@@ -1,0 +1,48 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  imageUrl    String
+  isSoldOut   Boolean   @default(false)
+  category    Category
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum Category {
+  COSMETICS
+  HAIR
+}
+
+model Post {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  content         String
+  featuredImageUrl String
+  excerpt         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model PartnershipInquiry {
+    id          String @id @default(cuid())
+    fullName    String
+    companyName String
+    email       String
+    inquiryType String
+    message     String
+    createdAt   DateTime @default(now())
+}
