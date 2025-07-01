@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import  CardGrid  from "@/components/CardGrid";
+
 
 export default function HomePage() {
   const [data, setData] = useState<HomeData | null>(null);
@@ -182,8 +184,15 @@ export default function HomePage() {
             </p>
           </motion.div>
 
+          {/* Cards Grid */}
+            <main className="p-6">
+              <h1 className="text-2xl font-bold mb-4 text-center">Welcome to the House!</h1>
+              <CardGrid />
+            </main>
+
+
           {/* Cosmetics */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
@@ -205,10 +214,10 @@ export default function HomePage() {
                 </motion.div>
               ))}
             </div>
-          </motion.div>
+          </motion.div> */}
 
           {/* Hair */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
@@ -229,7 +238,7 @@ export default function HomePage() {
                 </motion.div>
               ))}
             </div>
-          </motion.div>
+          </motion.div> */}
         </div>
       </section>
 
