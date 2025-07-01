@@ -1,36 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { getPosts, Post } from "@/lib/api";
-import LoginPopup from "../auth/LoginPopup";
-
+import { api, Post } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
-import SectionWrapper from "@/components/SectionWrapper";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 export default function JournalPage() {
+  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-
-  const handleNewPost = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("New Post:", { title, description, image });
-    // You can integrate actual API here
-  };
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const data = await getPosts();
+        const data = await api.getPosts();
         setPosts(data);
       } catch (error) {
         console.error("Failed to fetch posts:", error);
@@ -44,110 +31,87 @@ export default function JournalPage() {
 
   if (loading) {
     return (
-      <SectionWrapper className="flex justify-center">
-        <div className="py-20 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground mx-auto"></div>
-        </div>
-      </SectionWrapper>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-2xl font-serif text-gray-900">Loading...</div>
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Navbar */}
-      <header className="flex justify-between items-center px-6 py-4 border-b shadow-sm">
-        <h1 className="text-2xl font-bold">The Journal</h1>
-        <button
-          onClick={() => setLoginOpen(true)}
-          className="text-sm bg-black text-white px-4 py-2 rounded"
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-6 py-24">
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16"
         >
-          Login
-        </button>
-      </header>
+          <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 mb-8">
+            Journal
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Insights, stories, and the art of living well. Our journal explores the intersection of style, culture, and the pursuit of excellence.
+          </p>
+        </motion.div>
 
-      <LoginPopup open={loginOpen} onClose={() => setLoginOpen(false)} />
-
-      {/* Hero */}
-      <section className="py-16 text-center bg-accent/10">
-        <h2 className="text-4xl font-bold mb-2">Latest Insights</h2>
-        <p className="text-muted-foreground max-w-xl mx-auto">
-          Explore our latest grooming tips, lifestyle stories, and brand updates.
-        </p>
-      </section>
-
-      {/* Posts */}
-      <SectionWrapper className="py-12">
-        {posts.length > 0 ? (
-          <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post) => (
-              <Link href={`/journal/${post.slug}`} key={post.id}>
-                <Card className="overflow-hidden hover:shadow-md transition cursor-pointer">
-                  <div className="relative aspect-[4/3]">
-                    <Image
-                      src={post.featuredImageUrl}
-                      alt={post.title}
-                      fill
-                      className="object-cover"
-                      placeholder="blur"
-                      blurDataURL="/placeholder.jpg"
-                    />
-                  </div>
-                  <CardContent className="p-5">
-                    <h3 className="font-semibold text-xl mb-1">{post.title}</h3>
-                    <p className="text-muted-foreground text-sm line-clamp-3">
-                      {post.excerpt || post.content.slice(0, 100)}...
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {new Date(post.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center text-muted-foreground mt-10">
-            No blog posts yet.
-          </div>
-        )}
-      </SectionWrapper>
-
-      {/* Create New Post Section */}
-      <SectionWrapper className="py-12 border-t">
-        <div className="max-w-xl mx-auto">
-          <h3 className="text-2xl font-semibold mb-4">Create New Post</h3>
-          <form onSubmit={handleNewPost} className="space-y-4">
-            <div>
-              <label className="block mb-1 font-medium">Title</label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter post title"
-              />
+        {/* Blog Posts Grid */}
+        <div className="mt-16">
+          {posts.length > 0 ? (
+            <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {posts.map((post) => (
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Link href={`/journal/${post.slug}`}>
+                    <Card className="overflow-hidden hover:shadow-md transition cursor-pointer group">
+                      <div className="relative aspect-[4/3]">
+                        <Image
+                          src={post.featuredImageUrl}
+                          alt={post.title}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          placeholder="blur"
+                          blurDataURL="/placeholder.jpg"
+                        />
+                      </div>
+                      <CardContent className="p-5">
+                        <h3 className="font-semibold text-xl mb-1 group-hover:text-gray-900 transition-colors">
+                          {post.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm line-clamp-3">
+                          {post.excerpt || post.content.slice(0, 100)}...
+                        </p>
+                        <p className="text-xs text-gray-500 mt-4">
+                          {new Date(post.createdAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </p>
+                        <div className="mt-4 pt-4 border-t">
+                          <Button 
+                            className="w-full bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+                            variant="default"
+                          >
+                            Read in Detail
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </motion.div>
+              ))}
             </div>
-            <div>
-              <label className="block mb-1 font-medium">Description</label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Write something insightful..."
-              />
+          ) : (
+            <div className="text-center text-gray-600 mt-10">
+              No blog posts yet.
             </div>
-            <div>
-              <label className="block mb-1 font-medium">Upload Image</label>
-              <Input
-                type="file"
-                onChange={(e) => setImage(e.target.files?.[0] || null)}
-              />
-            </div>
-            <Button type="submit">Publish</Button>
-          </form>
+          )}
         </div>
-      </SectionWrapper>
+      </div>
     </div>
   );
 }

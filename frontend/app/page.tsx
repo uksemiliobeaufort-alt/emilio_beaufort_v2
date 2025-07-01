@@ -13,25 +13,28 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import Journal from './journal/page';
+import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
+import CardGrid from '@/components/CardGrid';
 
 export default function HomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
-    message: '',
-  });
+  const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const homeData = await api.getHomeData();
         setData(homeData);
-      } catch {
-        console.error('Failed to fetch home data');
-        toast.error('Failed to load content');
+      } catch (error) {
+        console.error('Failed to fetch home data:', error);
+        toast.error('Failed to load content. Please try again later.');
+        // Set empty data to prevent undefined errors
+        setData({
+          cosmetics: [],
+          hair: [],
+          posts: []
+        });
       } finally {
         setLoading(false);
       }
@@ -40,21 +43,10 @@ export default function HomePage() {
     fetchData();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await api.submitPartnershipInquiry(formData);
-      toast.success('Partnership inquiry submitted successfully');
-      setFormData({ name: '', email: '', company: '', message: '' });
-    } catch {
-      toast.error('Failed to submit inquiry');
-    }
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-premium flex items-center justify-center">
-        <div className="text-2xl font-serif text-premium">Loading...</div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-2xl font-serif text-gray-900">Loading...</div>
       </div>
     );
   }
@@ -182,62 +174,14 @@ export default function HomePage() {
               Each product is designed to elevate your daily ritual.
             </p>
           </motion.div>
-
-          {/* Cosmetics */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            viewport={{ once: true }}
-            className="mb-20"
-          >
-            <h3 className="heading-premium text-4xl text-premium mb-12 text-center">Cosmetics</h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {data?.cosmetics.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 1, delay: index * 0.1, ease: "easeOut" }}
-                  viewport={{ once: true }}
-                  className="card-premium"
-                >
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Hair */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            viewport={{ once: true }}
-          >
-            <h3 className="heading-premium text-4xl text-premium mb-12 text-center">Hair</h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {data?.hair.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 1, delay: index * 0.1, ease: "easeOut" }}
-                  viewport={{ once: true }}
-                  className="card-premium"
-                >
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+          <CardGrid />
         </div>
       </section>
 
       {/* Journal Section */}
       <section id="journal" className="section-padding bg-premium">
         <div className="container-premium">
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
@@ -251,10 +195,10 @@ export default function HomePage() {
               Insights, stories, and the art of living well. Our journal explores the intersection of style, 
               culture, and the pursuit of excellence.
             </p>
-          </motion.div>
-          <Journal></Journal>
+          </motion.div> */}
+          <Journal />
 
-          <div className="grid md:grid-cols-3 gap-12">
+          {/* <div className="grid md:grid-cols-3 gap-12">
             {data?.posts.map((post, index) => (
               <motion.div
                 key={post.id}
@@ -281,7 +225,7 @@ export default function HomePage() {
                 </Card>
               </motion.div>
             ))}
-          </div>
+          </div> */}
         </div>
       </section>
 
@@ -296,8 +240,14 @@ export default function HomePage() {
             className="text-center mb-20"
           >
             <h2 className="heading-premium text-6xl md:text-7xl text-premium mb-12">
-              Alliances
+              Emilio Beaufort Global
             </h2>
+            <p className="body-premium text-xl max-w-3xl mx-auto leading-relaxed mb-8">
+              At Emilio Beaufort Global, we are more than just a luxury grooming brand. We are pioneers in crafting 
+              exceptional experiences that transcend traditional boundaries. Our commitment to innovation, sustainability, 
+              and unparalleled quality has established us as a global leader in premium grooming solutions. With a presence 
+              spanning multiple continents, we continue to redefine excellence in the luxury personal care industry.
+            </p>
             <p className="body-premium text-xl max-w-3xl mx-auto leading-relaxed">
               We believe in the power of collaboration. Let&apos;s explore how we can create something extraordinary together.
             </p>
@@ -308,75 +258,25 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
+            className="text-center"
           >
-            <Card className="bg-premium border-premium shadow-premium-lg">
-              <CardHeader className="text-center">
-                <CardTitle className="heading-premium text-3xl text-premium">Partnership Inquiry</CardTitle>
-                <CardDescription className="body-premium text-lg">
-                  Tell us about your vision and how we might collaborate.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-8">
-                <form onSubmit={handleSubmit} className="space-y-8">
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div>
-                      <Label htmlFor="name" className="font-sans-medium text-premium mb-3 block">Name</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                        className="input-premium w-full"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email" className="font-sans-medium text-premium mb-3 block">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
-                        className="input-premium w-full"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="company" className="font-sans-medium text-premium mb-3 block">Company</Label>
-                    <Input
-                      id="company"
-                      value={formData.company}
-                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      required
-                      className="input-premium w-full"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="message" className="font-sans-medium text-premium mb-3 block">Message</Label>
-                    <Textarea
-                      id="message"
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      required
-                      rows={6}
-                      className="input-premium w-full resize-none"
-                      placeholder="Tell us about your vision and how we might collaborate..."
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="btn-primary-premium w-full py-4 text-lg font-sans-medium"
-                  >
-                    Submit Inquiry
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+            <Button 
+              size="lg"
+              className="btn-primary-premium text-lg px-12 py-6 text-base font-sans-medium"
+              onClick={() => setIsPartnershipFormOpen(true)}
+            >
+              Fill Partnership Form
+            </Button>
           </motion.div>
         </div>
       </section>
 
       <Footer />
+
+      <PartnershipFormDialog 
+        isOpen={isPartnershipFormOpen}
+        onClose={() => setIsPartnershipFormOpen(false)}
+      />
     </div>
   );
 } 

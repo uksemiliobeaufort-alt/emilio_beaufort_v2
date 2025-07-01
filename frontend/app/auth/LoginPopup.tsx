@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/diaglog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-export default function LoginPopup({ open, onClose }) {
+interface LoginPopupProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function LoginPopup({ open, onClose }: LoginPopupProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

@@ -1,15 +1,15 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export interface Product {
-  id: "1";
-  name: "first blog";
-  description: "Does wearing hats cause hair loss? or Is frequent washing bad for your hair ?Hair Loss Myths DEBUNKED: Hats, Washing, and What Really Causes Hair Problems Fact vs. Fiction: Separating Hair Loss Myths from Scientific Truth Stop Believing These Hair Myths! The Truth About Hats, Washing, and Hair Health We've all heard them – those persistent rumors about what causes hair loss or damages our precious strands. From the old wives' tale about hats to the debate over daily washing, it's easy to get confused. But it's time to set the record straight! Let's dive into some common hair myths and uncover the scientific truth.Myth 1: Does wearing hats cause hair loss? Common Belief: Many people worry that wearing hats too often suffocates hair follicles, leading to hair loss or thinning. Scientific Backing (briefly): Good news, hat lovers! There's no scientific evidence to suggest that wearing hats directly causes hair loss. Hair follicles get their oxygen from the bloodstream, not directly from the air. Unless your hat is excessively tight, causing friction or traction alopecia (a specific type of hair loss from pulling), it's generally harmless. Factual Information: Hair loss is usually linked to genetics, hormonal changes, nutritional deficiencies, certain medical conditions, or medications. So, feel free to rock your favorite cap without fear!";
-  price: 145;
-  imageUrl: "/frontend/public/images/post1 img.png";
-  isSoldOut: 0;
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  isSoldOut: boolean;
   category: 'COSMETICS' | 'HAIR';
-  createdAt: "2025-07-01T12:00:00Z";
-  updatedAt: "2025-07-01T12:00:00Z";
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Post {
@@ -56,126 +56,139 @@ export interface HomeData {
   posts: Post[];
 }
 
+const MOCK_PRODUCTS: Product[] = [
+  {
+    id: '1',
+    name: 'Premium Grooming Kit',
+    description: 'Complete luxury grooming kit with everything you need for a perfect look.',
+    price: 299.99,
+    imageUrl: '/images/Cosmetics Banner.jpeg',
+    isSoldOut: false,
+    category: 'COSMETICS',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: '2',
+    name: 'Luxury Hair Care Set',
+    description: 'Premium hair care collection for the ultimate hair treatment experience.',
+    price: 199.99,
+    imageUrl: '/images/Ormi Hair.webp',
+    isSoldOut: false,
+    category: 'HAIR',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+const MOCK_POSTS: Post[] = [
+  {
+    id: '1',
+    slug: 'grooming-essentials',
+    title: 'Essential Grooming Tips for Modern Men',
+    content: 'Discover the secrets to maintaining a perfect grooming routine...',
+    featuredImageUrl: '/images/Cosmetics Banner.jpeg',
+    excerpt: 'A comprehensive guide to male grooming essentials.',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+const MOCK_HOME_DATA: HomeData = {
+  cosmetics: MOCK_PRODUCTS.filter(p => p.category === 'COSMETICS'),
+  hair: MOCK_PRODUCTS.filter(p => p.category === 'HAIR'),
+  posts: MOCK_POSTS
+};
+
 // Products API
 export async function getProducts(category?: 'COSMETICS' | 'HAIR'): Promise<Product[]> {
-  const url = category 
-    ? `${API_BASE_URL}/products?category=${category}`
-    : `${API_BASE_URL}/products`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch products');
-  }
-  return response.json();
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return category ? MOCK_PRODUCTS.filter(p => p.category === category) : MOCK_PRODUCTS;
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
-  const response = await fetch(`${API_BASE_URL}/products/${id}`);
-  if (!response.ok) {
-    return null;
-  }
-  return response.json();
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return MOCK_PRODUCTS.find(p => p.id === id) || null;
 }
 
 export async function getFeaturedProduct(): Promise<Product | null> {
-  const response = await fetch(`${API_BASE_URL}/products/featured`);
-  if (!response.ok) {
-    return null;
-  }
-  return response.json();
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return MOCK_PRODUCTS[0] || null;
 }
 
 // Posts API
 export async function getPosts(): Promise<Post[]> {
-  const response = await fetch(`${API_BASE_URL}/posts`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch posts');
-  }
-  return response.json();
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return MOCK_POSTS;
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
-  const response = await fetch(`${API_BASE_URL}/posts/${slug}`);
-  if (!response.ok) {
-    return null;
-  }
-  return response.json();
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return MOCK_POSTS.find(p => p.slug === slug) || null;
 }
 
 // Partnership Inquiries API
 export async function submitPartnershipInquiry(data: CreatePartnershipInquiryDto): Promise<PartnershipInquiry> {
-  const response = await fetch(`${API_BASE_URL}/partnership-inquiries`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to submit partnership inquiry');
-  }
-  return response.json();
+  await new Promise(resolve => setTimeout(resolve, 500));
+  return {
+    id: '1',
+    ...data,
+    createdAt: new Date().toISOString()
+  };
 }
 
 export async function submitCareerApplication(data: CareerApplication): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/careers`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to submit career application');
-  }
+  await new Promise(resolve => setTimeout(resolve, 500));
+  console.log('Career application submitted:', data);
 }
 
 export async function submitWaitlistSignup(data: WaitlistSignup): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/waitlist`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to submit waitlist signup');
-  }
+  await new Promise(resolve => setTimeout(resolve, 500));
+  console.log('Waitlist signup submitted:', data);
 }
 
 export const api = {
   async getProducts(): Promise<Product[]> {
-    const response = await fetch(`${API_BASE_URL}/products`);
-    if (!response.ok) throw new Error('Failed to fetch products');
-    return response.json();
+    // Simulating API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return MOCK_PRODUCTS;
   },
 
   async getProductsByCategory(category: 'COSMETICS' | 'HAIR'): Promise<Product[]> {
-    const response = await fetch(`${API_BASE_URL}/products/category/${category}`);
-    if (!response.ok) throw new Error('Failed to fetch products');
-    return response.json();
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return MOCK_PRODUCTS.filter(p => p.category === category);
   },
 
   async getProduct(id: string): Promise<Product> {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch product');
-    return response.json();
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const product = MOCK_PRODUCTS.find(p => p.id === id);
+    if (!product) throw new Error('Product not found');
+    return product;
   },
 
   async getPosts(): Promise<Post[]> {
-    const response = await fetch(`${API_BASE_URL}/posts`);
-    if (!response.ok) throw new Error('Failed to fetch posts');
-    return response.json();
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return MOCK_POSTS;
   },
 
   async getPost(slug: string): Promise<Post> {
-    const response = await fetch(`${API_BASE_URL}/posts/slug/${slug}`);
-    if (!response.ok) throw new Error('Failed to fetch post');
-    return response.json();
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const post = MOCK_POSTS.find(p => p.slug === slug);
+    if (!post) throw new Error('Post not found');
+    return post;
   },
 
   async getHomeData(): Promise<HomeData> {
-    const response = await fetch(`${API_BASE_URL}/home-data`);
-    if (!response.ok) throw new Error('Failed to fetch home data');
-    return response.json();
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return MOCK_HOME_DATA;
+  },
+
+  async submitPartnershipInquiry(data: CreatePartnershipInquiryDto): Promise<PartnershipInquiry> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return {
+      id: '1',
+      ...data,
+      createdAt: new Date().toISOString()
+    };
   },
 }; 
