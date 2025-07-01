@@ -56,92 +56,6 @@ export interface HomeData {
   posts: Post[];
 }
 
-// Products API
-export async function getProducts(category?: 'COSMETICS' | 'HAIR'): Promise<Product[]> {
-  const url = category 
-    ? `${API_BASE_URL}/products?category=${category}`
-    : `${API_BASE_URL}/products`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch products');
-  }
-  return response.json();
-}
-
-export async function getProductById(id: string): Promise<Product | null> {
-  const response = await fetch(`${API_BASE_URL}/products/${id}`);
-  if (!response.ok) {
-    return null;
-  }
-  return response.json();
-}
-
-export async function getFeaturedProduct(): Promise<Product | null> {
-  const response = await fetch(`${API_BASE_URL}/products/featured`);
-  if (!response.ok) {
-    return null;
-  }
-  return response.json();
-}
-
-// Posts API
-export async function getPosts(): Promise<Post[]> {
-  const response = await fetch(`${API_BASE_URL}/posts`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch posts');
-  }
-  return response.json();
-}
-
-export async function getPostBySlug(slug: string): Promise<Post | null> {
-  const response = await fetch(`${API_BASE_URL}/posts/${slug}`);
-  if (!response.ok) {
-    return null;
-  }
-  return response.json();
-}
-
-// Partnership Inquiries API
-export async function submitPartnershipInquiry(data: CreatePartnershipInquiryDto): Promise<PartnershipInquiry> {
-  const response = await fetch(`${API_BASE_URL}/partnership-inquiries`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to submit partnership inquiry');
-  }
-  return response.json();
-}
-
-export async function submitCareerApplication(data: CareerApplication): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/careers`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to submit career application');
-  }
-}
-
-export async function submitWaitlistSignup(data: WaitlistSignup): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/waitlist`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to submit waitlist signup');
-  }
-}
-
 export const api = {
   async getProducts(): Promise<Product[]> {
     const response = await fetch(`${API_BASE_URL}/products`);
@@ -178,4 +92,48 @@ export const api = {
     if (!response.ok) throw new Error('Failed to fetch home data');
     return response.json();
   },
-}; 
+
+  async submitPartnershipInquiry(data: CreatePartnershipInquiryDto): Promise<PartnershipInquiry> {
+    const response = await fetch(`${API_BASE_URL}/partnership-inquiries`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to submit partnership inquiry');
+    }
+
+    return response.json();
+  },
+
+  async submitCareerApplication(data: CareerApplication): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/careers`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to submit career application');
+    }
+  },
+
+  async submitWaitlistSignup(data: WaitlistSignup): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/waitlist`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to submit waitlist signup');
+    }
+  }
+};

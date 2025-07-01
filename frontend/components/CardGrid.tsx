@@ -1,21 +1,28 @@
 'use client';
 import React, { useState } from 'react';
-import { Card, CardContent, Typography } from "@mui/material";
-import { ArrowForward } from "@mui/icons-material";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Modal,
+  Box
+} from '@mui/material';
+import { ArrowForward } from '@mui/icons-material';
 import Cards from './Cards';
 
 export default function CardGrid() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const cardData = [
-    { title: "Cosmetics", link: "" },
-    { title: "Hair", link: "/products/hair" },
-    { title: "Emilio Global", desc: "This is the third card.", link: "" },
-    { title: "Journal", desc: "This is the fourth card.", link: "" },
+    { title: 'Cosmetics', link: '' },
+    { title: 'Hair', link: '/products/hair' },
+    { title: 'Emilio Global', desc: 'This is the third card.', link: '' },
+    { title: 'Journal', desc: 'This is the fourth card.', link: '' },
   ];
 
   return (
     <>
+      {/* Main Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {cardData.map((card, index) => (
           <div
@@ -49,21 +56,65 @@ export default function CardGrid() {
         ))}
       </div>
 
-      {/* ✅ Popup Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white w-[90%] max-w-4xl rounded-xl shadow-lg p-6 relative">
-            <h2 className="text-2xl font-bold mb-4 text-center">Cosmetics Collection</h2>
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 bg-yellow-500 text-white px-4 py-1 rounded"
-            >
-              Close
-            </button>
-            <Cards /> {/* 👈 product image grid inside modal */}
-          </div>
-        </div>
-      )}
+      {/* ✅ Modal Popup with Mac OS header */}
+      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <Box
+          sx={{
+            width: '90vw',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            margin: '5vh auto',
+            backgroundColor: 'white',
+            borderRadius: 2,
+            p: 4,
+            boxShadow: 24,
+          }}
+        >
+          {/* Mac OS Style Header */}
+          <Box mb={4}>
+            {/* Mac-style top-left dots */}
+            <Box display="flex" alignItems="center" gap={1} mb={2}>
+              {/* Red - close modal */}
+              <Box
+                sx={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  backgroundColor: '#ff5f57',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setIsModalOpen(false)}
+              />
+              {/* Yellow & Green - visual only */}
+              <Box
+                sx={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  backgroundColor: '#ffbd2e',
+                }}
+              />
+              <Box
+                sx={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  backgroundColor: '#28ca41',
+                }}
+              />
+            </Box>
+
+            {/* Centered title */}
+            <Typography variant="h4" align="center">
+              Cosmetics Collection
+            </Typography>
+          </Box>
+
+          {/* Product Grid */}
+          <Cards />
+        </Box>
+      </Modal>
     </>
   );
 }
+
