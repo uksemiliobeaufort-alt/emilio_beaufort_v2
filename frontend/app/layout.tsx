@@ -23,7 +23,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>
         <PageTransitionProgressBar />
-        {children}
+        <main>
+          {children}
+        </main>
         <Toaster />
       </body>
     </html>

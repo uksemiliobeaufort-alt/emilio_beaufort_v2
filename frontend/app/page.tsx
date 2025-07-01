@@ -5,16 +5,11 @@ import { motion } from 'framer-motion';
 import { api } from '@/lib/api';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
-import { ProductCard } from '@/components/ui/ProductCard';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import Journal from './journal/page';
-import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
 import CardGrid from '@/components/CardGrid';
+import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -172,51 +167,7 @@ export default function Home() {
       {/* Journal Section */}
       <section id="journal" className="section-padding bg-premium">
         <div className="container-premium">
-          {/* <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            viewport={{ once: true }}
-            className="text-center mb-20"
-          >
-            <h2 className="heading-premium text-6xl md:text-7xl text-premium mb-12">
-              Journal
-            </h2>
-            <p className="body-premium text-xl max-w-4xl mx-auto leading-relaxed">
-              Insights, stories, and the art of living well. Our journal explores the intersection of style, 
-              culture, and the pursuit of excellence.
-            </p>
-          </motion.div> */}
           <Journal />
-
-          {/* <div className="grid md:grid-cols-3 gap-12">
-            {data?.posts.map((post, index) => (
-              <motion.div
-                key={post.id}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: index * 0.2, ease: "easeOut" }}
-                viewport={{ once: true }}
-                className="card-premium"
-              >
-                <Card className="h-full bg-white border-premium hover:border-gold transition-premium shadow-premium">
-                  <CardHeader>
-                    <CardTitle className="heading-premium text-xl text-premium">{post.title}</CardTitle>
-                    <CardDescription className="body-premium">
-                      {new Date(post.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="body-premium leading-relaxed">{post.excerpt}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div> */}
         </div>
       </section>
 
