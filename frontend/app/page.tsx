@@ -186,7 +186,6 @@ export default function HomePage() {
 
           {/* Cards Grid */}
             <main className="p-6">
-              <h1 className="text-2xl font-bold mb-4 text-center">Welcome to the House!</h1>
               <CardGrid />
             </main>
 
@@ -243,7 +242,7 @@ export default function HomePage() {
       </section>
 
       {/* Journal Section */}
-      <section id="journal" className="section-padding bg-premium">
+      <section id="journal" className="section-padding bg-premium ">
         <div className="container-premium">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
