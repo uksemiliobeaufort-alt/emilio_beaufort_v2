@@ -3,7 +3,8 @@ import { Inter, Playfair_Display } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import PageTransitionProgressBar from "@/components/PageTransitionProgressBar";
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+// import { Footer } from "@/components/Footer";
+import { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
@@ -15,13 +16,13 @@ export const metadata = {
 
 function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <Suspense>
       <PageTransitionProgressBar />
       <Navbar />
       {children}
-      <Footer />
+      {/* <Footer /> */}
       <Toaster />
-    </>
+    </Suspense>
   );
 }
 
