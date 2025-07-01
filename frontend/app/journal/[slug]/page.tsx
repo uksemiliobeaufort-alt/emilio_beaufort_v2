@@ -3,14 +3,15 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
-  const post = await getPostBySlug(params.slug);
+  const resolvedParams = await params;
+  const post = await getPostBySlug(resolvedParams.slug);
 
   if (!post) {
     return (

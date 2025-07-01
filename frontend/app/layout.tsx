@@ -13,6 +13,18 @@ export const metadata = {
   description: "Luxury grooming products and philosophy by Emilio Beaufort.",
 };
 
+function ClientLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <PageTransitionProgressBar />
+      <Navbar />
+      {children}
+      <Footer />
+      <Toaster />
+    </>
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -21,13 +33,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>
-        <PageTransitionProgressBar />
-        <Navbar />
-        <main>
-          {children}
-        </main>
-        <Footer />
-        <Toaster />
+        <ClientLayout>
+          <main>
+            {children}
+          </main>
+        </ClientLayout>
       </body>
     </html>
   );
