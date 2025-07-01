@@ -2,16 +2,13 @@ import { getPostBySlug } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
 
-interface PageProps {
-  params: Promise<{
-    slug: string;
-  }>;
+type Props = {
+  params: { slug: string };
   searchParams: { [key: string]: string | string[] | undefined };
-}
+};
 
-export default async function BlogPostPage({ params }: PageProps) {
-  const resolvedParams = await params;
-  const post = await getPostBySlug(resolvedParams.slug);
+export default async function BlogPostPage({ params, searchParams }: Props) {
+  const post = await getPostBySlug(params.slug);
 
   if (!post) {
     return (
