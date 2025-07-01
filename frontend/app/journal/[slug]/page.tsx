@@ -1,6 +1,7 @@
 import { getPostBySlug } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
+import { Navbar } from "@/components/Navbar";
 
 type Props = {
   params: { slug: string };
@@ -19,40 +20,46 @@ export default async function BlogPostPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen py-20 px-4 bg-white">
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-4xl font-bold font-serif mb-2">{post.title}</h1>
-          <p className="text-sm text-gray-500">
-            {new Date(post.createdAt).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-        </div>
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      <main className="pt-32 md:pt-36 lg:pt-40 pb-20 px-4">
+        <div className="max-w-3xl mx-auto">
+          <article>
+            <div className="mb-8">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-4">{post.title}</h1>
+              <p className="text-sm text-gray-500">
+                {new Date(post.createdAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
 
-        <div className="relative w-full aspect-video rounded-md overflow-hidden mb-8">
-          <Image
-            src={post.featuredImageUrl || '/images/Cosmetics Banner.jpeg'}
-            alt={post.title}
-            fill
-            className="object-cover"
-          />
-        </div>
+            <div className="relative w-full aspect-video rounded-md overflow-hidden mb-10">
+              <Image
+                src={post.featuredImageUrl || '/images/Cosmetics Banner.jpeg'}
+                alt={post.title}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
 
-        <div className="prose prose-lg max-w-none mb-10">
-          {post.content}
-        </div>
+            <div className="prose prose-lg max-w-none mb-12">
+              {post.content}
+            </div>
 
-        <Link 
-          href="/journal" 
-          className="inline-flex items-center text-gray-600 hover:text-[#B7A16C] transition-colors duration-300 group"
-        >
-          <span className="mr-2 text-sm font-medium">←</span>
-          <span className="text-sm font-medium group-hover:underline">Back to Journal</span>
-        </Link>
-      </div>
+            <Link 
+              href="/" 
+              className="inline-flex items-center text-gray-600 hover:text-[#B7A16C] transition-colors duration-300 group"
+            >
+              <span className="mr-2 text-sm font-medium">←</span>
+              <span className="text-sm font-medium group-hover:underline">Back to Journal</span>
+            </Link>
+          </article>
+        </div>
+      </main>
     </div>
   );
 }

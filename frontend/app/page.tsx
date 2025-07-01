@@ -42,7 +42,7 @@ export default function Home() {
       <Navbar />
       
       {/* Hero Section */}
-      <section id="hero" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-premium">
+      <section id="hero" className="min-h-[80vh] sm:min-h-screen flex items-center justify-center relative overflow-hidden bg-premium">
         <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100"></div>
         <motion.div 
           className="relative z-10 text-center px-6 max-w-5xl mx-auto"
@@ -54,14 +54,14 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.3 }}
-            className="mb-8"
+            className="mb-6 sm:mb-8"
           >
-            <h1 className="text-7xl md:text-9xl font-serif font-bold text-premium mb-8 leading-tight tracking-tight">
+            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-serif font-bold text-premium mb-6 sm:mb-8 leading-tight tracking-tight">
               Emilio Beaufort
             </h1>
           </motion.div>
           <motion.p 
-            className="text-xl md:text-2xl body-premium mb-16 max-w-3xl mx-auto leading-relaxed"
+            className="text-lg sm:text-xl md:text-2xl body-premium mb-10 sm:mb-16 max-w-3xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6 }}
@@ -75,7 +75,7 @@ export default function Home() {
           >
             <Button 
               size="lg" 
-              className="btn-primary-premium text-lg px-12 py-6 text-base font-sans-medium"
+              className="btn-primary-premium text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 font-sans-medium"
               onClick={() => document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Discover Our Philosophy
@@ -85,26 +85,26 @@ export default function Home() {
       </section>
 
       {/* Philosophy Section */}
-      <section id="philosophy" className="section-padding bg-premium">
+      <section id="philosophy" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-premium">
         <div className="container-premium">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center mb-20"
+            className="text-center mb-12 sm:mb-16"
           >
-            <h2 className="heading-premium text-6xl md:text-7xl text-premium mb-12">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight">
               Philosophy
             </h2>
-            <p className="body-premium text-xl max-w-4xl mx-auto leading-relaxed">
+            <p className="body-premium text-lg sm:text-xl max-w-4xl mx-auto leading-relaxed">
               We believe in the art of refinement. Every product is crafted with uncompromising attention to detail, 
               using only the finest ingredients and materials. Our philosophy centers on timeless elegance, 
               sustainable luxury, and the belief that true sophistication lies in simplicity.
             </p>
           </motion.div>
           
-          <div className="grid md:grid-cols-3 gap-16">
+          <div className="grid md:grid-cols-3 gap-8 sm:gap-12 md:gap-16">
             {[
               {
                 title: 'Timeless Elegance',
@@ -131,10 +131,10 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: item.delay, ease: "easeOut" }}
                 viewport={{ once: true }}
-                className="text-center group"
+                className="text-center group mb-8 sm:mb-0"
               >
-                <div className="text-6xl mb-8 group-hover:scale-110 transition-premium">{item.icon}</div>
-                <h3 className="heading-premium text-2xl text-premium mb-6">{item.title}</h3>
+                <div className="text-5xl sm:text-6xl mb-6 sm:mb-8 group-hover:scale-110 transition-premium">{item.icon}</div>
+                <h3 className="heading-premium text-xl sm:text-2xl text-premium mb-4 sm:mb-6">{item.title}</h3>
                 <p className="body-premium leading-relaxed">{item.description}</p>
               </motion.div>
             ))}
@@ -143,19 +143,19 @@ export default function Home() {
       </section>
 
       {/* The House Section */}
-      <section id="house" className="section-padding bg-white">
+      <section id="house" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-white">
         <div className="container-premium">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center mb-20"
+            className="text-center mb-12 sm:mb-16"
           >
-            <h2 className="heading-premium text-6xl md:text-7xl text-premium mb-12">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight">
               The House
             </h2>
-            <p className="body-premium text-xl max-w-4xl mx-auto leading-relaxed">
+            <p className="body-premium text-lg sm:text-xl max-w-4xl mx-auto leading-relaxed">
               Our curated collection represents the pinnacle of grooming excellence. 
               Each product is designed to elevate your daily ritual.
             </p>
@@ -165,32 +165,47 @@ export default function Home() {
       </section>
 
       {/* Journal Section */}
-      <section id="journal" className="section-padding bg-premium">
+      <section id="journal" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-premium">
         <div className="container-premium">
+          {/* <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            viewport={{ once: true }}
+            className="text-center mb-12 sm:mb-16"
+          >
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight">
+              Journal
+            </h2>
+            <p className="body-premium text-lg sm:text-xl max-w-4xl mx-auto leading-relaxed">
+              Insights, stories, and the art of living well. Our journal explores 
+              the intersection of style, culture, and the pursuit of excellence.
+            </p>
+          </motion.div> */}
           <Journal />
         </div>
       </section>
 
       {/* Alliances Section */}
-      <section id="alliances" className="section-padding bg-white">
-        <div className="max-w-5xl mx-auto px-6">
+      <section id="alliances" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center mb-20"
+            className="text-center mb-12 sm:mb-16"
           >
-            <h2 className="heading-premium text-6xl md:text-7xl text-premium mb-12">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight">
               Emilio Beaufort Global
             </h2>
-            <p className="body-premium text-xl max-w-3xl mx-auto leading-relaxed mb-8">
+            <p className="body-premium text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-8">
               At Emilio Beaufort Global, we are more than just a luxury grooming brand. We are pioneers in crafting 
               exceptional experiences that transcend traditional boundaries. Our commitment to innovation, sustainability, 
               and unparalleled quality has established us as a global leader in premium grooming solutions. With a presence 
               spanning multiple continents, we continue to redefine excellence in the luxury personal care industry.
             </p>
-            <p className="body-premium text-xl max-w-3xl mx-auto leading-relaxed">
+            <p className="body-premium text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed">
               We believe in the power of collaboration. Let&apos;s explore how we can create something extraordinary together.
             </p>
           </motion.div>
@@ -200,11 +215,11 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center"
+            className="text-center mb-8 sm:mb-12 md:mb-16"
           >
             <Button 
               size="lg"
-              className="btn-primary-premium text-lg px-12 py-6 text-base font-sans-medium"
+              className="btn-primary-premium text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 font-sans-medium"
               onClick={() => setIsPartnershipFormOpen(true)}
             >
               Fill Partnership Form

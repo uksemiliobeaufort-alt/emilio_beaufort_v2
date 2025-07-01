@@ -3,8 +3,15 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu } from 'lucide-react';
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTrigger, 
+  SheetClose,
+  SheetHeader,
+  SheetTitle
+} from '@/components/ui/sheet';
+import { Menu, X } from 'lucide-react';
 
 const navItems = [
   { name: 'Philosophy', href: '#philosophy' },
@@ -15,6 +22,7 @@ const navItems = [
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,6 +37,7 @@ export function Navbar() {
     const element = document.querySelector(href);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+      setIsOpen(false);
     }
   };
 
@@ -91,30 +100,45 @@ export function Navbar() {
 
           {/* Mobile Navigation */}
           <div className="md:hidden">
-            <Sheet>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <button className="text-premium hover:text-gold transition-premium">
                   <Menu className="w-6 h-6" />
                 </button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px] bg-premium border-l border-premium">
-                <div className="flex flex-col gap-8 mt-12">
+              <SheetContent 
+                side="right" 
+                className="w-[300px] sm:w-[400px] bg-white border-l border-premium p-0"
+                hideCloseButton
+              >
+                <SheetHeader className="p-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <SheetTitle className="font-serif text-xl">Menu</SheetTitle>
+                    <button 
+                      onClick={() => setIsOpen(false)}
+                      className="text-gray-500 hover:text-gray-900 transition-premium rounded-full hover:bg-gray-100 p-1"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </SheetHeader>
+                <nav className="flex flex-col p-6" aria-label="Mobile Navigation">
                   {navItems.map((item) => (
                     <button
                       key={item.name}
                       onClick={() => scrollToSection(item.href)}
-                      className="font-sans-medium text-xl text-premium hover:text-gold transition-premium text-left"
+                      className="font-sans-medium text-lg text-premium hover:text-gold transition-premium text-left py-4 border-b border-gray-100 last:border-none"
                     >
                       {item.name}
                     </button>
                   ))}
                   <Button
                     onClick={() => scrollToSection('#alliances')}
-                    className="btn-primary-premium mt-4"
+                    className="btn-primary-premium w-full mt-8 py-6"
                   >
                     Partner With Us
                   </Button>
-                </div>
+                </nav>
               </SheetContent>
             </Sheet>
           </div>

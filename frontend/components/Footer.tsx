@@ -46,10 +46,10 @@ export function Footer() {
             </p>
             <div className="flex justify-center md:justify-start space-x-4">
               {[
-                { icon: Instagram, href: '#', label: 'Instagram' },
-                { icon: Twitter, href: '#', label: 'Twitter' },
-                { icon: Facebook, href: '#', label: 'Facebook' },
-                { icon: Linkedin, href: '#', label: 'LinkedIn' }
+                { icon: Instagram, href: 'https://www.linkedin.com/company/emiliobeaufort', label: 'Instagram' },
+                { icon: Twitter, href: 'https://www.linkedin.com/company/emiliobeaufort', label: 'Twitter' },
+                { icon: Facebook, href: 'https://www.linkedin.com/company/emiliobeaufort', label: 'Facebook' },
+                { icon: Linkedin, href: 'https://www.linkedin.com/company/emiliobeaufort', label: 'LinkedIn' }
               ].map((social) => (
                 <a
                   key={social.label}
@@ -65,7 +65,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-premium pt-8">
+        {/* <div className="border-t border-premium pt-8"> */}
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="body-premium text-gray-400 mb-4 md:mb-0">
               © {currentYear} Emilio Beaufort. All rights reserved.
@@ -76,7 +76,7 @@ export function Footer() {
               <a href="#" className="text-gray-400 hover:text-gold transition-premium">Cookie Policy</a>
             </div>
           </div>
-        </div>
+        {/* </div> */}
       </div>
     </footer>
   );

@@ -29,6 +29,7 @@ export interface PartnershipInquiry {
   email: string;
   company: string;
   message: string;
+  inquiryType: string;
   createdAt: string;
 }
 
@@ -48,6 +49,7 @@ export interface CreatePartnershipInquiryDto {
   email: string;
   company: string;
   message: string;
+  inquiryType: string;
 }
 
 export interface HomeData {

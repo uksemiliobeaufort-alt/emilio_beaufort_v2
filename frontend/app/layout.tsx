@@ -2,7 +2,7 @@ import "./globals.css";
 import { Inter, Playfair_Display } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import PageTransitionProgressBar from "@/components/PageTransitionProgressBar";
-import { Navbar } from "@/components/Navbar";
+// import { Navbar } from "@/components/Navbar";
 // import { Footer } from "@/components/Footer";
 import { Suspense } from "react";
 
@@ -18,7 +18,7 @@ function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
     <Suspense>
       <PageTransitionProgressBar />
-      <Navbar />
+      {/* <Navbar /> */}
       {children}
       {/* <Footer /> */}
       <Toaster />
