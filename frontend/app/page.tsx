@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import Journal from './journal/page';
 
 export default function HomePage() {
   const [data, setData] = useState<HomeData | null>(null);
@@ -251,6 +252,7 @@ export default function HomePage() {
               culture, and the pursuit of excellence.
             </p>
           </motion.div>
+          <Journal></Journal>
 
           <div className="grid md:grid-cols-3 gap-12">
             {data?.posts.map((post, index) => (

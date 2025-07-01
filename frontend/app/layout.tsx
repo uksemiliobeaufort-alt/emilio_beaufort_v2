@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Inter, Playfair_Display } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { SessionProvider } from "next-auth/react";
 import PageTransitionProgressBar from "@/components/PageTransitionProgressBar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });

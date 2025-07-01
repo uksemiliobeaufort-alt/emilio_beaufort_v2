@@ -1,15 +1,15 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
-  isSoldOut: boolean;
+  id: "1";
+  name: "first blog";
+  description: "Does wearing hats cause hair loss? or Is frequent washing bad for your hair ?Hair Loss Myths DEBUNKED: Hats, Washing, and What Really Causes Hair Problems Fact vs. Fiction: Separating Hair Loss Myths from Scientific Truth Stop Believing These Hair Myths! The Truth About Hats, Washing, and Hair Health We've all heard them – those persistent rumors about what causes hair loss or damages our precious strands. From the old wives' tale about hats to the debate over daily washing, it's easy to get confused. But it's time to set the record straight! Let's dive into some common hair myths and uncover the scientific truth.Myth 1: Does wearing hats cause hair loss? Common Belief: Many people worry that wearing hats too often suffocates hair follicles, leading to hair loss or thinning. Scientific Backing (briefly): Good news, hat lovers! There's no scientific evidence to suggest that wearing hats directly causes hair loss. Hair follicles get their oxygen from the bloodstream, not directly from the air. Unless your hat is excessively tight, causing friction or traction alopecia (a specific type of hair loss from pulling), it's generally harmless. Factual Information: Hair loss is usually linked to genetics, hormonal changes, nutritional deficiencies, certain medical conditions, or medications. So, feel free to rock your favorite cap without fear!";
+  price: 145;
+  imageUrl: "/frontend/public/images/post1 img.png";
+  isSoldOut: 0;
   category: 'COSMETICS' | 'HAIR';
-  createdAt: string;
-  updatedAt: string;
+  createdAt: "2025-07-01T12:00:00Z";
+  updatedAt: "2025-07-01T12:00:00Z";
 }
 
 export interface Post {
