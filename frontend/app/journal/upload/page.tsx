@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { auth } from '@/lib/auth';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
 
 export default function UploadBlogPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function UploadBlogPage() {
     featuredImage: null as File | null,
     excerpt: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -29,14 +31,22 @@ export default function UploadBlogPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
-      // For now, just log the blog post data
-      console.log('Blog post data:', formData);
-      toast.success('Blog post saved successfully');
+      await api.createPost({
+        title: formData.title,
+        content: formData.content,
+        featuredImageUrl: formData.featuredImage ? URL.createObjectURL(formData.featuredImage) : null,
+        slug: formData.title.toLowerCase().replace(/\s+/g, '-'),
+      });
+
+      toast.success('Post created successfully!');
       router.push('/journal');
-    } catch (error) {
-      toast.error('Failed to save blog post');
+    } catch {
+      toast.error('Failed to create post');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -110,7 +120,7 @@ export default function UploadBlogPage() {
             />
           </div>
 
-          <Button type="submit" className="w-full mt-8">
+          <Button type="submit" className="w-full mt-8" disabled={isSubmitting}>
             Upload Blog Post
           </Button>
         </form>

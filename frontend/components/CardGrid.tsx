@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import { Card, CardContent } from "@/components/ui/card";
 
 const cardData = [
   { 

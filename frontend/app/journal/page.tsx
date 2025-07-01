@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -10,7 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default function JournalPage() {
-  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -69,7 +67,7 @@ export default function JournalPage() {
                     <Card className="overflow-hidden hover:shadow-md transition cursor-pointer group">
                       <div className="relative aspect-[4/3]">
                         <Image
-                          src={post.featuredImageUrl}
+                          src={post.featuredImageUrl || '/images/placeholder.jpg'}
                           alt={post.title}
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-105"

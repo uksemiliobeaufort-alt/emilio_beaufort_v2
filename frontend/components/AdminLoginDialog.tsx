@@ -27,7 +27,7 @@ export default function AdminLoginDialog({ isOpen, onClose, onSuccess }: AdminLo
       await auth.login(email, password);
       toast.success('Logged in successfully');
       onSuccess();
-    } catch (error) {
+    } catch {
       toast.error('Invalid credentials');
     } finally {
       setLoading(false);

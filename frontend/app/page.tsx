@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { api, HomeData } from '@/lib/api';
+import { api } from '@/lib/api';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { ProductCard } from '@/components/ui/ProductCard';
@@ -16,25 +16,16 @@ import Journal from './journal/page';
 import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
 import CardGrid from '@/components/CardGrid';
 
-export default function HomePage() {
-  const [data, setData] = useState<HomeData | null>(null);
+export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const homeData = await api.getHomeData();
-        setData(homeData);
-      } catch (error) {
-        console.error('Failed to fetch home data:', error);
-        toast.error('Failed to load content. Please try again later.');
-        // Set empty data to prevent undefined errors
-        setData({
-          cosmetics: [],
-          hair: [],
-          posts: []
-        });
+        await api.getHomeData();
+      } catch {
+        toast.error("Failed to load data");
       } finally {
         setLoading(false);
       }

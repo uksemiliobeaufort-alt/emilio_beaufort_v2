@@ -1,7 +1,6 @@
 import { getPostBySlug } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = await getPostBySlug(params.slug);
@@ -30,7 +29,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
         <div className="relative w-full aspect-video rounded-md overflow-hidden mb-8">
           <Image
-            src={post.featuredImageUrl}
+            src={post.featuredImageUrl || '/images/Cosmetics Banner.jpeg'}
             alt={post.title}
             fill
             className="object-cover"

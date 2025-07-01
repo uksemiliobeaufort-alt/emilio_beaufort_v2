@@ -17,7 +17,7 @@ export interface Post {
   slug: string;
   title: string;
   content: string;
-  featuredImageUrl: string;
+  featuredImageUrl: string | null;
   excerpt?: string;
   createdAt: string;
   updatedAt: string;
@@ -54,6 +54,13 @@ export interface HomeData {
   cosmetics: Product[];
   hair: Product[];
   posts: Post[];
+}
+
+export interface CreatePostDto {
+  title: string;
+  content: string;
+  featuredImageUrl: string | null;
+  slug: string;
 }
 
 const MOCK_PRODUCTS: Product[] = [
@@ -176,6 +183,19 @@ export const api = {
     const post = MOCK_POSTS.find(p => p.slug === slug);
     if (!post) throw new Error('Post not found');
     return post;
+  },
+
+  async createPost(data: CreatePostDto): Promise<Post> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const newPost: Post = {
+      id: Math.random().toString(36).substr(2, 9),
+      ...data,
+      excerpt: data.content.slice(0, 150) + '...',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    MOCK_POSTS.push(newPost);
+    return newPost;
   },
 
   async getHomeData(): Promise<HomeData> {
