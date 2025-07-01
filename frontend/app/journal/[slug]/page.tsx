@@ -2,7 +2,14 @@ import { getPostBySlug } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
 
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+interface PageProps {
+  params: {
+    slug: string;
+  };
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default async function BlogPostPage({ params }: PageProps) {
   const post = await getPostBySlug(params.slug);
 
   if (!post) {
@@ -41,7 +48,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         </div>
 
         <Link 
-          href="/" 
+          href="/journal" 
           className="inline-flex items-center text-gray-600 hover:text-[#B7A16C] transition-colors duration-300 group"
         >
           <span className="mr-2 text-sm font-medium">←</span>
