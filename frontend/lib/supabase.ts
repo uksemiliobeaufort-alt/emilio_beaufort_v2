@@ -26,24 +26,21 @@ export const supabase = createClient(
 
 // Helper function to get public URL for an image in a bucket
 export const getImageUrl = (bucketName: string, path: string) => {
-  // Encode bucket name and path to handle spaces and special characters
-  const encodedBucketName = encodeURIComponent(bucketName);
-  const encodedPath = encodeURIComponent(path);
-  
   try {
+    // Get the public URL directly from Supabase
     const { data } = supabase.storage
       .from(bucketName)
       .getPublicUrl(path);
 
-    // If the URL contains spaces, encode them properly
-    if (data.publicUrl) {
-      // Replace any unencoded spaces in the final URL
-      return data.publicUrl.replace(/ /g, '%20');
+    if (!data.publicUrl) {
+      console.error('No public URL returned for', bucketName, path);
+      return '';
     }
-    
+
+    // Use the URL directly from Supabase
     return data.publicUrl;
   } catch (error) {
-    console.error('Error getting public URL:', error);
+    console.error('Error getting public URL:', error, 'for path:', path);
     return '';
   }
 };
