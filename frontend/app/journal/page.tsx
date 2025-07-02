@@ -37,12 +37,12 @@ export default function JournalPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-6 py-24">
+      <div className="max-w-7xl mx-auto px-6 py-12">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          className="text-center mb-8"
         >
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 mb-8">
             Journal
@@ -53,7 +53,7 @@ export default function JournalPage() {
         </motion.div>
 
         {/* Blog Posts Grid */}
-        <div className="mt-16">
+        <div className="mt-8">
           {posts.length > 0 ? (
             <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {posts.map((post) => (

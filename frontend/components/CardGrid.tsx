@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
+import { getImageUrl } from "@/lib/supabase";
+import { useState } from "react";
 
 const cardData = [
   { 
@@ -11,24 +13,31 @@ const cardData = [
     subtitle: "Premium Grooming Collection",
     description: "Discover our signature range of luxury grooming essentials, crafted with precision and care.",
     link: "/products/cosmetics",
-    image: "/images/Cosmetics Banner.jpeg"
+    image: getImageUrl('the-house', 'Cosmetics Banner.jpeg')
   },
   { 
     title: "Ormi Hear",
     subtitle: "Coming Soon",
     description: "Experience the future of personal care. Join the waitlist for our revolutionary new product line.",
     link: "/products/hear",
-    image: "/images/Ormi Hair.webp"
+    image: getImageUrl('the-house', 'Ormi Hair.webp')
   },
 ];
 
 export default function CardGrid() {
+  const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
+
   const handleClick = (link: string) => {
     if (link === "/products/hear") {
       window.location.href = "https://www.linkedin.com/company/emiliobeaufort/";
     } else {
       window.location.href = link;
     }
+  };
+
+  const handleImageError = (title: string) => {
+    console.error(`Failed to load image for ${title}`);
+    setImageErrors(prev => ({ ...prev, [title]: true }));
   };
 
   return (
@@ -48,13 +57,21 @@ export default function CardGrid() {
               {/* Image Section */}
               <div className="relative h-[300px] w-full overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
-                <Image
-                  src={card.image}
-                  alt={card.title}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  priority
-                />
+                {!imageErrors[card.title] ? (
+                  <Image
+                    src={card.image}
+                    alt={card.title}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    priority
+                    onError={() => handleImageError(card.title)}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-500">Image not available</span>
+                  </div>
+                )}
               </div>
 
               {/* Content Section */}
