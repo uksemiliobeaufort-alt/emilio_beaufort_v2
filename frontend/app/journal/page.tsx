@@ -7,11 +7,15 @@ import { motion } from "framer-motion";
 import { api, Post } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getImageUrl } from "@/lib/supabase";
 
 export default function JournalPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const defaultImage = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`;
+  const [imageError, setImageError] = useState<Record<string, boolean>>({});
+
+  // Get the default image URL from Supabase storage
+  const defaultImageUrl = getImageUrl('the-house', 'Cosmetics Banner.jpeg');
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -27,6 +31,35 @@ export default function JournalPage() {
 
     fetchPosts();
   }, []);
+
+  const handleImageError = (postId: string) => {
+    console.error(`Failed to load image for post ${postId}`);
+    setImageError(prev => ({ ...prev, [postId]: true }));
+  };
+
+  const getPostImage = (post: Post) => {
+    if (imageError[post.id]) {
+      return defaultImageUrl;
+    }
+    
+    if (post.featuredImageUrl) {
+      // If the featuredImageUrl is from Supabase storage, use getImageUrl
+      if (post.featuredImageUrl.includes('storage/v1/object')) {
+        try {
+          const url = new URL(post.featuredImageUrl);
+          const path = url.pathname.split('/public/')[1];
+          if (path) {
+            return getImageUrl('the-house', decodeURIComponent(path));
+          }
+        } catch (error) {
+          console.error('Error parsing featured image URL:', error);
+        }
+      }
+      return post.featuredImageUrl;
+    }
+    
+    return defaultImageUrl;
+  };
 
   if (loading) {
     return (
@@ -68,12 +101,13 @@ export default function JournalPage() {
                     <Card className="overflow-hidden hover:shadow-md transition cursor-pointer group">
                       <div className="relative aspect-[4/3]">
                         <Image
-                          src={post.featuredImageUrl || defaultImage}
+                          src={getPostImage(post)}
                           alt={post.title}
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           priority
+                          onError={() => handleImageError(post.id)}
                         />
                       </div>
                       <CardContent className="p-5">
