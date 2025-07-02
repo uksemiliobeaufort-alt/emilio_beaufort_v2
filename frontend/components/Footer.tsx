@@ -25,7 +25,7 @@ export function Footer() {
                 { name: 'Philosophy', href: '#philosophy' },
                 { name: 'The House', href: '#house' },
                 { name: 'Journal', href: '#journal' },
-                { name: 'Alliances', href: '#alliances' }
+                // { name: 'Alliances', href: '#alliances' }
               ].map((link) => (
                 <button
                   key={link.name}

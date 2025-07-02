@@ -12,6 +12,7 @@ import {
   SheetTitle
 } from '@/components/ui/sheet';
 import { Menu, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 
 const navItems = [
   { name: 'Philosophy', href: '#philosophy' },
@@ -23,6 +24,9 @@ const navItems = [
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+  const isHomePage = pathname === '/';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,11 +37,55 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setIsOpen(false);
+  // Effect to handle scrolling when redirected with a hash
+  useEffect(() => {
+    if (isHomePage && window.location.hash) {
+      const element = document.querySelector(window.location.hash);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [isHomePage]);
+
+  const handleNavigation = async (href: string) => {
+    setIsOpen(false);
+    
+    if (isHomePage) {
+      // If on home page, scroll to section
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // If not on home page, navigate to home page with hash and scroll
+      await router.push(`/${href}`);
+    }
+  };
+
+  const handleLogoClick = async () => {
+    if (isHomePage) {
+      const heroSection = document.querySelector('#hero');
+      if (heroSection) {
+        heroSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      await router.push('/');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePartnerClick = async () => {
+    setIsOpen(false);
+    
+    if (isHomePage) {
+      const alliancesSection = document.querySelector('#alliances');
+      if (alliancesSection) {
+        alliancesSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      await router.push('/#alliances');
     }
   };
 
@@ -57,7 +105,7 @@ export function Navbar() {
           {/* Logo */}
           <motion.div
             className="heading-premium text-2xl text-premium cursor-pointer"
-            onClick={() => scrollToSection('#hero')}
+            onClick={handleLogoClick}
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
           >
@@ -70,7 +118,7 @@ export function Navbar() {
               <motion.button
                 key={item.name}
                 className="font-sans-medium text-premium hover:text-gold transition-premium relative group"
-                onClick={() => scrollToSection(item.href)}
+                onClick={() => handleNavigation(item.href)}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
@@ -90,7 +138,7 @@ export function Navbar() {
             className="hidden md:block"
           >
             <Button
-              onClick={() => scrollToSection('#alliances')}
+              onClick={handlePartnerClick}
               className="btn-primary-premium"
               size="sm"
             >
@@ -126,14 +174,14 @@ export function Navbar() {
                   {navItems.map((item) => (
                     <button
                       key={item.name}
-                      onClick={() => scrollToSection(item.href)}
+                      onClick={() => handleNavigation(item.href)}
                       className="font-sans-medium text-lg text-premium hover:text-gold transition-premium text-left py-4 border-b border-gray-100 last:border-none"
                     >
                       {item.name}
                     </button>
                   ))}
                   <Button
-                    onClick={() => scrollToSection('#alliances')}
+                    onClick={handlePartnerClick}
                     className="btn-primary-premium w-full mt-8 py-6"
                   >
                     Partner With Us
