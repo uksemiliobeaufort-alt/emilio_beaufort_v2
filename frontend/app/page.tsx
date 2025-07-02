@@ -165,7 +165,7 @@ export default function Home() {
       </section>
 
       {/* Journal Section */}
-      <section id="journal" className="py-8 sm:py-10 md:py-12 lg:py-16 bg-premium">
+      <section id="journal" className="py-8 sm:py-10 md:py-16 lg:py-20 bg-premium">
         <div className="container-premium">
           {/* <motion.div
             initial={{ opacity: 0, y: 50 }}
