@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { savePartnershipInquiry } from "@/lib/supabase";
+import { savePartnershipInquiry, DuplicateEmailError } from "@/lib/supabase";
 import { Toaster, toast } from "sonner";
 
 const formSchema = z.object({
@@ -101,7 +101,9 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isDuplicateEmail, setIsDuplicateEmail] = useState(false);
   const [submittedName, setSubmittedName] = useState("");
+  const [submittedEmail, setSubmittedEmail] = useState("");
 
   // Validate form whenever fields change
   useEffect(() => {
@@ -169,21 +171,20 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
       setSubmittedName(data.fullName);
       setIsSuccess(true);
       form.reset();
-      
-      toast.success(
-        <div className="flex flex-col gap-1">
-          <p className="font-medium">Partnership inquiry submitted</p>
-          <p className="text-sm text-gray-600">We'll get back to you soon!</p>
-        </div>
-      );
+
     } catch (error) {
       console.error("Detailed submission error:", error);
-      toast.error(
-        <div className="flex flex-col gap-1">
-          <p className="font-medium">Failed to submit inquiry</p>
-          <p className="text-sm text-gray-600">Please try again. If the problem persists, contact support.</p>
-        </div>
-      );
+      if (error instanceof DuplicateEmailError) {
+        setSubmittedEmail(data.email);
+        setIsDuplicateEmail(true);
+      } else {
+        toast.error(
+          <div className="flex flex-col gap-1">
+            <p className="font-medium">Failed to submit inquiry</p>
+            <p className="text-sm text-gray-600">Please try again. If the problem persists, contact support.</p>
+          </div>
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -191,14 +192,16 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
 
   const handleClose = () => {
     setIsSuccess(false);
+    setIsDuplicateEmail(false);
     setSubmittedName("");
+    setSubmittedEmail("");
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
-        {!isSuccess ? (
+        {!isSuccess && !isDuplicateEmail ? (
           <>
             <DialogHeader>
               <DialogTitle className="text-2xl font-serif">Partner With Us</DialogTitle>
@@ -386,6 +389,27 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
               </Form>
             </div>
           </>
+        ) : isDuplicateEmail ? (
+          <div className="flex flex-col items-center py-8 text-center">
+            <div className="text-4xl mb-4">📬</div>
+            <h2 className="text-2xl font-serif mb-2">Already Received!</h2>
+            <div className="text-xl font-medium mb-4">
+              {submittedEmail} ✨
+            </div>
+            <div className="text-gray-600 mb-6">
+              We've already received your partnership inquiry.<br/>
+              Our team will get back to you soon!
+            </div>
+            <div className="flex gap-2 text-2xl mb-6">
+              ⭐ 📨 💫
+            </div>
+            <Button 
+              onClick={handleClose}
+              className="bg-accent hover:bg-accent/90 transition-colors"
+            >
+              Close
+            </Button>
+          </div>
         ) : (
           <div className="flex flex-col items-center py-8 text-center">
             <div className="text-4xl mb-4">🎉</div>
