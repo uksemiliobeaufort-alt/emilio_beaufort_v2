@@ -13,6 +13,7 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import { Cards } from "./Cards";
+import { supabase } from "@/lib/supabase";
 
 interface CardData {
   title: string;
@@ -29,7 +30,7 @@ const cardData: CardData[] = [
     description:
       "Discover our signature range of luxury grooming essentials, crafted with precision and care.",
     link: "/products/cosmetics",
-    image: "/images/Cosmetics Banner.jpeg"
+    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`
   },
   {
     title: "Ormi Hear",
@@ -37,7 +38,7 @@ const cardData: CardData[] = [
     description:
       "Experience the future of personal care. Join the waitlist for our revolutionary new product line.",
     link: "/products/hear",
-    image: "/images/Ormi Hair.webp"
+    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Ormi Hair.webp`
   },
 ];
 
