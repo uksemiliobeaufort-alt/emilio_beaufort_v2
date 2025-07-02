@@ -33,7 +33,7 @@ const cardData: CardData[] = [
     image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`
   },
   {
-    title: "Ormi Hear",
+    title: "ORMÉE Hair",
     subtitle: "Coming Soon",
     description:
       "Experience the future of personal care. Join the waitlist for our revolutionary new product line.",
