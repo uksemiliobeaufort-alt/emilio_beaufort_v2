@@ -8,9 +8,20 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
   throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_ANON_KEY');
 }
 
+// Create Supabase client with additional headers
 export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: false // Don't persist the session
+    },
+    global: {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  }
 );
 
 // Helper function to get public URL for an image in a bucket
@@ -51,4 +62,40 @@ export const uploadImage = async (bucketName: string, path: string, file: File) 
   }
 
   return data;
+};
+
+// Helper function to save partnership inquiry
+export const savePartnershipInquiry = async (data: {
+  name: string;
+  email: string;
+  company: string;
+  message: string;
+  inquiryType: string;
+}) => {
+  try {
+    const { data: result, error } = await supabase
+      .from('partnership_inquiries')
+      .insert([
+        {
+          full_name: data.name,
+          email: data.email,
+          company: data.company,
+          message: data.message,
+          inquiry_type: data.inquiryType,
+          created_at: new Date().toISOString(),
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Detailed error:', error);
+    throw error;
+  }
 }; 

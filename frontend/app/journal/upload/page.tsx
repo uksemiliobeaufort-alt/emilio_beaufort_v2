@@ -9,12 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { auth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 interface FormData {
   title: string;
   content: string;
   featuredImage: File | null;
-  excerpt: string;
 }
 
 export default function UploadBlogPage() {
@@ -23,7 +23,6 @@ export default function UploadBlogPage() {
     title: '',
     content: '',
     featuredImage: null,
-    excerpt: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -36,20 +35,51 @@ export default function UploadBlogPage() {
     }
   }, [router]);
 
+  const uploadImageToSupabase = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `journal/${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('the-house')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/${filePath}`;
+      return imageUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      let featuredImageUrl = null;
+      if (formData.featuredImage) {
+        featuredImageUrl = await uploadImageToSupabase(formData.featuredImage);
+        if (!featuredImageUrl) {
+          throw new Error('Failed to upload image');
+        }
+      }
+
       await api.createPost({
         title: formData.title,
         content: formData.content,
-        featuredImageUrl: formData.featuredImage ? URL.createObjectURL(formData.featuredImage) : null,
+        featuredImageUrl,
         slug: formData.title.toLowerCase().replace(/\s+/g, '-'),
       });
 
       toast.success('Post created successfully!');
       router.push('/journal');
-    } catch {
+    } catch (error) {
+      console.error('Error creating post:', error);
       toast.error('Failed to create post');
     } finally {
       setIsSubmitting(false);
@@ -58,9 +88,19 @@ export default function UploadBlogPage() {
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
+      const file = e.target.files[0];
+      // Validate file type and size
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
       setFormData((prev: FormData) => ({
         ...prev,
-        featuredImage: e.target.files![0]
+        featuredImage: file
       }));
     }
   };
@@ -95,16 +135,6 @@ export default function UploadBlogPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="excerpt">Excerpt</Label>
-            <Textarea
-              id="excerpt"
-              value={formData.excerpt}
-              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFormData((prev: FormData) => ({ ...prev, excerpt: e.target.value }))}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="content">Content</Label>
             <Textarea
               id="content"
@@ -116,7 +146,7 @@ export default function UploadBlogPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="featuredImage">Featured Image</Label>
+            <Label htmlFor="featuredImage">Featured Image (Max 5MB)</Label>
             <Input
               id="featuredImage"
               type="file"
@@ -126,8 +156,12 @@ export default function UploadBlogPage() {
             />
           </div>
 
-          <Button type="submit" className="w-full mt-8" disabled={isSubmitting}>
-            Upload Blog Post
+          <Button 
+            type="submit" 
+            className="w-full mt-8" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Uploading...' : 'Upload Blog Post'}
           </Button>
         </form>
       </div>

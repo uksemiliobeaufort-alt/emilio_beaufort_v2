@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 export default function JournalPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const defaultImage = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`;
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -67,12 +68,12 @@ export default function JournalPage() {
                     <Card className="overflow-hidden hover:shadow-md transition cursor-pointer group">
                       <div className="relative aspect-[4/3]">
                         <Image
-                          src={post.featuredImageUrl || '/images/placeholder.jpg'}
+                          src={post.featuredImageUrl || defaultImage}
                           alt={post.title}
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          placeholder="blur"
-                          blurDataURL="/placeholder.jpg"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          priority
                         />
                       </div>
                       <CardContent className="p-5">

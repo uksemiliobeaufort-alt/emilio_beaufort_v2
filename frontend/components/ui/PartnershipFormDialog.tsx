@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
-import { api } from "@/lib/api";
+import { savePartnershipInquiry } from "@/lib/supabase";
 import { Toaster, toast } from "sonner";
 
 const formSchema = z.object({
@@ -160,15 +160,22 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
         console.error('Cache save error:', cacheError);
       }
 
-      // Make the API call
-      console.log('Making API call...');
-      const response = await api.submitPartnershipInquiry(submissionData);
-      console.log('API Response:', response);
+      // Save to Supabase
+      console.log('Saving to Supabase...');
+      await savePartnershipInquiry(submissionData);
+      console.log('Data saved to Supabase successfully');
 
       // Show success message
       setSubmittedName(data.fullName);
       setIsSuccess(true);
       form.reset();
+      
+      toast.success(
+        <div className="flex flex-col gap-1">
+          <p className="font-medium">Partnership inquiry submitted</p>
+          <p className="text-sm text-gray-600">We'll get back to you soon!</p>
+        </div>
+      );
     } catch (error) {
       console.error("Detailed submission error:", error);
       toast.error(
