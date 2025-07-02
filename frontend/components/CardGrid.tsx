@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, X } from "lucide-react";
 import Image from "next/image";
@@ -14,7 +14,15 @@ import {
 } from "@/components/ui/dialog";
 import { Cards } from "./Cards";
 
-const cardData = [
+interface CardData {
+  title: string;
+  subtitle: string;
+  description: string;
+  link: string;
+  image: string;
+}
+
+const cardData: CardData[] = [
   {
     title: "Emilio Cosmetics",
     subtitle: "Premium Grooming Collection",

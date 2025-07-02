@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,19 @@ import { auth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 
+interface FormData {
+  title: string;
+  content: string;
+  featuredImage: File | null;
+  excerpt: string;
+}
+
 export default function UploadBlogPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     content: '',
-    featuredImage: null as File | null,
+    featuredImage: null,
     excerpt: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,10 +36,9 @@ export default function UploadBlogPage() {
     }
   }, [router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
       await api.createPost({
         title: formData.title,
@@ -50,9 +56,9 @@ export default function UploadBlogPage() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
-      setFormData(prev => ({
+      setFormData((prev: FormData) => ({
         ...prev,
         featuredImage: e.target.files![0]
       }));
@@ -83,7 +89,7 @@ export default function UploadBlogPage() {
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData((prev: FormData) => ({ ...prev, title: e.target.value }))}
               required
             />
           </div>
@@ -93,7 +99,7 @@ export default function UploadBlogPage() {
             <Textarea
               id="excerpt"
               value={formData.excerpt}
-              onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
+              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFormData((prev: FormData) => ({ ...prev, excerpt: e.target.value }))}
               required
             />
           </div>
@@ -103,7 +109,7 @@ export default function UploadBlogPage() {
             <Textarea
               id="content"
               value={formData.content}
-              onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFormData((prev: FormData) => ({ ...prev, content: e.target.value }))}
               className="min-h-[300px]"
               required
             />
