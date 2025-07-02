@@ -2,9 +2,17 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
+import { 
+  Dialog, 
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose
+} from "@/components/ui/dialog";
+import { Cards } from "./Cards";
 
 const cardData = [
   {
@@ -26,17 +34,16 @@ const cardData = [
 ];
 
 export default function CardGrid() {
-  const handleClick = (link: string) => {
-    if (link === "/products/hear") {
-      window.location.href = "https://www.linkedin.com/company/emiliobeaufort/";
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleClick = (link: string, title: string) => {
+    if (title === "Emilio Cosmetics") {
+      setIsModalOpen(true);
+    } else if (link === "/products/hear") {
+      window.open("https://www.linkedin.com/company/emiliobeaufort/", "_blank");
     } else {
       window.location.href = link;
     }
-  };
-
-  const handleImageError = (title: string) => {
-    console.error(`Failed to load image for ${title}`);
-    setImageErrors(prev => ({ ...prev, [title]: true }));
   };
 
   return (
@@ -50,26 +57,20 @@ export default function CardGrid() {
             transition={{ duration: 1, delay: index * 0.2, ease: "easeOut" }}
             viewport={{ once: true }}
             className="group cursor-pointer"
+            onClick={() => handleClick(card.link, card.title)}
           >
             <Card className="relative overflow-hidden bg-white border-0 shadow-lg transition-all duration-500 hover:shadow-xl group-hover:border-2 group-hover:border-[#B7A16C]">
               {/* Image */}
               <div className="relative h-[300px] w-full overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
-                {!imageErrors[card.title] ? (
-                  <Image
-                    src={card.image}
-                    alt={card.title}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    priority
-                    onError={() => handleImageError(card.title)}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-500">Image not available</span>
-                  </div>
-                )}
+                <Image
+                  src={card.image}
+                  alt={card.title}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
               </div>
 
               {/* Content */}
@@ -87,10 +88,7 @@ export default function CardGrid() {
                     {card.description}
                   </p>
 
-                  <div
-                    className="pt-4 flex items-center space-x-2 text-gray-600 group-hover:text-black transition-colors duration-300"
-                    onClick={() => handleClick(card.link, card.title)}
-                  >
+                  <div className="pt-4 flex items-center space-x-2 text-gray-600 group-hover:text-black transition-colors duration-300">
                     <span className="text-sm uppercase tracking-wider font-medium">
                       Explore Collection
                     </span>
@@ -107,57 +105,24 @@ export default function CardGrid() {
       </div>
 
       {/* Modal for Emilio Cosmetics */}
-      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <Box
-          sx={{
-            width: "90vw",
-            maxHeight: "90vh",
-            overflowY: "auto",
-            margin: "5vh auto",
-            backgroundColor: "white",
-            borderRadius: 2,
-            p: 4,
-            boxShadow: 24,
-          }}
-        >
-          <Box mb={4}>
-            <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  backgroundColor: "#ff5f57",
-                  cursor: "pointer",
-                }}
-                onClick={() => setIsModalOpen(false)}
-              />
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  backgroundColor: "#ffbd2e",
-                }}
-              />
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  backgroundColor: "#28ca41",
-                }}
-              />
-            </Box>
-            <Typography variant="h4" align="center">
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[900px]">
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-serif text-center">
               Cosmetics Collection
-            </Typography>
-          </Box>
+            </DialogTitle>
+            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+          </DialogHeader>
 
           {/* Cosmetics Product Grid */}
-          <Cards />
-        </Box>
-      </Modal>
+          <div className="mt-6">
+            <Cards />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
