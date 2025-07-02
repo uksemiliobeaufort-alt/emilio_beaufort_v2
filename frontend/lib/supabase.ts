@@ -64,6 +64,14 @@ export const uploadImage = async (bucketName: string, path: string, file: File) 
   return data;
 };
 
+// Custom error class for duplicate email
+export class DuplicateEmailError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DuplicateEmailError';
+  }
+}
+
 // Helper function to save partnership inquiry
 export const savePartnershipInquiry = async (data: {
   name: string;
@@ -73,6 +81,19 @@ export const savePartnershipInquiry = async (data: {
   inquiryType: string;
 }) => {
   try {
+    // First, check if an inquiry with this email already exists
+    const { data: existingInquiry } = await supabase
+      .from('partnership_inquiries')
+      .select('email')
+      .eq('email', data.email)
+      .single();
+
+    if (existingInquiry) {
+      throw new DuplicateEmailError(
+        'An inquiry with this email already exists. We will get back to you soon.'
+      );
+    }
+
     const { data: result, error } = await supabase
       .from('partnership_inquiries')
       .insert([
@@ -89,6 +110,12 @@ export const savePartnershipInquiry = async (data: {
       .single();
 
     if (error) {
+      // Check if the error is a unique constraint violation
+      if (error.code === '23505') {
+        throw new DuplicateEmailError(
+          'An inquiry with this email already exists. We will get back to you soon.'
+        );
+      }
       console.error('Supabase error:', error);
       throw error;
     }
