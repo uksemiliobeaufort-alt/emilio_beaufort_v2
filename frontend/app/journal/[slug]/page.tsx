@@ -1,3 +1,5 @@
+"use client";
+
 import { getPostBySlug } from "@/lib/api";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,6 +12,8 @@ type Props = {
 
 export default async function BlogPostPage({ params }: Props) {
   const post = await getPostBySlug(params.slug);
+
+  const defaultImage = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`;
 
   if (!post) {
     return (
@@ -38,11 +42,12 @@ export default async function BlogPostPage({ params }: Props) {
 
             <div className="relative w-full aspect-video rounded-md overflow-hidden mb-10">
               <Image
-                src={post.featuredImageUrl || '/images/Cosmetics Banner.jpeg'}
+                src={post.featuredImageUrl || defaultImage}
                 alt={post.title}
                 fill
                 className="object-cover"
                 priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             </div>
 
