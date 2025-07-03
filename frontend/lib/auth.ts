@@ -97,26 +97,26 @@ export const auth = {
           stored: emailCheck.password
         });
         throw new AuthError('Invalid email or password');
-      }
-
-      const authenticatedUser: AuthUser = {
-        id: emailCheck.id,
-        password: emailCheck.password,
-        created_at: emailCheck.created_at,
-        email: emailCheck.email
-      };
-
       auth.user = authenticatedUser;
       
-      // Store in session storage with expiry (24 hours)
-      const expiryTime = Date.now() + (24 * 60 * 60 * 1000);
-      sessionStorage.setItem('user', JSON.stringify({ 
-        ...authenticatedUser,
-        expiryTime 
-      }));
+      // Store in session storage with expiry (24 hours) - client side only
+      if (typeof window !== 'undefined') {
+        const expiryTime = Date.now() + (24 * 60 * 60 * 1000);
+        sessionStorage.setItem('user', JSON.stringify({ 
+          ...authenticatedUser,
+          expiryTime 
+        }));
+      }
       
       return authenticatedUser;
-  // Initialize auth state from session storage (client-side only)
+    } catch (error) {
+      console.error('Login process error:', error);
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      throw new AuthError('An error occurred during login');
+    }
+  },
   init: () => {
     // Only run on client side
     if (typeof window === 'undefined') return;
