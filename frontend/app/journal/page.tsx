@@ -101,13 +101,10 @@ export default function JournalPage() {
                     <Card className="overflow-hidden hover:shadow-md transition cursor-pointer group">
                       <div className="relative aspect-[4/3]">
                         <Image
-                          src={getPostImage(post)}
+                          src={post.featuredImageUrl || 'Cosmetics_Banner.jpeg'}
                           alt={post.title}
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          priority
-                          onError={() => handleImageError(post.id)}
                         />
                       </div>
                       <CardContent className="p-5">
