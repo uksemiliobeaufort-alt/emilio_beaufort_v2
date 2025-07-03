@@ -126,4 +126,118 @@ export const savePartnershipInquiry = async (data: {
     console.error('Detailed error:', error);
     throw error;
   }
+};
+
+// Analytics Types
+export interface PageView {
+  id: string;
+  page_path: string;
+  user_agent: string;
+  referrer: string;
+  created_at: string;
+}
+
+export interface DailyStats {
+  date: string;
+  count: number;
+  hour?: number;
+}
+
+// Track page view with debug logging
+export const trackPageView = async (pagePath: string) => {
+  console.log('Tracking page view for:', pagePath); // Debug log
+
+  // Don't track admin pages
+  if (pagePath.startsWith('/admin')) {
+    console.log('Skipping admin page tracking'); // Debug log
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('page_views')
+      .insert([
+        {
+          page_path: pagePath,
+          user_agent: window.navigator.userAgent,
+          referrer: document.referrer || 'direct',
+        }
+      ])
+      .select();
+
+    if (error) {
+      console.error('Error tracking page view:', error); // Debug log
+      throw error;
+    }
+
+    console.log('Successfully tracked page view:', data); // Debug log
+    return data;
+  } catch (error) {
+    console.error('Failed to track page view:', error);
+    // Don't throw error to prevent breaking the app
+    return null;
+  }
+};
+
+// Get daily traffic data with debug logging
+export const getDailyTraffic = async (days: number = 7): Promise<DailyStats[]> => {
+  console.log('Fetching daily traffic for last', days, 'days'); // Debug log
+  
+  const now = new Date();
+  const startDate = new Date(now.setDate(now.getDate() - days));
+
+  try {
+    const { data, error } = await supabase
+      .from('page_views')
+      .select('created_at')
+      .gte('created_at', startDate.toISOString())
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching traffic data:', error); // Debug log
+      throw error;
+    }
+
+    console.log('Raw traffic data:', data); // Debug log
+
+    // Group by day
+    const dailyStats = data?.reduce((acc: { [key: string]: number }, view) => {
+      const date = new Date(view.created_at).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      });
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Convert to array and sort by date
+    const result = Object.entries(dailyStats || {})
+      .map(([date, count]) => ({
+        date,
+        count,
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    console.log('Processed traffic data:', result); // Debug log
+    return result;
+  } catch (error) {
+    console.error('Error fetching daily traffic:', error);
+    return [];
+  }
+};
+
+// Subscribe to real-time page views
+export const subscribeToPageViews = (callback: (payload: any) => void) => {
+  return supabase
+    .channel('page_views_channel')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'page_views',
+      },
+      callback
+    )
+    .subscribe();
 }; 
