@@ -1,4 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
+
+
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
   throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_URL');
