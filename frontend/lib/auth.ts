@@ -116,22 +116,11 @@ export const auth = {
       }));
       
       return authenticatedUser;
-    } catch (error) {
-      console.error('Login process error:', error);
-      if (error instanceof AuthError) {
-        throw error;
-      }
-      throw new AuthError('An error occurred during login');
-    }
-  },
-
-  logout: () => {
-    auth.user = null;
-    sessionStorage.removeItem('user');
-  },
-
-  // Initialize auth state from session storage
+  // Initialize auth state from session storage (client-side only)
   init: () => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     try {
       const storedData = sessionStorage.getItem('user');
       if (storedData) {
@@ -154,5 +143,15 @@ export const auth = {
   // Check if user is authenticated and is an admin
   isAdmin: (): boolean => {
     return !!auth.user?.id;
+  },
+
+  logout: () => {
+    auth.user = null;
+    // Only access sessionStorage on client side
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('user');
+    }
   }
-}; 
+};
+
+
