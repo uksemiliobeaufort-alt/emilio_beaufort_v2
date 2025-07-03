@@ -6,6 +6,8 @@ import {
   CardContent,
   Typography
 } from '@mui/material';
+import { Box, Button } from '@mui/material';
+
 
 export default function ProductCard({ title, price, image, desc }) {
   return (
@@ -49,13 +51,15 @@ export default function ProductCard({ title, price, image, desc }) {
             {desc}
           </Typography>
 
-          <Typography
-            variant="subtitle2"
-            color="primary"
-            fontWeight="bold"
-          >
-            {price}
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Typography variant="subtitle2" color="primary" fontWeight="bold">
+           {price}
           </Typography>
+          <Button variant="contained" size="small" sx={{ ml: 1 }}>
+               Buy
+          </Button>
+         </Box>
+
         </CardContent>
       </CardActionArea>
     </Card>

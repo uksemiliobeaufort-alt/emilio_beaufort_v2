@@ -1,7 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import ProductCard from './ProductCard';
-import { Box, IconButton } from '@mui/material';
-import { ArrowBackIos, ArrowForwardIos } from '@mui/icons-material';
+import { Box, Button } from '@mui/material';
 
 const products = [
   {
@@ -39,92 +38,85 @@ const products = [
     price: '$85',
     image: '/images/product2.jpg',
   },
+  {
+    id: 6,
+    name: 'Toner',
+    desc: 'Refresh and hydrate skin',
+    price: '$60',
+    image: '/images/product1.jpg',
+  },
+  {
+    id: 7,
+    name: 'Moisturizer',
+    desc: 'Long-lasting hydration formula',
+    price: '$95',
+    image: '/images/product2.jpg',
+  },
+  {
+    id: 8,
+    name: 'Face Wash',
+    desc: 'Gentle cleanser for all skin types',
+    price: '$40',
+    image: '/images/product1.jpg',
+  },
 ];
 
 const Cards = () => {
-  const containerRef = useRef(null);
-  const [index, setIndex] = useState(0); // tracks current scroll group
-  const visibleCards = 3;
-  const cardWidth = 320 + 16; // card width + gap (16px)
+  const [viewMore, setViewMore] = useState(false);
 
-  const scrollToIndex = (i) => {
-    const scrollX = i * cardWidth;
-    containerRef.current.scrollTo({
-      left: scrollX,
-      behavior: 'smooth',
-    });
-  };
-
-  const handleNext = () => {
-    if (index < products.length - visibleCards) {
-      const newIndex = index + 1;
-      setIndex(newIndex);
-      scrollToIndex(newIndex);
-    }
-  };
-
-  const handlePrev = () => {
-    if (index > 0) {
-      const newIndex = index - 1;
-      setIndex(newIndex);
-      scrollToIndex(newIndex);
-    }
-  };
+  const displayedProducts = viewMore ? products : products.slice(0, 6);
 
   return (
-    <Box sx={{ position: 'relative', maxWidth: 980, mx: 'auto' }}>
-      {/* Scrollable Card Row */}
-      <Box
-        ref={containerRef}
-        sx={{
-          display: 'flex',
-          overflowX: 'hidden', // hidden, controlled via buttons
-          gap: 2,
-          py: 2,
-        }}
-      >
-        {products.map((product) => (
-          <Box key={product.id} sx={{ flex: '0 0 auto' }}>
-            <ProductCard
-              title={product.name}
-              price={product.price}
-              desc={product.desc}
-              image={product.image}
-            />
-          </Box>
-        ))}
-      </Box>
+    <Box
+      sx={{
+        // ✅ Scroll sirf viewMore ke baad enable
+        maxHeight: viewMore ? '65vh' : 'none',
+        overflowY: viewMore ? 'auto' : 'visible',
+        px: 2,
+        pb: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+      }}
+    >
+      {/* Product rows - always 3 per row */}
+      {Array.from({ length: Math.ceil(displayedProducts.length / 3) }, (_, rowIndex) => (
+        <Box
+          key={rowIndex}
+          sx={{
+            display: 'flex',
+            gap: 2,
+            justifyContent: 'center',
+          }}
+        >
+          {displayedProducts
+            .slice(rowIndex * 3, rowIndex * 3 + 3)
+            .map((product) => (
+              <Box key={product.id}>
+                <ProductCard
+                  title={product.name}
+                  price={product.price}
+                  desc={product.desc}
+                  image={product.image}
+                />
+              </Box>
+            ))}
+        </Box>
+      ))}
 
-      {/* Navigation Arrows */}
-      <IconButton
-        onClick={handlePrev}
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          left: -30,
-          transform: 'translateY(-50%)',
-          zIndex: 2,
-        }}
-        disabled={index === 0}
-      >
-        <ArrowBackIos />
-      </IconButton>
-
-      <IconButton
-        onClick={handleNext}
-        sx={{
-          position: 'absolute',
-          top: '50%',
-          right: -30,
-          transform: 'translateY(-50%)',
-          zIndex: 2,
-        }}
-        disabled={index >= products.length - visibleCards}
-      >
-        <ArrowForwardIos />
-      </IconButton>
+      {/* View More Button */}
+      {!viewMore && (
+        <Box mt={2} display="flex" justifyContent="flex-end">
+          <Button variant="outlined" onClick={() => setViewMore(true)}>
+            View More
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };
 
 export default Cards;
+
+
+

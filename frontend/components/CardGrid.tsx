@@ -103,57 +103,47 @@ export default function CardGrid() {
       </div>
 
       {/* Modal for Emilio Cosmetics */}
-      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+       <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+  <Box
+    sx={{
+      width: '90vw',
+      maxWidth: 1200,
+      height: 'auto',
+      maxHeight: 'none', // 
+      overflow: 'visible', //  No scroll initially
+      margin: '3vh auto',   // ⬅ adjust top margin to allow more vertical room
+      backgroundColor: 'white',
+      borderRadius: 2,
+      p: 4,
+      boxShadow: 24,
+    }}
+  >
+    <Box mb={4}>
+      <Box display="flex" alignItems="center" gap={1} mb={2}>
         <Box
           sx={{
-            width: "90vw",
-            maxHeight: "90vh",
-            overflowY: "auto",
-            margin: "5vh auto",
-            backgroundColor: "white",
-            borderRadius: 2,
-            p: 4,
-            boxShadow: 24,
+            width: 12,
+            height: 12,
+            borderRadius: '50%',
+            backgroundColor: '#ff5f57',
+            cursor: 'pointer',
           }}
-        >
-          <Box mb={4}>
-            <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  backgroundColor: "#ff5f57",
-                  cursor: "pointer",
-                }}
-                onClick={() => setIsModalOpen(false)}
-              />
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  backgroundColor: "#ffbd2e",
-                }}
-              />
-              <Box
-                sx={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  backgroundColor: "#28ca41",
-                }}
-              />
-            </Box>
-            <Typography variant="h4" align="center">
-              Cosmetics Collection
-            </Typography>
-          </Box>
+          onClick={() => setIsModalOpen(false)}
+        />
+        <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#ffbd2e' }} />
+        <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#28ca41' }} />
+      </Box>
+      <Typography variant="h4" align="center">
+        Cosmetics Collection
+      </Typography>
+    </Box>
 
-          {/* Cosmetics Product Grid */}
-          <Cards />
-        </Box>
-      </Modal>
+    {/* Cards Section */}
+    <Cards />
+  </Box>
+</Modal>
+
+
     </>
   );
 }
