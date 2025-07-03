@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogClose
 } from "@/components/ui/dialog";
-import { Cards } from "./Cards";
+// import { Cards } from "./Cards";
 import { supabase } from "@/lib/supabase";
 
 interface CardData {
@@ -116,7 +116,7 @@ export default function CardGrid() {
       </div>
 
       {/* Modal for Emilio Cosmetics */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      {/* <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
           <DialogHeader className="mb-3">
             <DialogTitle className="text-2xl font-serif text-center">
@@ -128,12 +128,12 @@ export default function CardGrid() {
             </DialogClose>
           </DialogHeader>
 
-          {/* Cosmetics Product Grid */}
+          {/* Cosmetics Product Grid }
           <div className="mt-2">
             <Cards />
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </section>
   );
 }

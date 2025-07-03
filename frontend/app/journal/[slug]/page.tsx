@@ -1,19 +1,78 @@
 "use client";
 
-import { getPostBySlug } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { getPostBySlug, Post } from "@/lib/api";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
+import { getImageUrl } from "@/lib/supabase";
 
 type Props = {
   params: { slug: string };
   searchParams: { [key: string]: string | string[] | undefined };
 };
 
-export default async function BlogPostPage({ params }: Props) {
-  const post = await getPostBySlug(params.slug);
+export default function BlogPostPage({ params }: Props) {
+  const router = useRouter();
+  const [post, setPost] = useState<Post | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
-  const defaultImage = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`;
+  // Get the default image URL from Supabase storage
+  const defaultImageUrl = getImageUrl('the-house', 'Cosmetics Banner.jpeg');
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const data = await getPostBySlug(params.slug);
+        setPost(data);
+      } catch (error) {
+        console.error("Failed to fetch post:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [params.slug]);
+
+  const handleImageError = () => {
+    console.error('Failed to load post image');
+    setImageError(true);
+  };
+
+  const getPostImage = (featuredImageUrl: string | null) => {
+    if (imageError || !featuredImageUrl) {
+      return defaultImageUrl;
+    }
+    
+    // If the featuredImageUrl is from Supabase storage, use getImageUrl
+    if (featuredImageUrl.includes('storage/v1/object')) {
+      try {
+        const url = new URL(featuredImageUrl);
+        const path = url.pathname.split('/public/')[1];
+        if (path) {
+          return getImageUrl('the-house', decodeURIComponent(path));
+        }
+      } catch (error) {
+        console.error('Error parsing featured image URL:', error);
+      }
+    }
+    
+    return featuredImageUrl;
+  };
+
+  const handleBack = () => {
+    router.back();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-2xl font-serif text-gray-900">Loading...</div>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -42,12 +101,13 @@ export default async function BlogPostPage({ params }: Props) {
 
             <div className="relative w-full aspect-video rounded-md overflow-hidden mb-10">
               <Image
-                src={post.featuredImageUrl || defaultImage}
+                src={getPostImage(post.featuredImageUrl)}
                 alt={post.title}
                 fill
                 className="object-cover"
                 priority
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                onError={handleImageError}
               />
             </div>
 
@@ -55,13 +115,13 @@ export default async function BlogPostPage({ params }: Props) {
               {post.content}
             </div>
 
-            <Link 
-              href="/" 
+            <button 
+              onClick={handleBack}
               className="inline-flex items-center text-gray-600 hover:text-[#B7A16C] transition-colors duration-300 group"
             >
               <span className="mr-2 text-sm font-medium">←</span>
               <span className="text-sm font-medium group-hover:underline">Back to Journal</span>
-            </Link>
+            </button>
           </article>
         </div>
       </main>
