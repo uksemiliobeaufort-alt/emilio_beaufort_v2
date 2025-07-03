@@ -67,12 +67,10 @@ export default function JournalPage() {
                     <Card className="overflow-hidden hover:shadow-md transition cursor-pointer group">
                       <div className="relative aspect-[4/3]">
                         <Image
-                          src={post.featuredImageUrl || '/images/placeholder.jpg'}
+                          src={post.featuredImageUrl || 'Cosmetics_Banner.jpeg'}
                           alt={post.title}
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          placeholder="blur"
-                          blurDataURL="/placeholder.jpg"
                         />
                       </div>
                       <CardContent className="p-5">

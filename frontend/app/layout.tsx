@@ -5,6 +5,7 @@ import PageTransitionProgressBar from "@/components/PageTransitionProgressBar";
 import { Navbar } from "@/components/Navbar";
 // import { Footer } from "@/components/Footer";
 import { Suspense } from "react";
+import { BagProvider } from '@/components/BagContext';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
@@ -34,11 +35,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>
-        <ClientLayout>
-          <main>
-            {children}
-          </main>
-        </ClientLayout>
+        <BagProvider>
+          <ClientLayout>
+            <main>
+              {children}
+            </main>
+          </ClientLayout>
+        </BagProvider>
       </body>
     </html>
   );

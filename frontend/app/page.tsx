@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import Journal from './journal/page';
 import CardGrid from '@/components/CardGrid';
 import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
+import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -43,9 +44,8 @@ export default function Home() {
       
       {/* Hero Section */}
       <section id="hero" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-premium">
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100"></div>
         <motion.div 
-          className="relative z-10 text-center px-6 max-w-5xl mx-auto"
+          className="relative z-10 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
@@ -54,14 +54,14 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.3 }}
-            className="mb-8"
+            className="mb-4 w-full"
           >
-            <h1 className="text-7xl md:text-9xl font-serif font-bold text-premium mb-8 leading-tight tracking-tight">
+            <h1 className="text-7xl md:text-9xl font-serif font-bold text-black mb-4 leading-tight tracking-tight text-center w-full">
               Emilio Beaufort
             </h1>
           </motion.div>
           <motion.p 
-            className="text-xl md:text-2xl body-premium mb-16 max-w-3xl mx-auto leading-relaxed"
+            className="text-xl md:text-2xl body-premium mb-8 max-w-3xl leading-relaxed text-center mx-auto"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6 }}
@@ -72,10 +72,11 @@ export default function Home() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.9 }}
+            className="w-full flex justify-center"
           >
-            <Button 
-              size="lg" 
-              className="btn-primary-premium text-lg px-12 py-6 text-base font-sans-medium"
+            <Button
+              size="lg"
+              className="text-lg px-12 py-6 text-base font-sans-medium transition-colors duration-200 bg-black text-white hover:bg-white hover:text-black border border-white"
               onClick={() => document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Discover Our Philosophy
@@ -83,6 +84,9 @@ export default function Home() {
           </motion.div>
         </motion.div>
       </section>
+
+      {/* Exclusive Products Marquee Section */}
+      <ExclusiveProductsMarquee />
 
       {/* Philosophy Section */}
       <section id="philosophy" className="section-padding bg-premium">
