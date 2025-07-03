@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import Journal from './journal/page';
 import CardGrid from '@/components/CardGrid';
 import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
+import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -54,12 +55,9 @@ export default function Home() {
       <Navbar />
       
       {/* Hero Section */}
-      <section id="hero" className="min-h-[80vh] sm:min-h-screen flex items-center justify-center relative overflow-hidden section-premium">
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-[#fafafa] to-[#f5f5f5]"></div>
-        <div className="absolute inset-0 bg-pattern-diagonal opacity-[0.15]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#111111_0%,_transparent_60%)] opacity-[0.02]"></div>
+      <section id="hero" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-premium">
         <motion.div 
-          className="relative z-10 text-center px-6 max-w-5xl mx-auto"
+          className="relative z-10 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
@@ -68,14 +66,14 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.3 }}
-            className="mb-6 sm:mb-8"
+            className="mb-4 w-full"
           >
-            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-serif font-bold text-premium mb-6 sm:mb-8 leading-tight tracking-tight heading-shadow-lg decor-corner">
+            <h1 className="text-7xl md:text-9xl font-serif font-bold text-black mb-4 leading-tight tracking-tight text-center w-full">
               Emilio Beaufort
             </h1>
           </motion.div>
           <motion.p 
-            className="text-lg sm:text-xl md:text-2xl body-premium mb-10 sm:mb-16 max-w-3xl mx-auto leading-relaxed"
+            className="text-xl md:text-2xl body-premium mb-8 max-w-3xl leading-relaxed text-center mx-auto"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6 }}
@@ -86,10 +84,11 @@ export default function Home() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.9 }}
+            className="w-full flex justify-center"
           >
-            <Button 
-              size="lg" 
-              className="btn-primary-premium text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 font-sans-medium"
+            <Button
+              size="lg"
+              className="text-lg px-12 py-6 text-base font-sans-medium transition-colors duration-200 bg-black text-white hover:bg-white hover:text-black border border-white"
               onClick={() => document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Discover Our Philosophy
@@ -97,6 +96,9 @@ export default function Home() {
           </motion.div>
         </motion.div>
       </section>
+
+      {/* Exclusive Products Marquee Section */}
+      <ExclusiveProductsMarquee />
 
       {/* Philosophy Section */}
       <section id="philosophy" className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-hidden section-premium">
