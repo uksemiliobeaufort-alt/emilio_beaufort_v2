@@ -101,7 +101,7 @@ export function Navbar() {
       transition={{ duration: 0.8, ease: "easeOut" }}
     >
       <div className="container-premium">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <motion.div
             className="heading-premium text-2xl text-premium cursor-pointer"
