@@ -647,3 +647,67 @@
 .animate-blob {
   animation: blob 7s infinite;
 }
+
+/* Rich text editor content formatting */
+.line-clamp-3 strong {
+  font-weight: bold !important;
+}
+
+.line-clamp-3 em {
+  font-style: italic !important;
+}
+
+.line-clamp-3 u {
+  text-decoration: underline !important;
+}
+
+.line-clamp-3 p {
+  margin: 0.125rem 0;
+  display: inline;
+}
+
+.line-clamp-3 h1,
+.line-clamp-3 h2,
+.line-clamp-3 h3,
+.line-clamp-3 h4,
+.line-clamp-3 h5,
+.line-clamp-3 h6 {
+  font-weight: bold !important;
+  display: inline;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+.line-clamp-3 ul,
+.line-clamp-3 ol {
+  padding-left: 1rem;
+  display: inline;
+}
+
+.line-clamp-3 li {
+  list-style-type: disc;
+  display: inline;
+}
+
+/* TipTap color preservation */
+.line-clamp-3 [style*="color:"] {
+  color: inherit !important;
+}
+
+.line-clamp-3 [style*="color: rgb(239, 68, 68)"],
+.line-clamp-3 [style*="color: #ef4444"],
+.line-clamp-3 [style*="color: red"] {
+  color: #ef4444 !important;
+}
+
+.line-clamp-3 [style*="color: rgb(59, 130, 246)"],
+.line-clamp-3 [style*="color: #3b82f6"],
+.line-clamp-3 [style*="color: blue"] {
+  color: #3b82f6 !important;
+}
+
+.line-clamp-3 [style*="color: rgb(16, 185, 129)"],
+.line-clamp-3 [style*="color: #10b981"],
+.line-clamp-3 [style*="color: green"] {
+  color: #10b981 !important;
+}

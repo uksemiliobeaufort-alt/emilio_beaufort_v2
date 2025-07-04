@@ -8,26 +8,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-// Create client with special headers to bypass RLS
+// Create Supabase client
 const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: false
-  },
-  global: {
-    headers: {
-      'apikey': supabaseAnonKey,
-      'Authorization': `Bearer ${supabaseAnonKey}`
-    }
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
   }
 });
 
 export interface AuthUser {
   id: number;
-  password: string;
-  created_at: string;
   email: string;
+  created_at: string;
 }
 
 export class AuthError extends Error {
@@ -42,81 +35,63 @@ export const auth = {
 
   login: async (email: string, password: string): Promise<AuthUser> => {
     try {
-      // First, let's see what's in the database
-      const { data: allUsers, error: dbError } = await supabase
+      // First, check if the user exists in admin_user table
+      const { data: adminUser, error: adminError } = await supabase
         .from('admin_user')
-        .select('*');
-
-      console.log('Database connection:', {
-        url: supabaseUrl,
-        hasKey: !!supabaseAnonKey,
-        error: dbError,
-        tableData: allUsers,
-        firstUser: allUsers?.[0] // Log the first user's data
-      });
-
-      if (dbError) {
-        console.error('Database error:', dbError);
-        throw new AuthError('Database connection error');
-      }
-
-      if (!allUsers || allUsers.length === 0) {
-        console.log('No users found in admin_user table');
-        throw new AuthError('Database is empty');
-      }
-
-      // First try to find by email only to debug
-      const { data: emailCheck, error: emailError } = await supabase
-        .from('admin_user')
-        .select('*')
+        .select('id, email, password, created_at')
         .eq('email', email.toLowerCase().trim())
-        .maybeSingle();
+        .single();
 
-      console.log('Email check:', {
-        foundUser: !!emailCheck,
-        error: emailError,
-        attemptedEmail: email.toLowerCase().trim(),
-        userData: emailCheck // Log the found user data
+      if (adminError) {
+        console.error('Database error:', adminError);
+        throw new AuthError('An error occurred during login');
+      }
+
+      if (!adminUser) {
+        throw new AuthError('Invalid email or password');
+      }
+
+      // Compare passwords
+      if (adminUser.password !== password) {
+        throw new AuthError('Invalid email or password');
+      }
+
+      // Sign in with Supabase Auth
+      const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.toLowerCase().trim(),
+        password: password
       });
 
-      if (emailError) {
-        console.error('Email check error:', emailError);
-        throw new AuthError('Database error occurred');
-      }
+      if (signInError) {
+        console.error('Supabase auth error:', signInError);
+        
+        // If the user doesn't exist in auth, create them
+        if (signInError.message.includes('Invalid login credentials')) {
+          const { data: { session: newSession }, error: signUpError } = await supabase.auth.signUp({
+            email: email.toLowerCase().trim(),
+            password: password
+          });
 
-      // If email exists, try with password
-      if (!emailCheck) {
-        console.log('No user found with this email');
-        throw new AuthError('Invalid email or password');
-      }
+          if (signUpError) {
+            console.error('Supabase signup error:', signUpError);
+            throw new AuthError('Failed to create auth account');
+          }
 
-      // Now check password
-      if (emailCheck.password !== password) {
-        console.log('Password mismatch:', {
-          provided: password,
-          stored: emailCheck.password
-        });
-        throw new AuthError('Invalid email or password');
+          if (!newSession) {
+            throw new AuthError('Failed to create session');
+          }
+        } else {
+          throw new AuthError('Authentication failed');
+        }
       }
 
       const authenticatedUser: AuthUser = {
-        id: emailCheck.id,
-        password: emailCheck.password,
-        created_at: emailCheck.created_at,
-        email: emailCheck.email
+        id: adminUser.id,
+        email: adminUser.email,
+        created_at: adminUser.created_at
       };
 
       auth.user = authenticatedUser;
-      
-      // Store in session storage with expiry (24 hours) - client side only
-      if (typeof window !== 'undefined') {
-        const expiryTime = Date.now() + (24 * 60 * 60 * 1000);
-        sessionStorage.setItem('user', JSON.stringify({ 
-          ...authenticatedUser,
-          expiryTime 
-        }));
-      }
-      
       return authenticatedUser;
     } catch (error) {
       console.error('Login process error:', error);
@@ -127,31 +102,45 @@ export const auth = {
     }
   },
 
-  logout: () => {
-    auth.user = null;
-    // Only access sessionStorage on client side
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('user');
+  logout: async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      auth.user = null;
+    } catch (error) {
+      console.error('Logout error:', error);
     }
   },
 
-  // Initialize auth state from session storage (client-side only)
-  init: () => {
-    // Only run on client side
-    if (typeof window === 'undefined') return;
-    
+  init: async () => {
     try {
-      const storedData = sessionStorage.getItem('user');
-      if (storedData) {
-        const { expiryTime, ...userData } = JSON.parse(storedData);
-        
-        // Check if the session has expired
-        if (Date.now() > expiryTime) {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Session error:', error);
+        auth.logout();
+        return;
+      }
+
+      if (session?.user) {
+        // Verify the user is still an admin
+        const { data: adminUser, error: adminError } = await supabase
+          .from('admin_user')
+          .select('id, email, created_at')
+          .eq('email', session.user.email)
+          .single();
+
+        if (adminError || !adminUser) {
+          console.error('Admin verification error:', adminError);
           auth.logout();
           return;
         }
 
-        auth.user = userData;
+        auth.user = {
+          id: adminUser.id,
+          email: adminUser.email,
+          created_at: adminUser.created_at
+        };
       }
     } catch (error) {
       console.error('Error initializing auth:', error);
@@ -159,7 +148,6 @@ export const auth = {
     }
   },
 
-  // Check if user is authenticated and is an admin
   isAdmin: (): boolean => {
     return !!auth.user?.id;
   }
