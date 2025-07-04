@@ -5,15 +5,11 @@ import { motion } from "framer-motion";
 import { ArrowRight, X } from "lucide-react";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Dialog, 
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose
-} from "@/components/ui/dialog";
-// import { Cards } from "./Cards";
-import { supabase } from "@/lib/supabase";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ProductCard } from "@/components/ui/ProductCard";
+import { ProductDetailDialog } from "@/components/ui/ProductDetailDialog";
+import CosmeticsCollectionGrid from "./CosmeticsCollectionGrid";
+import { useRouter } from "next/navigation";
 
 interface CardData {
   title: string;
@@ -25,12 +21,11 @@ interface CardData {
 
 const cardData: CardData[] = [
   {
-    title: "Emilio Cosmetics",
+    title: "EMILIO Cosmetics",
     subtitle: "Premium Grooming Collection",
-    description:
-      "Discover our signature range of luxury grooming essentials, crafted with precision and care.",
-    link: "/products/cosmetics",
-    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`
+    description: "Discover our signature range of luxury grooming essentials, crafted with precision and care.",
+    link: "/products",
+    image: "/images/Cosmetics_Banner.jpeg"
   },
   {
     title: "ORMÉE Hair",
@@ -38,7 +33,7 @@ const cardData: CardData[] = [
     description:
       "Experience the future of personal care. Join the waitlist for our revolutionary new product line.",
     link: "/products/hear",
-    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Ormi Hair.webp`
+    image: "/images/Ormi_Hair.webp"
   },
 ];
 
