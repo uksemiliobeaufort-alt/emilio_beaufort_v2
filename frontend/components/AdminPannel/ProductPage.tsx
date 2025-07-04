@@ -1,182 +1,170 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
-  Box, Typography, IconButton, Button, Collapse, MenuItem,
-  Select, CircularProgress
+  Box, Typography, Button, Avatar, IconButton,
+  Tooltip, Dialog, DialogTitle, DialogContent, Card, CardContent
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import RemoveIcon from '@mui/icons-material/Remove';
-import AddIcon from '@mui/icons-material/Add';
-import AddProductModal from './AddProductModal';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import AddProductModal, { ProductType } from './AddProductModal';
 
-type Product = {
-  id: number;
-  title: string;
-  productType: string;
-  description: string;
-  price: string;
-  discount: string;
-  imageUrl: string;
-  expiration?: string;
-  sku?: string;
-  minStock?: string;
-  size?: string;
-};
+const ProductPage = () => {
+  const [productList, setProductList] = useState<ProductType[]>([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductType | null>(null);
+  const [openDetails, setOpenDetails] = useState(false);
 
-const ProductPage: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [openDetailId, setOpenDetailId] = useState<number | null>(null);
-  const [quantities, setQuantities] = useState<{ [id: number]: number }>({});
-  const [sizes, setSizes] = useState<{ [id: number]: string }>({});
-  const [loading, setLoading] = useState(true);
-  const [addModalOpen, setAddModalOpen] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const toggleDetails = (id: number) => {
-    setOpenDetailId(prev => (prev === id ? null : id));
+  const handleAddProduct = (product: ProductType) => {
+    setProductList(prev => {
+      const updated = [...prev];
+      const index = updated.findIndex(p => p.id === product.id);
+      if (index >= 0) updated[index] = product;
+      else updated.push(product);
+      return updated;
+    });
   };
 
-  const handleQtyChange = (id: number, change: number) => {
-    setQuantities(prev => ({
-      ...prev,
-      [id]: Math.max(1, (prev[id] || 1) + change),
-    }));
+  const handleDelete = (id: number) => {
+    setProductList(prev => prev.filter(p => p.id !== id));
   };
 
-  const handleSizeChange = (id: number, value: string) => {
-    setSizes(prev => ({ ...prev, [id]: value }));
+  const extractWeights = (priceString: string) => {
+    return priceString
+      .split(',')
+      .map(p => p.split('for')[1]?.trim())
+      .join(', ');
   };
 
-  const handleAddProduct = (product: Product) => {
-    setProducts(prev => [...prev, product]);
-  };
-
-  const handleEditProduct = (product: Product) => {
-    setAddModalOpen(true); // Optional: Implement prefill logic if needed
-  };
-
-  const handleDeleteProduct = (id: number) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
+  const extractPrices = (priceString: string) => {
+    return priceString
+      .split(',')
+      .map(p => p.trim().split(' ')[0])
+      .join(', ');
   };
 
   return (
-    <Box p={3}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5" fontWeight={700}>Products</Typography>
-        <Button variant="contained" onClick={() => setAddModalOpen(true)} sx={{ backgroundColor: '#C4A35A' }}>Add Product</Button>
+    <Box p={4}>
+      {/* Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Typography variant="h5" fontWeight="bold">Emilio Beaufort</Typography>
       </Box>
 
-      {loading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" height="300px">
-          <CircularProgress />
+      {/* Stats Row + Add Product */}
+      <Box mt={4} display="flex" justifyContent="space-between" alignItems="center">
+        <Typography variant="h4" fontWeight="bold">Products</Typography>
+        <Box display="flex" gap={3}>
+          <Box>
+            <Typography variant="subtitle2" color="gray">Product Sold (pcs)</Typography>
+            <Typography fontWeight="bold">5,420 <span style={{ color: 'red' }}>▼ 8.6%</span></Typography>
+          </Box>
+          <Box>
+            <Typography variant="subtitle2" color="gray">On Packaging (pcs)</Typography>
+            <Typography fontWeight="bold">6,580 <span style={{ color: 'green' }}>▲ 9.2%</span></Typography>
+          </Box>
+          <Box>
+            <Typography variant="subtitle2" color="gray">Average Order</Typography>
+            <Typography fontWeight="bold">2,640 <span style={{ color: 'green' }}>▲ 7.4%</span></Typography>
+          </Box>
+          <Button
+            variant="contained"
+            sx={{ backgroundColor: '#f73378', textTransform: 'none' }}
+            onClick={() => { setEditingProduct(null); setOpenModal(true); }}
+          >
+            + Add a product
+          </Button>
         </Box>
-      ) : products.length === 0 ? (
-        <Box textAlign="center" py={10}>
-          <Typography variant="h6" color="text.secondary">No products found.</Typography>
-        </Box>
-      ) : (
-        products.map((product) => {
-          const price = Number(product.price);
-          const discount = Number(product.discount);
-          const discountPrice = isNaN(price) || isNaN(discount)
-            ? '0.00'
-            : (price - price * discount / 100).toFixed(2);
-          const quantity = quantities[product.id] || 1;
-          const selectedSize = sizes[product.id] || '50 ml';
+      </Box>
 
-          return (
-            <Box
-              key={product.id}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              borderBottom="1px solid #eee"
-              py={2}
-              flexWrap="wrap"
-              gap={2}
-            >
-              <Box display="flex" gap={2}>
-                <Box width={80} height={80}>
-                  <img
-                    src={product.imageUrl}
-                    alt={product.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }}
-                  />
-                </Box>
-                <Box>
-                  <Typography fontWeight={600}>{product.title}</Typography>
-                  <Typography variant="body2" color="text.secondary">{product.productType}</Typography>
-                  <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                    <Typography fontWeight={600}>${discountPrice}</Typography>
-                    <Typography color="text.secondary" sx={{ textDecoration: 'line-through' }}>${product.price}</Typography>
+      {/* Product Table */}
+      <Box mt={3}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
+              <th></th>
+              <th>Product</th>
+              <th>Description</th>
+              <th>Stock</th>
+              <th>Price Per Item</th>
+              <th>Net Weight</th>
+              <th>Category</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {productList.map(product => (
+              <tr key={product.id} style={{ borderBottom: '1px solid #eee' }}>
+                <td><input type="checkbox" /></td>
+                <td>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Avatar src={product.imageUrl} alt={product.title} />
+                    {product.title}
                   </Box>
-                  <Box display="flex" alignItems="center" gap={2} mt={1}>
-                    <Select
-                      size="small"
-                      value={selectedSize}
-                      onChange={(e) => handleSizeChange(product.id, e.target.value)}
-                      sx={{ minWidth: 90 }}
+                </td>
+                <td>{product.description}</td>
+                <td>{product.minStock || '-'}</td>
+                <td>{extractPrices(product.price)}</td>
+                <td>{product.variants.map(v => v.weight).join(', ')}</td>
+                <td>{product.category}</td>
+                <td>
+                  <Tooltip title="See Details" arrow>
+                    <IconButton onClick={() => { setSelectedProduct(product); setOpenDetails(true); }} sx={{ color: 'black' }}>
+                      <InfoOutlinedIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Edit" arrow>
+                    <IconButton onClick={() => { setEditingProduct(product); setOpenModal(true); }} sx={{ color: 'black' }}>
+                      <EditOutlinedIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete" arrow>
+                    <IconButton
+                      onClick={() => handleDelete(product.id)}
+                      sx={{ color: 'black', '&:hover': { color: 'red' } }}
                     >
-                      {['50 ml', '100 ml', '200 ml'].map((size) => (
-                        <MenuItem key={size} value={size}>{size}</MenuItem>
-                      ))}
-                    </Select>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography fontSize={14}>Qty:</Typography>
-                      <IconButton size="small" onClick={() => handleQtyChange(product.id, -1)}>
-                        <RemoveIcon fontSize="small" />
-                      </IconButton>
-                      <Typography>{quantity}</Typography>
-                      <IconButton size="small" onClick={() => handleQtyChange(product.id, 1)}>
-                        <AddIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
+                      <DeleteOutlineOutlinedIcon />
+                    </IconButton>
+                  </Tooltip>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Box>
 
-              <Box display="flex" flexDirection="column" alignItems="flex-end" gap={1}>
-                <Box>
-                  <IconButton onClick={() => handleEditProduct(product)}><EditIcon /></IconButton>
-                  <IconButton onClick={() => handleDeleteProduct(product.id)}><DeleteIcon /></IconButton>
+      {/* Product Details Dialog */}
+      <Dialog open={openDetails} onClose={() => setOpenDetails(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ borderBottom: '1px solid #ccc', fontWeight: 'bold' }}>Product Details</DialogTitle>
+        <DialogContent>
+          {selectedProduct && (
+            <Card sx={{ border: '2px solid black', borderRadius: 2, p: 2, mt: 2 }} elevation={3}>
+              <CardContent>
+                <Box display="flex" flexDirection="column" gap={2}>
+                  <img src={selectedProduct.imageUrl} alt={selectedProduct.title} style={{ maxHeight: 200, borderRadius: 12 }} />
+                  <Typography><strong>Name:</strong> {selectedProduct.title}</Typography>
+                  <Typography><strong>Description:</strong> {selectedProduct.description}</Typography>
+                  <Typography><strong>Category:</strong> {selectedProduct.category}</Typography>
+                  <Typography><strong>Brand:</strong> {selectedProduct.brand}</Typography>
+                  <Typography><strong>Price / Item:</strong> {extractPrices(selectedProduct.price)}</Typography>
+                  <Typography><strong>Net Weights:</strong> {selectedProduct.variants.map(v => v.weight).join(', ')}</Typography>
+                  <Typography><strong>SKU:</strong> {selectedProduct.sku}</Typography>
+                  <Typography><strong>Min Stock:</strong> {selectedProduct.minStock}</Typography>
+                  <Typography><strong>Expiration Date:</strong> {selectedProduct.expiration}</Typography>
                 </Box>
-                <Button
-                  variant="text"
-                  size="small"
-                  endIcon={openDetailId === product.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  onClick={() => toggleDetails(product.id)}
-                >
-                  Details
-                </Button>
-              </Box>
+              </CardContent>
+            </Card>
+          )}
+        </DialogContent>
+      </Dialog>
 
-              <Collapse in={openDetailId === product.id} timeout="auto" unmountOnExit sx={{ width: '100%', mt: 2 }}>
-                <Box p={2} border="1px solid #eee" borderRadius={2} bgcolor="#fafafa">
-                  <Typography><strong>Description:</strong> {product.description}</Typography>
-                  <Typography><strong>Expiration:</strong> {product.expiration || 'N/A'}</Typography>
-                  <Typography><strong>SKU:</strong> {product.sku || 'N/A'}</Typography>
-                  <Typography><strong>Min Stock:</strong> {product.minStock || 'N/A'}</Typography>
-                </Box>
-              </Collapse>
-            </Box>
-          );
-        })
-      )}
-
+      {/* Add Product Modal */}
       <AddProductModal
-        open={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
+        open={openModal}
+        onClose={() => setOpenModal(false)}
         onAddProduct={handleAddProduct}
+        productToEdit={editingProduct}
       />
     </Box>
   );

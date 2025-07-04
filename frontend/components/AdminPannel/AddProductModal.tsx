@@ -1,3 +1,4 @@
+// AddProductModal.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -6,6 +7,8 @@ import {
   Button, TextField, Snackbar, CircularProgress, Chip, InputLabel, MenuItem, Select, OutlinedInput
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 
 export type ProductType = {
   id: number;
@@ -13,48 +16,84 @@ export type ProductType = {
   description: string;
   price: string;
   imageUrl: string;
+  category: string;
+  brand: string;
+  expiration: string;
+  sku: string;
+  minStock: string;
+  variants: { weight: string; price: string }[];
 };
 
 type Props = {
   open: boolean;
   onClose: () => void;
   onAddProduct: (product: ProductType) => void;
+  productToEdit?: ProductType | null;
 };
 
-const AddProductModal: React.FC<Props> = ({ open, onClose, onAddProduct }) => {
+const AddProductModal: React.FC<Props> = ({ open, onClose, onAddProduct, productToEdit }) => {
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [form, setForm] = useState({
-    title: '', description: '', price: '', discount: '',
-    productType: '', productMerk: '', expiration: '', sku: '', minStock: ''
+    title: '', description: '', category: '', brand: '', expiration: '', sku: '', minStock: ''
   });
+  const [variants, setVariants] = useState([{ weight: '', price: '' }]);
   const [tags, setTags] = useState<string[]>([]);
   const [toast, setToast] = useState('');
   const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    if (productToEdit) {
+      setForm({
+        title: productToEdit.title,
+        description: productToEdit.description,
+        category: productToEdit.category,
+        brand: productToEdit.brand,
+        expiration: productToEdit.expiration,
+        sku: productToEdit.sku,
+        minStock: productToEdit.minStock,
+      });
+      setVariants(productToEdit.variants);
+      setPreview(productToEdit.imageUrl);
+    } else {
+      resetForm();
+    }
+  }, [productToEdit]);
 
   const resetForm = () => {
     setImage(null);
     setPreview(null);
     setForm({
-      title: '', description: '', price: '', discount: '',
-      productType: '', productMerk: '', expiration: '', sku: '', minStock: ''
+      title: '', description: '', category: '', brand: '', expiration: '', sku: '', minStock: ''
     });
+    setVariants([{ weight: '', price: '' }]);
     setTags([]);
   };
 
   const handleUpload = () => {
-    if (!form.title || !form.description || !form.price || !preview) {
+    if (!form.title || !form.description || !preview) {
       setToast('Please fill all fields and upload an image.');
       return;
     }
 
+    const variantPriceText = variants
+      .filter(v => v.weight && v.price)
+      .map(v => `$${v.price} for ${v.weight}`)
+      .join(', ');
+
     setLoading(true);
     const newProduct: ProductType = {
-      id: Date.now(),
+      id: productToEdit?.id || Date.now(),
       title: form.title,
       description: form.description,
-      price: form.price,
+      category: form.category,
+      brand: form.brand,
+      expiration: form.expiration,
+      sku: form.sku,
+      minStock: form.minStock,
+      price: variantPriceText,
       imageUrl: preview,
+      variants: variants,
     };
 
     setTimeout(() => {
@@ -62,8 +101,24 @@ const AddProductModal: React.FC<Props> = ({ open, onClose, onAddProduct }) => {
       resetForm();
       setLoading(false);
       onClose();
-      setToast('Product added successfully!');
+      setToast(productToEdit ? 'Product updated successfully!' : 'Product added successfully!');
     }, 1000);
+  };
+
+  const handleVariantChange = (index: number, field: 'weight' | 'price', value: string) => {
+    const updated = [...variants];
+    updated[index][field] = value;
+    setVariants(updated);
+  };
+
+  const addVariant = () => setVariants([...variants, { weight: '', price: '' }]);
+
+  const removeVariant = (index: number) => {
+    if (variants.length > 1) {
+      const updated = [...variants];
+      updated.splice(index, 1);
+      setVariants(updated);
+    }
   };
 
   return (
@@ -73,7 +128,7 @@ const AddProductModal: React.FC<Props> = ({ open, onClose, onAddProduct }) => {
         <Box display="flex" justifyContent="space-between" alignItems="center" px={3} py={2} borderBottom="1px solid #eee">
           <Box display="flex" alignItems="center" gap={1}>
             <IconButton onClick={onClose}><ArrowBackIcon /></IconButton>
-            <Typography variant="h6" fontWeight={600}>Add New Product</Typography>
+            <Typography variant="h6" fontWeight={600}>{productToEdit ? 'Edit Product' : 'Add New Product'}</Typography>
           </Box>
           <Button variant="outlined" sx={{ textTransform: 'none', fontWeight: 500, borderRadius: 2 }}>Save to Draft</Button>
         </Box>
@@ -102,16 +157,9 @@ const AddProductModal: React.FC<Props> = ({ open, onClose, onAddProduct }) => {
               {/* Image Upload */}
               <Box
                 sx={{
-                  border: '2px dashed #ccc',
-                  borderRadius: 3,
-                  backgroundColor: '#fafafa',
-                  height: 260,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                  cursor: 'pointer',
-                  transition: 'background 0.3s',
+                  border: '2px dashed #ccc', borderRadius: 3, backgroundColor: '#fafafa',
+                  height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexDirection: 'column', cursor: 'pointer', transition: 'background 0.3s',
                   '&:hover': { backgroundColor: '#f0f0f0' },
                 }}
               >
@@ -145,29 +193,28 @@ const AddProductModal: React.FC<Props> = ({ open, onClose, onAddProduct }) => {
                   </Button>
                 )}
               </Box>
-
-              <Button variant="text" sx={{ color: '#C4A35A', textTransform: 'none', fontWeight: 500 }}>
-                + Add Another Image
-              </Button>
+              <Button variant="text" sx={{ color: '#C4A35A', textTransform: 'none', fontWeight: 500 }}>+ Add Another Image</Button>
             </Box>
 
             {/* Right: Form */}
             <Box flex={2} display="flex" flexDirection="column" gap={2} minWidth={400}>
               <TextField label="Product Name" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} fullWidth />
               <Box display="flex" gap={2}>
-                <TextField label="Product Type" value={form.productType} onChange={(e) => setForm({ ...form, productType: e.target.value })} fullWidth />
-                <TextField label="Product Merk" value={form.productMerk} onChange={(e) => setForm({ ...form, productMerk: e.target.value })} fullWidth />
+                <TextField label="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} fullWidth />
+                <TextField label="Product Brand" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} fullWidth />
               </Box>
-              <Box display="flex" gap={2}>
-                <TextField label="Price" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} fullWidth />
-                <TextField label="Discount (%)" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} fullWidth />
-                <TextField label="Discount Price" value={
-                  (form.price && form.discount)
-                    ? (Number(form.price) - Number(form.price) * Number(form.discount) / 100).toFixed(2)
-                    : ''
-                } fullWidth disabled />
-              </Box>
-              <TextField label="Business Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} fullWidth multiline rows={3} />
+
+              <Typography fontWeight={600} mt={1}>Product Variants (Weight & Price)</Typography>
+              {variants.map((v, i) => (
+                <Box key={i} display="flex" gap={2} alignItems="center">
+                  <TextField label="Weight (e.g. 50ml)" value={v.weight} onChange={e => handleVariantChange(i, 'weight', e.target.value)} fullWidth />
+                  <TextField label="Price ($)" value={v.price} onChange={e => handleVariantChange(i, 'price', e.target.value)} fullWidth />
+                  <IconButton color="error" onClick={() => removeVariant(i)}><RemoveIcon /></IconButton>
+                </Box>
+              ))}
+              <Button onClick={addVariant} startIcon={<AddIcon />} variant="outlined" sx={{ width: 'fit-content' }}>Add Variant</Button>
+
+              <TextField label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} fullWidth multiline rows={3} />
               <TextField label="Expiration Date" placeholder="DD/MM/YYYY" value={form.expiration} onChange={(e) => setForm({ ...form, expiration: e.target.value })} fullWidth />
             </Box>
           </Box>
@@ -186,20 +233,14 @@ const AddProductModal: React.FC<Props> = ({ open, onClose, onAddProduct }) => {
             <Button
               variant="contained"
               onClick={handleUpload}
-              disabled={loading || !form.title || !form.price || !form.description || !preview}
+              disabled={loading || !form.title || !form.description || !preview}
               sx={{
-                backgroundColor: '#C4A35A',
-                color: 'white',
-                borderRadius: '10px',
-                px: 4,
-                py: 1,
-                fontWeight: 600,
-                fontSize: '16px',
-                textTransform: 'none',
+                backgroundColor: '#C4A35A', color: 'white', borderRadius: '10px', px: 4, py: 1,
+                fontWeight: 600, fontSize: '16px', textTransform: 'none',
                 '&:hover': { backgroundColor: '#b7964f' },
               }}
             >
-              {loading ? <CircularProgress size={20} color="inherit" /> : 'Upload Product'}
+              {loading ? <CircularProgress size={20} color="inherit" /> : productToEdit ? 'Update Product' : 'Upload Product'}
             </Button>
           </Box>
         </DialogContent>
