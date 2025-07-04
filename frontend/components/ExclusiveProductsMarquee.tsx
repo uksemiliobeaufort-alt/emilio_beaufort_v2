@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { getImageUrl } from "@/lib/supabase";
 
@@ -11,33 +11,41 @@ const exclusiveProducts = [
     {
       title: "Luminous Silk Foundation",
       description: "A weightless, buildable foundation for a radiant, flawless finish.",
-      image: getImageUrl("the-house", "cosmetics1.jpg"),
+      image: getImageUrl("product-images", "cosmetics1.jpg"),
     },
     {
       title: "Velvet Matte Lipstick",
       description: "Intense color payoff with a soft, hydrating matte finish.",
-      image: getImageUrl("the-house", "cosmetics2.jpg"),
+      image: getImageUrl("product-images", "cosmetics2.jpg"),
     },
     {
       title: "Radiance Glow Serum",
       description: "Revitalize your skin with our luxurious, illuminating serum.",
-      image: getImageUrl("the-house", "cosmetics3.jpg"),
+      image: getImageUrl("product-images", "cosmetics3.jpg"),
     },
     {
       title: "Opulent Eyeshadow Palette",
       description: "A curated palette of rich, blendable shades for every occasion.",
-      image: getImageUrl("the-house", "cosmetics4.jpg"),
+      image: getImageUrl("product-images", "cosmetics4.jpg"),
     },
     {
       title: "Silk Touch Setting Powder",
       description: "Lock in your look with a silky, translucent powder for all-day perfection.",
-      image: getImageUrl("the-house", "cosmetics5.jpg"),
+      image: getImageUrl("product-images", "cosmetics5.jpg"),
     },
   ];
   // ... existing code ...
 
 export default function ExclusiveProductsMarquee() {
   const marqueeProducts = [...exclusiveProducts, ...exclusiveProducts]; // repeat twice for seamless loop
+  const fallbackImage = getImageUrl("product-images", "cosmetics1.jpg");
+  const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
+
+  // Function to handle image load error
+  const handleImageError = (idx: number, productTitle: string) => {
+    console.error(`Failed to load image for product: ${productTitle}`);
+    setImageErrors(prev => ({ ...prev, [idx]: true }));
+  };
 
   return (
     <div className="w-full py-16 bg-premium overflow-hidden relative">
@@ -51,15 +59,23 @@ export default function ExclusiveProductsMarquee() {
               key={idx}
               className="min-w-[300px] max-w-xs bg-white rounded-xl shadow-lg overflow-hidden flex-shrink-0 border border-premium flex flex-col"
             >
-              <div className="relative h-56 w-full">
-                <Image
-                  src={product.image || getImageUrl("the-house", "Cosmetics Banner.jpeg")}
-                  alt={product.title}
-                  fill
-                  className="object-cover"
-                  sizes="300px"
-                  priority={idx < 5} // Prioritize loading first 5 images
-                />
+              <div className="relative h-56 w-full bg-gray-100">
+                {!imageErrors[idx] ? (
+                  <Image
+                    src={product.image || fallbackImage}
+                    alt={product.title}
+                    fill
+                    className="object-cover transition-opacity duration-300"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority={idx < 5} // Prioritize loading first 5 images
+                    quality={85}
+                    onError={() => handleImageError(idx, product.title)}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
+                    <p className="text-sm">Image not available</p>
+                  </div>
+                )}
               </div>
               <div className="p-6 flex flex-col gap-3 flex-1 justify-between">
                 <h3 className="text-2xl font-serif font-bold text-premium mb-2">
