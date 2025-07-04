@@ -8,6 +8,8 @@ import { api, Post } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getImageUrl } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+
 
 export default function JournalPage() {
   const [posts, setPosts] = useState<Post[]>([]);

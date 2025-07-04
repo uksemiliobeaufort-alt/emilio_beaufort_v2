@@ -108,12 +108,14 @@ export const auth = {
 
       auth.user = authenticatedUser;
       
-      // Store in session storage with expiry (24 hours)
-      const expiryTime = Date.now() + (24 * 60 * 60 * 1000);
-      sessionStorage.setItem('user', JSON.stringify({ 
-        ...authenticatedUser,
-        expiryTime 
-      }));
+      // Store in session storage with expiry (24 hours) - client side only
+      if (typeof window !== 'undefined') {
+        const expiryTime = Date.now() + (24 * 60 * 60 * 1000);
+        sessionStorage.setItem('user', JSON.stringify({ 
+          ...authenticatedUser,
+          expiryTime 
+        }));
+      }
       
       return authenticatedUser;
     } catch (error) {
@@ -127,11 +129,17 @@ export const auth = {
 
   logout: () => {
     auth.user = null;
-    sessionStorage.removeItem('user');
+    // Only access sessionStorage on client side
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('user');
+    }
   },
 
-  // Initialize auth state from session storage
+  // Initialize auth state from session storage (client-side only)
   init: () => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     try {
       const storedData = sessionStorage.getItem('user');
       if (storedData) {
@@ -155,4 +163,4 @@ export const auth = {
   isAdmin: (): boolean => {
     return !!auth.user?.id;
   }
-}; 
+};
