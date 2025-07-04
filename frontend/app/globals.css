@@ -163,6 +163,25 @@
     font-weight: 600;
   }
 
+  /* Override Radix UI Select animations */
+  [data-radix-select-content] {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  [data-radix-select-viewport] {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  [data-radix-select-item] {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
   .transition-premium {
     transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   }
