@@ -30,21 +30,27 @@ export const supabase = createClient(
 
 // Helper function to get public URL for an image in a bucket
 export const getImageUrl = (bucketName: string, path: string) => {
+  if (!bucketName || !path) {
+    console.error('Missing bucket name or path:', { bucketName, path });
+    return '';
+  }
+
   try {
     // Get the public URL directly from Supabase
     const { data } = supabase.storage
       .from(bucketName)
       .getPublicUrl(path);
 
-    if (!data.publicUrl) {
-      console.error('No public URL returned for', bucketName, path);
+    if (!data?.publicUrl) {
+      console.error('No public URL returned for', { bucketName, path });
       return '';
     }
 
-    // Use the URL directly from Supabase
-    return data.publicUrl;
+    // Ensure the URL is properly encoded
+    const url = new URL(data.publicUrl);
+    return url.toString();
   } catch (error) {
-    console.error('Error getting public URL:', error, 'for path:', path);
+    console.error('Error getting public URL:', error, 'for', { bucketName, path });
     return '';
   }
 };
