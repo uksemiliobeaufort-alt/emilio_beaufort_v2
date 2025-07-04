@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { auth } from '@/lib/auth';
 import { toast } from 'sonner';
-import { api } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 
 interface FormData {
@@ -35,46 +34,39 @@ export default function UploadBlogPage() {
     }
   }, [router]);
 
-  const uploadImageToSupabase = async (file: File): Promise<string | null> => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `journal/${fileName}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('the-house')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/${filePath}`;
-      return imageUrl;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      return null;
-    }
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      let featuredImageUrl = null;
+      let featuredImageBase64 = null;
       if (formData.featuredImage) {
-        featuredImageUrl = await uploadImageToSupabase(formData.featuredImage);
-        if (!featuredImageUrl) {
-          throw new Error('Failed to upload image');
-        }
+        featuredImageBase64 = await convertFileToBase64(formData.featuredImage);
       }
 
-      await api.createPost({
-        title: formData.title,
-        content: formData.content,
-        featuredImageUrl,
-        slug: formData.title.toLowerCase().replace(/\s+/g, '-'),
-      });
+      const slug = formData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+      const { error } = await supabase.from('blog_posts').insert([
+        {
+          title: formData.title,
+          slug: slug,
+          content: formData.content,
+          featured_image_base64: featuredImageBase64,
+        }
+      ]);
+
+      if (error) {
+        console.error('Error creating post:', error);
+        throw error;
+      }
 
       toast.success('Post created successfully!');
       router.push('/journal');

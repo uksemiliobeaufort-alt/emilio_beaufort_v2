@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import Sidebar from './components/Sidebar';
+import { Toaster } from 'sonner';
 
 export default function AdminLayout({
   children
@@ -14,8 +15,8 @@ export default function AdminLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(true); // Start as mobile to prevent flash
 
   useEffect(() => {
     // Initialize auth state
@@ -29,14 +30,72 @@ export default function AdminLayout({
 
     // Handle responsive sidebar
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-      setIsSidebarOpen(window.innerWidth >= 768);
+      const width = window.innerWidth;
+      const newIsMobile = width < 1024; // 1024px breakpoint for better tablet experience
+      
+      // Only update if the mobile state actually changed
+      setIsMobile(prevIsMobile => {
+        if (prevIsMobile !== newIsMobile) {
+          // Auto-close sidebar on mobile/tablet, auto-open on desktop
+          if (newIsMobile) {
+            setIsSidebarOpen(false);
+          } else {
+            setIsSidebarOpen(true);
+          }
+          return newIsMobile;
+        }
+        return prevIsMobile;
+      });
     };
 
-    handleResize();
+    // Initial check after mount to get actual window size
+    const initialCheck = () => {
+      if (typeof window !== 'undefined') {
+        handleResize();
+      }
+    };
+
+    // Use setTimeout to ensure this runs after the component is mounted
+    const timeoutId = setTimeout(initialCheck, 0);
+    
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', handleResize);
+    };
   }, [router]);
+
+  // Additional effect to handle screen size changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 1023px)');
+    
+    const handleMediaChange = (e: MediaQueryListEvent) => {
+      const newIsMobile = e.matches;
+      setIsMobile(newIsMobile);
+      
+      // Force sidebar state based on screen size
+      if (newIsMobile) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+
+    // Set initial state
+    const isCurrentlyMobile = mediaQuery.matches;
+    setIsMobile(isCurrentlyMobile);
+    setIsSidebarOpen(!isCurrentlyMobile);
+
+    mediaQuery.addEventListener('change', handleMediaChange);
+    return () => mediaQuery.removeEventListener('change', handleMediaChange);
+  }, []);
+
+  // Close sidebar when clicking on main content on mobile
+  const handleMainContentClick = () => {
+    if (isMobile && isSidebarOpen) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   const handleLogout = async () => {
     auth.logout();
@@ -50,21 +109,39 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Sidebar Toggle */}
-      <div className="md:hidden fixed top-4 left-4 z-30">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="bg-white"
-        >
-          {isSidebarOpen ? (
-            <X className="h-4 w-4" />
-          ) : (
-            <Menu className="h-4 w-4" />
-          )}
-        </Button>
+      <Toaster position="top-right" richColors />
+      
+      {/* Mobile/Tablet Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b z-30 px-4 flex items-center justify-between shadow-sm">
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="mr-3 p-2"
+          >
+            {isSidebarOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
+          <span className="font-semibold text-gray-900">Admin Panel</span>
+        </div>
+        
+        {/* Quick actions on mobile header if needed */}
+        <div className="flex items-center gap-2">
+          {/* Can add quick action buttons here */}
+        </div>
       </div>
+
+      {/* Mobile/Tablet Backdrop */}
+      {isMobile && isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-20 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
 
       {/* Sidebar */}
       <Sidebar
@@ -76,11 +153,19 @@ export default function AdminLayout({
       {/* Main Content */}
       <main
         className={`
-          transition-all duration-200
-          ${isSidebarOpen ? 'md:pl-64' : ''}
+          transition-all duration-300 ease-in-out
+          min-h-screen bg-gray-50
+          ${isSidebarOpen && !isMobile ? 'lg:pl-64' : ''}
+          ${isMobile ? 'pt-14' : ''}
         `}
+        onClick={handleMainContentClick}
       >
-        {children}
+        <div className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
+          {/* Page content wrapper with responsive padding */}
+          <div className="w-full">
+            {children}
+          </div>
+        </div>
       </main>
     </div>
   );

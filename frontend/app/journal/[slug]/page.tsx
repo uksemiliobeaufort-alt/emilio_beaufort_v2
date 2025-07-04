@@ -1,30 +1,66 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getPostBySlug, Post } from "@/lib/api";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
-import { getImageUrl } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
+
+interface BlogPost {
+  id: number;
+  title: string;
+  slug: string;
+  content: string;
+  featured_image_base64?: string;
+  gallery_base64?: string[];
+  created_at: string;
+}
 
 type Props = {
-  params: { slug: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export default function BlogPostPage({ params }: Props) {
   const router = useRouter();
-  const [post, setPost] = useState<Post | null>(null);
+  const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [slug, setSlug] = useState<string>('');
 
-  // Get the default image URL from Supabase storage
-  const defaultImageUrl = getImageUrl('the-house', 'Cosmetics Banner.jpeg');
+  // Default placeholder image
+  const defaultImageUrl = "/default-image.jpg";
 
   useEffect(() => {
+    const initializeParams = async () => {
+      try {
+        const resolvedParams = await params;
+        setSlug(resolvedParams.slug);
+      } catch (error) {
+        console.error("Failed to resolve params:", error);
+      }
+    };
+
+    initializeParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (!slug) return;
+
     const fetchPost = async () => {
       try {
-        const data = await getPostBySlug(params.slug);
+        const { data, error } = await supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('slug', slug)
+          .single();
+
+        if (error) {
+          console.error("Error fetching post:", error);
+          throw error;
+        }
+
+        console.log("Fetched blog post:", data);
         setPost(data);
       } catch (error) {
         console.error("Failed to fetch post:", error);
@@ -34,32 +70,20 @@ export default function BlogPostPage({ params }: Props) {
     };
 
     fetchPost();
-  }, [params.slug]);
+  }, [slug]);
 
   const handleImageError = () => {
     console.error('Failed to load post image');
     setImageError(true);
   };
 
-  const getPostImage = (featuredImageUrl: string | null) => {
-    if (imageError || !featuredImageUrl) {
+  const getPostImage = (post: BlogPost) => {
+    if (imageError) {
       return defaultImageUrl;
     }
     
-    // If the featuredImageUrl is from Supabase storage, use getImageUrl
-    if (featuredImageUrl.includes('storage/v1/object')) {
-      try {
-        const url = new URL(featuredImageUrl);
-        const path = url.pathname.split('/public/')[1];
-        if (path) {
-          return getImageUrl('the-house', decodeURIComponent(path));
-        }
-      } catch (error) {
-        console.error('Error parsing featured image URL:', error);
-      }
-    }
-    
-    return featuredImageUrl;
+    // Use featured_image_base64 as the primary image source
+    return post.featured_image_base64 || defaultImageUrl;
   };
 
   const handleBack = () => {
@@ -91,7 +115,7 @@ export default function BlogPostPage({ params }: Props) {
             <div className="mb-8">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-4">{post.title}</h1>
               <p className="text-sm text-gray-500">
-                {new Date(post.createdAt).toLocaleDateString("en-US", {
+                {new Date(post.created_at).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "long",
                   day: "numeric",
@@ -101,7 +125,7 @@ export default function BlogPostPage({ params }: Props) {
 
             <div className="relative w-full aspect-video rounded-md overflow-hidden mb-10">
               <Image
-                src={getPostImage(post.featuredImageUrl)}
+                src={getPostImage(post)}
                 alt={post.title}
                 fill
                 className="object-cover"
@@ -112,7 +136,7 @@ export default function BlogPostPage({ params }: Props) {
             </div>
 
             <div className="prose prose-lg max-w-none mb-12">
-              {post.content}
+              <div dangerouslySetInnerHTML={{ __html: post.content }} />
             </div>
 
             <button 
