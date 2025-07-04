@@ -28,10 +28,16 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'mzvuuvtckcimzemivltz.supabase.co',
+        hostname: '*.supabase.co',
         port: '',
-        pathname: '/storage/v1/object/public/product-images/**',
+        pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/sign/**',
+      }
     ],
   },
   typescript: {

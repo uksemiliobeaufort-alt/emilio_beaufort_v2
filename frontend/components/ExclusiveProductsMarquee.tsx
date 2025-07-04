@@ -4,33 +4,34 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRef } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { getImageUrl } from "@/lib/supabase";
 
 // ... existing code ...
 const exclusiveProducts = [
     {
       title: "Luminous Silk Foundation",
       description: "A weightless, buildable foundation for a radiant, flawless finish.",
-      image: "/images/cosmetics1.jpg",
+      image: getImageUrl("the-house", "cosmetics1.jpg"),
     },
     {
       title: "Velvet Matte Lipstick",
       description: "Intense color payoff with a soft, hydrating matte finish.",
-      image: "/images/cosmetics2.jpg",
+      image: getImageUrl("the-house", "cosmetics2.jpg"),
     },
     {
       title: "Radiance Glow Serum",
       description: "Revitalize your skin with our luxurious, illuminating serum.",
-      image: "/images/cosmetics3.jpg",
+      image: getImageUrl("the-house", "cosmetics3.jpg"),
     },
     {
       title: "Opulent Eyeshadow Palette",
       description: "A curated palette of rich, blendable shades for every occasion.",
-      image: "/images/cosmetics4.jpg",
+      image: getImageUrl("the-house", "cosmetics4.jpg"),
     },
     {
       title: "Silk Touch Setting Powder",
       description: "Lock in your look with a silky, translucent powder for all-day perfection.",
-      image: "/images/cosmetics5.jpg",
+      image: getImageUrl("the-house", "cosmetics5.jpg"),
     },
   ];
   // ... existing code ...
@@ -52,11 +53,12 @@ export default function ExclusiveProductsMarquee() {
             >
               <div className="relative h-56 w-full">
                 <Image
-                  src={product.image}
+                  src={product.image || getImageUrl("the-house", "Cosmetics Banner.jpeg")}
                   alt={product.title}
                   fill
                   className="object-cover"
                   sizes="300px"
+                  priority={idx < 5} // Prioritize loading first 5 images
                 />
               </div>
               <div className="p-6 flex flex-col gap-3 flex-1 justify-between">
