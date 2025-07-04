@@ -8,14 +8,15 @@ import { api, Post } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getImageUrl } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+
+// Default image from Supabase
+const DEFAULT_IMAGE = getImageUrl('the-house', 'Cosmetics Banner.jpeg');
 
 export default function JournalPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
-
-  // Get the default image URL from Supabase storage
-  const defaultImageUrl = getImageUrl('the-house', 'Cosmetics Banner.jpeg');
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -33,32 +34,29 @@ export default function JournalPage() {
   }, []);
 
   const handleImageError = (postId: string) => {
-    console.error(`Failed to load image for post ${postId}`);
     setImageError(prev => ({ ...prev, [postId]: true }));
   };
 
-  const getPostImage = (post: Post) => {
-    if (imageError[post.id]) {
-      return defaultImageUrl;
+  const getPostImage = (post: Post): string => {
+    if (imageError[post.id] || !post.featuredImageUrl) {
+      return DEFAULT_IMAGE;
     }
     
-    if (post.featuredImageUrl) {
-      // If the featuredImageUrl is from Supabase storage, use getImageUrl
+    try {
       if (post.featuredImageUrl.includes('storage/v1/object')) {
-        try {
-          const url = new URL(post.featuredImageUrl);
-          const path = url.pathname.split('/public/')[1];
-          if (path) {
-            return getImageUrl('the-house', decodeURIComponent(path));
-          }
-        } catch (error) {
-          console.error('Error parsing featured image URL:', error);
+        const url = new URL(post.featuredImageUrl);
+        const path = url.pathname.split('/public/')[1];
+        if (!path) {
+          return DEFAULT_IMAGE;
         }
+        return getImageUrl('the-house', decodeURIComponent(path)) || DEFAULT_IMAGE;
       }
+      
       return post.featuredImageUrl;
+    } catch (error) {
+      console.error('Error processing image URL:', error);
+      return DEFAULT_IMAGE;
     }
-    
-    return defaultImageUrl;
   };
 
   if (loading) {
@@ -101,10 +99,13 @@ export default function JournalPage() {
                     <Card className="overflow-hidden hover:shadow-md transition cursor-pointer group">
                       <div className="relative aspect-[4/3]">
                         <Image
-                          src={post.featuredImageUrl || 'Cosmetics_Banner.jpeg'}
-                          alt={post.title}
+                          src={getPostImage(post)}
+                          alt={post.title || 'Blog post image'}
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          onError={() => handleImageError(post.id)}
+                          unoptimized={post.featuredImageUrl?.startsWith('http')}
                         />
                       </div>
                       <CardContent className="p-5">
@@ -112,7 +113,7 @@ export default function JournalPage() {
                           {post.title}
                         </h3>
                         <p className="text-gray-600 text-sm line-clamp-3">
-                          {post.excerpt || post.content.slice(0, 100)}...
+                          {post.excerpt || post.content?.slice(0, 100)}...
                         </p>
                         <p className="text-xs text-gray-500 mt-4">
                           {new Date(post.createdAt).toLocaleDateString("en-US", {

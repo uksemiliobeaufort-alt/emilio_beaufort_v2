@@ -1,65 +1,72 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getPostBySlug, Post } from "@/lib/api";
+import { api, Post } from "@/lib/api";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { getImageUrl } from "@/lib/supabase";
 
-type Props = {
-  params: { slug: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
-export default function BlogPostPage({ params }: Props) {
+export default function BlogPostPage() {
   const router = useRouter();
+  const params = useParams();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
 
-  // Get the default image URL from Supabase storage
+  // Get the default image URL from Supabase storage - using existing image
   const defaultImageUrl = getImageUrl('the-house', 'Cosmetics Banner.jpeg');
 
   useEffect(() => {
     const fetchPost = async () => {
+      if (!params?.slug) {
+        setPost(null);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const data = await getPostBySlug(params.slug);
+        const data = await api.getPost(params.slug as string);
         setPost(data);
       } catch (error) {
         console.error("Failed to fetch post:", error);
+        setPost(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPost();
-  }, [params.slug]);
+  }, [params?.slug]);
 
   const handleImageError = () => {
     console.error('Failed to load post image');
     setImageError(true);
   };
 
-  const getPostImage = (featuredImageUrl: string | null) => {
+  const getPostImage = (featuredImageUrl: string | null): string => {
+    // If there's an error or no URL, return default
     if (imageError || !featuredImageUrl) {
-      return defaultImageUrl;
+      return defaultImageUrl || '';
     }
     
-    // If the featuredImageUrl is from Supabase storage, use getImageUrl
-    if (featuredImageUrl.includes('storage/v1/object')) {
-      try {
+    try {
+      // If it's a Supabase URL
+      if (featuredImageUrl.includes('storage/v1/object')) {
         const url = new URL(featuredImageUrl);
         const path = url.pathname.split('/public/')[1];
-        if (path) {
-          return getImageUrl('the-house', decodeURIComponent(path));
-        }
-      } catch (error) {
-        console.error('Error parsing featured image URL:', error);
+        if (!path) return defaultImageUrl || '';
+        
+        const supabaseUrl = getImageUrl('the-house', decodeURIComponent(path));
+        return supabaseUrl || defaultImageUrl || '';
       }
+      
+      // If it's an external URL
+      return featuredImageUrl;
+    } catch (error) {
+      console.error('Error processing image URL:', error);
+      return defaultImageUrl || '';
     }
-    
-    return featuredImageUrl;
   };
 
   const handleBack = () => {
@@ -82,6 +89,8 @@ export default function BlogPostPage({ params }: Props) {
     );
   }
 
+  const imageUrl = getPostImage(post.featuredImageUrl);
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
@@ -99,17 +108,20 @@ export default function BlogPostPage({ params }: Props) {
               </p>
             </div>
 
-            <div className="relative w-full aspect-video rounded-md overflow-hidden mb-10">
-              <Image
-                src={getPostImage(post.featuredImageUrl)}
-                alt={post.title}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                onError={handleImageError}
-              />
-            </div>
+            {imageUrl && (
+              <div className="relative w-full aspect-video rounded-md overflow-hidden mb-10">
+                <Image
+                  src={imageUrl}
+                  alt={post.title}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  onError={handleImageError}
+                  unoptimized={!imageUrl.includes('supabase')}
+                />
+              </div>
+            )}
 
             <div className="prose prose-lg max-w-none mb-12">
               {post.content}

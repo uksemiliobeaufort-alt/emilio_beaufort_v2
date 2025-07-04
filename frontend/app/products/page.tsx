@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ProductDetailDialog } from '@/components/ui/ProductDetailDialog';
 import { RippleButton } from '@/components/ui/RippleButton';
 import MyBagButton from '@/components/MyBagButton';
+import { Navbar } from "@/components/Navbar";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -52,6 +53,7 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-white py-24">
       <MyBagButton />
       <div className="max-w-7xl mx-auto px-6">
+        <Navbar />
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}

@@ -4,36 +4,35 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRef } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { getImageUrl } from "@/lib/supabase";
 
-// ... existing code ...
 const exclusiveProducts = [
-    {
-      title: "Luminous Silk Foundation",
-      description: "A weightless, buildable foundation for a radiant, flawless finish.",
-      image: "/images/cosmetics1.jpg",
-    },
-    {
-      title: "Velvet Matte Lipstick",
-      description: "Intense color payoff with a soft, hydrating matte finish.",
-      image: "/images/cosmetics2.jpg",
-    },
-    {
-      title: "Radiance Glow Serum",
-      description: "Revitalize your skin with our luxurious, illuminating serum.",
-      image: "/images/cosmetics3.jpg",
-    },
-    {
-      title: "Opulent Eyeshadow Palette",
-      description: "A curated palette of rich, blendable shades for every occasion.",
-      image: "/images/cosmetics4.jpg",
-    },
-    {
-      title: "Silk Touch Setting Powder",
-      description: "Lock in your look with a silky, translucent powder for all-day perfection.",
-      image: "/images/cosmetics5.jpg",
-    },
-  ];
-  // ... existing code ...
+  {
+    title: "Luminous Silk Foundation",
+    description: "A weightless, buildable foundation for a radiant, flawless finish.",
+    image: getImageUrl('product-images', 'cosmetics1.jpg'),
+  },
+  {
+    title: "Velvet Matte Lipstick",
+    description: "Intense color payoff with a soft, hydrating matte finish.",
+    image: getImageUrl('product-images', 'cosmetics2.jpg'),
+  },
+  {
+    title: "Radiance Glow Serum",
+    description: "Revitalize your skin with our luxurious, illuminating serum.",
+    image: getImageUrl('product-images', 'cosmetics3.jpg'),
+  },
+  {
+    title: "Opulent Eyeshadow Palette",
+    description: "A curated palette of rich, blendable shades for every occasion.",
+    image: getImageUrl('product-images', 'cosmetics4.jpg'),
+  },
+  {
+    title: "Silk Touch Setting Powder",
+    description: "Lock in your look with a silky, translucent powder for all-day perfection.",
+    image: getImageUrl('product-images', 'cosmetics5.jpg'),
+  },
+];
 
 export default function ExclusiveProductsMarquee() {
   const marqueeProducts = [...exclusiveProducts, ...exclusiveProducts]; // repeat twice for seamless loop

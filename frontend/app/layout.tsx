@@ -24,12 +24,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>
         <BagProvider>
-          <ClientLayout>
-            <main>
-              {children}
-            </main>
-          </ClientLayout>
+          <main>
+            {children}
+          </main>
         </BagProvider>
+        <Toaster />
       </body>
     </html>
   );
