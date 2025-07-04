@@ -10,6 +10,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { ProductDetailDialog } from "@/components/ui/ProductDetailDialog";
 import CosmeticsCollectionGrid from "./CosmeticsCollectionGrid";
 import { useRouter } from "next/navigation";
+import { getImageUrl } from "@/lib/supabase";
 
 interface CardData {
   title: string;
@@ -25,7 +26,7 @@ const cardData: CardData[] = [
     subtitle: "Premium Grooming Collection",
     description: "Discover our signature range of luxury grooming essentials, crafted with precision and care.",
     link: "/products",
-    image: "/images/Cosmetics_Banner.jpeg"
+    image: getImageUrl('the-house', 'Cosmetics Banner.jpeg')
   },
   {
     title: "ORMÉE Hair",
@@ -33,7 +34,7 @@ const cardData: CardData[] = [
     description:
       "Experience the future of personal care. Join the waitlist for our revolutionary new product line.",
     link: "/products/hear",
-    image: "/images/Ormi_Hair.webp"
+    image: getImageUrl('the-house', 'Ormi Hair.webp')
   },
 ];
 

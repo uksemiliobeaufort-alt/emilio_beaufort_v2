@@ -10,11 +10,10 @@ import { Button } from "@/components/ui/button";
 import { getImageUrl } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
-
 export default function JournalPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [imageError, setImageError] = useState<Record<string, boolean>>({});
+  const [imageStates, setImageStates] = useState<Record<string, 'loading' | 'loaded' | 'error'>>({});
 
   // Get the default image URL from Supabase storage
   const defaultImageUrl = getImageUrl('the-house', 'Cosmetics Banner.jpeg');
@@ -23,7 +22,19 @@ export default function JournalPage() {
     const fetchPosts = async () => {
       try {
         const data = await api.getPosts();
-        setPosts(data);
+        // Pre-process image URLs
+        const processedData = data.map(post => ({
+          ...post,
+          featuredImageUrl: processImageUrl(post.featuredImageUrl)
+        }));
+        setPosts(processedData);
+        
+        // Initialize loading state for each post
+        const initialStates = processedData.reduce((acc, post) => {
+          acc[post.id] = 'loading';
+          return acc;
+        }, {} as Record<string, 'loading' | 'loaded' | 'error'>);
+        setImageStates(initialStates);
       } catch (error) {
         console.error("Failed to fetch posts:", error);
       } finally {
@@ -34,33 +45,34 @@ export default function JournalPage() {
     fetchPosts();
   }, []);
 
-  const handleImageError = (postId: string) => {
-    console.error(`Failed to load image for post ${postId}`);
-    setImageError(prev => ({ ...prev, [postId]: true }));
-  };
+  const processImageUrl = (url: string | null): string => {
+    if (!url) return defaultImageUrl;
 
-  const getPostImage = (post: Post) => {
-    if (imageError[post.id]) {
+    try {
+      // If it's already a full URL (including Supabase URLs), return as is
+      if (url.startsWith('http')) {
+        return url;
+      }
+
+      // For any other case, assume it's a filename for the-house bucket
+      const filename = url.split('/').pop() || 'Cosmetics Banner.jpeg';
+      const imageUrl = getImageUrl('the-house', 'Cosmetics Banner.jpeg');
+      return imageUrl || defaultImageUrl;
+    } catch (error) {
       return defaultImageUrl;
     }
-    
-    if (post.featuredImageUrl) {
-      // If the featuredImageUrl is from Supabase storage, use getImageUrl
-      if (post.featuredImageUrl.includes('storage/v1/object')) {
-        try {
-          const url = new URL(post.featuredImageUrl);
-          const path = url.pathname.split('/public/')[1];
-          if (path) {
-            return getImageUrl('the-house', decodeURIComponent(path));
-          }
-        } catch (error) {
-          console.error('Error parsing featured image URL:', error);
-        }
-      }
-      return post.featuredImageUrl;
-    }
-    
-    return defaultImageUrl;
+  };
+
+  const handleImageError = (postId: string) => {
+    setImageStates(prev => ({ ...prev, [postId]: 'error' }));
+  };
+
+  const handleImageLoad = (postId: string) => {
+    setImageStates(prev => ({ ...prev, [postId]: 'loaded' }));
+  };
+
+  const getPostImage = (post: Post): string => {
+    return post.featuredImageUrl || defaultImageUrl;
   };
 
   if (loading) {
@@ -102,22 +114,41 @@ export default function JournalPage() {
                   <Link href={`/journal/${post.slug}`}>
                     <Card className="overflow-hidden hover:shadow-md transition cursor-pointer group">
                       <div className="relative aspect-[4/3]">
+                        {/* Loading placeholder */}
+                        {imageStates[post.id] === 'loading' && (
+                          <div className="absolute inset-0 bg-gray-100 animate-pulse" />
+                        )}
+
+                        {/* Main image */}
                         <Image
                           src={getPostImage(post)}
-                          alt={post.title}
+                          alt={post.title || 'Blog post image'}
                           fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          className={`object-cover transition-all duration-300 ${
+                            imageStates[post.id] === 'loaded'
+                              ? 'opacity-100 group-hover:scale-105' 
+                              : 'opacity-0'
+                          }`}
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          priority
+                          priority={true}
                           onError={() => handleImageError(post.id)}
+                          onLoad={() => handleImageLoad(post.id)}
+                          quality={100}
                         />
+
+                        {/* Error state */}
+                        {imageStates[post.id] === 'error' && (
+                          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+                            <p className="text-gray-500">Image not available</p>
+                          </div>
+                        )}
                       </div>
                       <CardContent className="p-5">
                         <h3 className="font-semibold text-xl mb-1 group-hover:text-gray-900 transition-colors">
                           {post.title}
                         </h3>
                         <p className="text-gray-600 text-sm line-clamp-3">
-                          {post.excerpt || post.content.slice(0, 100)}...
+                          {post.excerpt || (post.content && post.content.slice(0, 100) + '...') || 'No excerpt available'}
                         </p>
                         <p className="text-xs text-gray-500 mt-4">
                           {new Date(post.createdAt).toLocaleDateString("en-US", {
