@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import { Toaster } from 'sonner';
+import { Analytics } from "@vercel/analytics/next"
 
 export default function AdminLayout({
   children
@@ -164,6 +165,7 @@ export default function AdminLayout({
           {/* Page content wrapper with responsive padding */}
           <div className="w-full">
             {children}
+            <Analytics />
           </div>
         </div>
       </main>
