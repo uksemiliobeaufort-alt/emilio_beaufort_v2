@@ -5,7 +5,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  console.error('❌ Missing Supabase environment variables:');
+  console.error('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Missing');
+  console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? '✅ Set' : '❌ Missing');
+  throw new Error('Missing Supabase environment variables. Please check your .env.local file.');
 }
 
 // Create Supabase client
@@ -16,6 +19,9 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false
   }
 });
+
+// Debug log to confirm Supabase client is initialized
+console.log('✅ Supabase client initialized successfully');
 
 export interface AuthUser {
   id: string;
@@ -83,16 +89,26 @@ export const auth = {
       const normalizedEmail = email.toLowerCase().trim();
       console.log('🔐 Attempting admin login for:', normalizedEmail);
       
+      // Check if Supabase client is properly initialized
+      if (!supabase) {
+        console.error('❌ Supabase client is not initialized');
+        throw new AuthError('Authentication service unavailable');
+      }
+      
       // Verify credentials using our database function (real-time check)
+      console.log('🔍 Calling verify_admin_password RPC...');
       const { data: isValidPassword, error: verifyError } = await supabase
         .rpc('verify_admin_password', {
           user_email: normalizedEmail,
           user_password: password
         });
 
+      console.log('📋 RPC result:', { isValidPassword, verifyError });
+
       if (verifyError) {
         console.error('❌ Password verification error:', verifyError);
-        throw new AuthError('Authentication service error');
+        console.error('❌ Error details:', JSON.stringify(verifyError, null, 2));
+        throw new AuthError(`Authentication service error: ${verifyError.message || 'Unknown error'}`);
       }
 
       if (!isValidPassword) {
@@ -105,9 +121,8 @@ export const auth = {
       // Get admin user details (real-time fetch)
       const { data: adminUser, error: adminError } = await supabase
         .from('admin_user')
-        .select('id, email, created_at, last_login, is_active')
+        .select('id, email, created_at, password')
         .eq('email', normalizedEmail)
-        .eq('is_active', true)
         .single();
 
       if (adminError || !adminUser) {
@@ -117,21 +132,14 @@ export const auth = {
 
       console.log('✅ Admin user found:', adminUser.email);
 
-      // Update last login time (real-time update)
-      const { error: updateError } = await supabase
-        .from('admin_user')
-        .update({ last_login: new Date().toISOString() })
-        .eq('email', normalizedEmail);
-
-      if (updateError) {
-        console.warn('⚠️ Failed to update last login:', updateError);
-      }
+      // Note: last_login column doesn't exist in your table structure
+      // Skipping last login update
 
       const authenticatedUser: AuthUser = {
-        id: adminUser.id,
+        id: adminUser.id.toString(), // Convert to string since your ID is int8
         email: adminUser.email,
         created_at: adminUser.created_at,
-        last_login: new Date().toISOString()
+        last_login: new Date().toISOString() // Keep for compatibility
       };
 
       // Set user and create session
@@ -142,10 +150,33 @@ export const auth = {
       return authenticatedUser;
     } catch (error) {
       console.error('💥 Login process error:', error);
+      
+      // If it's already an AuthError, throw it as-is
       if (error instanceof AuthError) {
         throw error;
       }
-      throw new AuthError('An error occurred during login');
+      
+      // Handle different types of errors
+      if (error instanceof Error) {
+        console.error('💥 Error name:', error.name);
+        console.error('💥 Error message:', error.message);
+        console.error('💥 Error stack:', error.stack);
+        
+        // Check for specific error types
+        if (error.message.includes('fetch')) {
+          throw new AuthError('Network error: Unable to connect to authentication service');
+        } else if (error.message.includes('JSON')) {
+          throw new AuthError('Data format error: Invalid response from authentication service');
+        } else if (error.message.includes('timeout')) {
+          throw new AuthError('Timeout error: Authentication service is taking too long to respond');
+        }
+        
+        throw new AuthError(`Authentication error: ${error.message}`);
+      }
+      
+      // Fallback for unknown errors
+      console.error('💥 Unknown error type:', typeof error);
+      throw new AuthError('An unexpected error occurred during login');
     }
   },
 
@@ -175,20 +206,19 @@ export const auth = {
       if (storedUser) {
         console.log('📱 Found stored session for:', storedUser.email);
         
-        // Verify user is still active (real-time check)
+        // Verify user still exists (real-time check)
         const { data: adminUser, error: adminError } = await supabase
           .from('admin_user')
-          .select('id, email, created_at, last_login')
+          .select('id, email, created_at, password')
           .eq('email', storedUser.email)
-          .eq('is_active', true)
           .single();
 
         if (!adminError && adminUser) {
           auth.user = {
-            id: adminUser.id,
+            id: adminUser.id.toString(), // Convert to string since your ID is int8
             email: adminUser.email,
             created_at: adminUser.created_at,
-            last_login: adminUser.last_login
+            last_login: undefined // This field doesn't exist in your table
           };
           console.log('✅ Auth initialized from session');
           return;
@@ -219,12 +249,11 @@ export const auth = {
         return false;
       }
 
-      // Real-time check: verify admin is still active
+      // Real-time check: verify admin still exists
       const { data: adminUser, error: adminError } = await supabase
         .from('admin_user')
         .select('id')
         .eq('email', auth.user.email)
-        .eq('is_active', true)
         .single();
 
       const isValid = !adminError && !!adminUser;
@@ -256,13 +285,12 @@ export const auth = {
     }
   },
 
-  // Real-time function to get all active admin emails
+  // Real-time function to get all admin emails
   getActiveAdminEmails: async (): Promise<string[]> => {
     try {
       const { data: adminUsers, error } = await supabase
         .from('admin_user')
         .select('email')
-        .eq('is_active', true)
         .order('created_at');
 
       if (error) {
