@@ -72,7 +72,7 @@ export default function JournalPage() {
   const getPostUrl = (post: BlogPost): string => {
     // Always use production domain for sharing (even in development)
     // This ensures shared links always point to the live site
-    const baseUrl = 'https://www.emiliobeaufort.com';
+    const baseUrl = 'http://emilio-beaufort.vercel.app/';
     return `${baseUrl}/journal/${post.slug}`;
   };
 

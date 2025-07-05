@@ -40,6 +40,11 @@ const sidebarItems = [
     href: '/admin/blogs',
     icon: <BookOpen className="h-4 w-4" />
   },
+  {
+    name: 'Admin Users',
+    href: '/admin/users',
+    icon: <Settings className="h-4 w-4" />
+  },
 ];
 
 export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarProps) {
