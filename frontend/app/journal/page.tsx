@@ -72,14 +72,35 @@ export default function JournalPage() {
   const getPostUrl = (post: BlogPost): string => {
     // Always use production domain for sharing (even in development)
     // This ensures shared links always point to the live site
-    const baseUrl = 'http://emilio-beaufort.vercel.app';
+    const baseUrl = 'https://emilio-beaufort.vercel.app';
     return `${baseUrl}/journal/${post.slug}`;
   };
 
   const copyToClipboard = async (post: BlogPost) => {
     try {
       const url = getPostUrl(post);
-      await navigator.clipboard.writeText(url);
+      
+      // Check if modern Clipboard API is available
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+      
       setCopiedPostId(post.id);
       toast.success("Link copied to clipboard!");
       
