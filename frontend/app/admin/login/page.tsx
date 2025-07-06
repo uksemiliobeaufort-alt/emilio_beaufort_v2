@@ -77,6 +77,16 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-50">
+      {/* Home button at top left of page */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="absolute top-6 left-6 z-20 bg-white/80 backdrop-blur-sm border-gray-200 hover:bg-white hover:border-gray-300 text-gray-700 hover:text-gray-900 transition-all duration-200 shadow-sm hover:shadow-md"
+        onClick={() => router.push('/')}
+      >
+        ← Home
+      </Button>
+
       {/* Animated background elements */}
       <div className="absolute inset-0 w-full h-full">
         <div className="absolute top-0 -left-4 w-72 h-72 bg-gray-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
@@ -93,7 +103,7 @@ export default function AdminLogin() {
             <Lock className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-serif mb-2 text-gray-900">Welcome Back</h1>
-          <p className="text-sm text-gray-500">Sign in to access the admin panel</p>
+          <p className="text-sm text-gray-500">Login in to access the admin panel</p>
         </div>
 
         <Card className="border border-gray-100 shadow-xl bg-white">
