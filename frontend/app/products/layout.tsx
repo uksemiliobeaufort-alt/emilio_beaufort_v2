@@ -14,4 +14,12 @@ export const metadata = generateMetadata({
     "premium grooming kit"
   ],
   path: "/products",
-}); 
+});
+
+export default function ProductsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <>{children}</>;
+} 

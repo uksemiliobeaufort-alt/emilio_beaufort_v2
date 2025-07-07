@@ -14,9 +14,13 @@ interface SEOConfig {
 const SITE_CONFIG = {
   name: 'Emilio Beaufort',
   description: 'Luxury grooming products and philosophy for the discerning gentleman. Premium skincare, shaving, and grooming essentials.',
-  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://emiliobeaufort.com',
-  logo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/EM.jpg`,
-  favicon: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/favicon.ico`,
+  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://emilio-beaufort.vercel.app',
+  logo: process.env.NEXT_PUBLIC_SUPABASE_URL 
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/EM.jpg`
+    : '/favicon.ico',
+  favicon: process.env.NEXT_PUBLIC_SUPABASE_URL 
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/favicon.ico`
+    : '/favicon.ico',
   twitter: '@emiliobeaufort',
   keywords: [
     'luxury grooming',
