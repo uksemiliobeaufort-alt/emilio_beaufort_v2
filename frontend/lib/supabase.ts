@@ -1,5 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from './supabaseClient';
+
+export async function saveFeedback(data: {
+  name?: string;
+  email?: string;
+  type: string;
+  message: string;
+}) {
+  const { error } = await supabase.from("feedback").insert([data]);
+
+  if (error) {
+    console.error("Supabase insert error:", error);
+    throw error;
+  }
+}
 
 
 
