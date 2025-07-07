@@ -71,6 +71,8 @@ const config: Config = {
       fontFamily: {
         sans: ["Inter", "sans-serif"],
         serif: ["Playfair Display", "serif"],
+        "plus-jakarta": ["var(--font-plus-jakarta)", "sans-serif"],
+        "space-grotesk": ["var(--font-space-grotesk)", "sans-serif"],
       },
     },
   },
