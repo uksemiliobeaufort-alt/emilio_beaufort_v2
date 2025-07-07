@@ -40,7 +40,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${playfair.variable} ${plusJakarta.variable} ${spaceGrotesk.variable} bg-white text-gray-900 font-sans`}>
         <BagProvider>
-          <Navbar />
+          {/* <Navbar /> */}
           <main>
             {children}
           </main>
