@@ -39,6 +39,147 @@ export async function saveFeedback(data: {
   }
 }
 
+// Product management functions
+export interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  detailed_description?: string;
+  price?: number;
+  original_price?: number;
+  category: string;
+  status: 'draft' | 'published' | 'archived';
+  featured: boolean;
+  in_stock: boolean;
+  stock_quantity: number;
+  sku?: string;
+  weight?: number;
+  dimensions?: string;
+  ingredients?: string;
+  usage_instructions?: string;
+  main_image_url?: string;
+  gallery_images?: string[];
+  metadata?: Record<string, any>;
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string[];
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+export const getProducts = async (): Promise<Product[]> => {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
+export const getProduct = async (id: string): Promise<Product | null> => {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Error fetching product:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+export const createProduct = async (productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> => {
+  const { data, error } = await supabase
+    .from('products')
+    .insert([productData])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating product:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+export const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product> => {
+  const { data, error } = await supabase
+    .from('products')
+    .update(productData)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating product:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+export const deleteProduct = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting product:', error);
+    throw error;
+  }
+};
+
+export const uploadProductImage = async (file: File, productId: string, imageType: 'main' | 'gallery' = 'gallery'): Promise<string> => {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${productId}/${imageType}_${Date.now()}.${fileExt}`;
+
+  const { data, error } = await supabase.storage
+    .from('product-images')
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: true,
+    });
+
+  if (error) {
+    console.error('Error uploading image:', error);
+    throw error;
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('product-images')
+    .getPublicUrl(fileName);
+
+  return urlData.publicUrl;
+};
+
+export const deleteProductImage = async (imageUrl: string): Promise<void> => {
+  // Extract the file path from the URL
+  const url = new URL(imageUrl);
+  const pathParts = url.pathname.split('/');
+  const fileName = pathParts.slice(-2).join('/'); // Get the last two parts (productId/filename)
+
+  const { error } = await supabase.storage
+    .from('product-images')
+    .remove([fileName]);
+
+  if (error) {
+    console.error('Error deleting image:', error);
+    throw error;
+  }
+};
+
 // Helper function to get public URL for an image in a bucket
 export const getImageUrl = (bucketName: string, path: string) => {
   if (!bucketName || !path) {

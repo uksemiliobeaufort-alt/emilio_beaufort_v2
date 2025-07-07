@@ -31,9 +31,10 @@ type FeedbackFormData = z.infer<typeof feedbackSchema>;
 interface FeedbackFormDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  isAutoTriggered?: boolean;
 }
 
-export default function FeedbackFormDialog({ isOpen, onClose }: FeedbackFormDialogProps) {
+export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = false }: FeedbackFormDialogProps) {
   const form = useForm<FeedbackFormData>({
     resolver: zodResolver(feedbackSchema),
     defaultValues: {
@@ -80,7 +81,19 @@ export default function FeedbackFormDialog({ isOpen, onClose }: FeedbackFormDial
         {!isSuccess ? (
           <>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-serif">We Value Your Feedback</DialogTitle>
+              <DialogTitle className="text-2xl font-serif">
+                {isAutoTriggered 
+                  ? "Thank you for exploring Emilio Beaufort" 
+                  : "We Value Your Feedback"
+                }
+              </DialogTitle>
+              {isAutoTriggered && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                  <p className="text-gray-700 text-sm">
+                    ✨ We value every moment you spend exploring our brand. Your feedback helps us perfect the Emilio Beaufort experience.
+                  </p>
+                </div>
+              )}
             </DialogHeader>
             <div className="mt-4">
               <Form {...form}>
@@ -150,13 +163,25 @@ export default function FeedbackFormDialog({ isOpen, onClose }: FeedbackFormDial
                     )}
                   />
 
-                  <Button
-                    type="submit"
-                    className="w-full btn-primary-premium"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Submitting..." : "Send Feedback"}
-                  </Button>
+                  <div className="flex gap-3">
+                    {isAutoTriggered && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={onClose}
+                      >
+                        Maybe Later
+                      </Button>
+                    )}
+                    <Button
+                      type="submit"
+                      className={`${isAutoTriggered ? 'flex-1' : 'w-full'} btn-primary-premium`}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Submitting..." : "Send Feedback"}
+                    </Button>
+                  </div>
                 </form>
               </Form>
             </div>
