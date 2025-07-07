@@ -52,11 +52,10 @@ const nextConfig = {
   // Power by header removal for security
   poweredByHeader: false,
 
-  // Enable experimental features for better performance
-  experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['framer-motion', 'lucide-react'],
-  },
+  // Enable experimental features for better performance (commented out for stable deployment)
+  // experimental: {
+  //   optimizePackageImports: ['framer-motion', 'lucide-react'],
+  // },
 
   // Headers for SEO and security
   async headers() {
