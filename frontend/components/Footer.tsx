@@ -85,9 +85,15 @@ export function Footer() {
             © {currentYear} Emilio Beaufort. All rights reserved.
           </p>
           <div className="flex space-x-6 text-sm">
-            <a href="#" className="text-gray-400 hover:text-gold transition-premium">Privacy Policy</a>
-            <a href="#" className="text-gray-400 hover:text-gold transition-premium">Terms of Service</a>
-            <a href="#" className="text-gray-400 hover:text-gold transition-premium">Cookie Policy</a>
+            <Link href="/privacy-policy" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta">
+              Privacy Policy
+            </Link>
+            <a href="#" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta">
+              Terms of Service
+            </a>
+            <Link href="/cookie-policy" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta">
+              Cookie Policy
+            </Link>
           </div>
         </div>
       </div>
