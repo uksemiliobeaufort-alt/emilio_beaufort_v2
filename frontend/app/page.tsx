@@ -16,6 +16,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
   const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
+  const [hasScrolledToFooter, setHasScrolledToFooter] = useState(false);
+  const [isAutoTriggeredFeedback, setIsAutoTriggeredFeedback] = useState(false);
+  const [lastPopupTime, setLastPopupTime] = useState(0);
 
 
   useEffect(() => {
@@ -43,6 +46,67 @@ export default function Home() {
       }
     }
   }, []);
+
+  // Auto-popup feedback form when user reaches footer area
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    const handleScroll = () => {
+      const alliancesSection = document.getElementById('alliances');
+      if (!alliancesSection) return;
+
+      const rect = alliancesSection.getBoundingClientRect();
+      const isInView = rect.top <= window.innerHeight && rect.bottom >= 0;
+
+      if (isInView && !hasScrolledToFooter) {
+        setHasScrolledToFooter(true);
+        
+        // Add a subtle delay to make it feel natural
+        timeoutId = setTimeout(() => {
+          // Double-check user is still in the area and hasn't already opened it
+          const currentRect = alliancesSection.getBoundingClientRect();
+          const stillInView = currentRect.top <= window.innerHeight && currentRect.bottom >= 0;
+          
+          // Check cooldown period (30 seconds) to prevent too frequent popups
+          const now = Date.now();
+          const cooldownPeriod = 30000; // 30 seconds
+          
+          if (stillInView && !isFeedbackFormOpen && !isPartnershipFormOpen && 
+              (now - lastPopupTime > cooldownPeriod)) {
+            setIsAutoTriggeredFeedback(true);
+            setIsFeedbackFormOpen(true);
+            setLastPopupTime(now);
+            
+            // Subtle success toast to let them know it's not intrusive
+            setTimeout(() => {
+              toast.success('💭 We\'d love to hear your thoughts on your Emilio Beaufort experience', {
+                duration: 3000,
+              });
+            }, 500);
+          }
+        }, 2000); // 2 second delay after they reach the section
+      } else if (!isInView && hasScrolledToFooter) {
+        // Reset when user scrolls away from footer area
+        setHasScrolledToFooter(false);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      }
+    };
+
+    // Only add scroll listener if loading is complete
+    if (!loading) {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      
+      // Also check on mount in case user is already at bottom
+      handleScroll();
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [loading, hasScrolledToFooter, isFeedbackFormOpen, isPartnershipFormOpen, lastPopupTime]);
 
   if (loading) {
     return (
@@ -243,23 +307,13 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-8 sm:mb-12 md:mb-16"
           >
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button 
-                size="lg"
-                className="btn-primary-premium text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 font-sans-medium"
-                onClick={() => setIsPartnershipFormOpen(true)}
-              >
-                Fill Partnership Form
-              </Button>
-              
-              <Button 
-                size="lg"
-                className="btn-secondary-premium text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 font-sans-medium"
-                onClick={() => setIsFeedbackFormOpen(true)}
-              >
-                Share Your Experience
-              </Button>
-            </div>
+            <Button 
+              size="lg"
+              className="btn-primary-premium text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 font-sans-medium"
+              onClick={() => setIsPartnershipFormOpen(true)}
+            >
+              Fill Partnership Form
+            </Button>
           </motion.div>
         </div>
       </section>
@@ -272,7 +326,11 @@ export default function Home() {
 
       <FeedbackFormDialog 
         isOpen={isFeedbackFormOpen}
-        onClose={() => setIsFeedbackFormOpen(false)}
+        onClose={() => {
+          setIsFeedbackFormOpen(false);
+          setIsAutoTriggeredFeedback(false);
+        }}
+        isAutoTriggered={isAutoTriggeredFeedback}
       />
 
       
