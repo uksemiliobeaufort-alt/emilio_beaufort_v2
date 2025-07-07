@@ -63,17 +63,14 @@ const nextConfig = {
       {
         source: '/(.*)',
         headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY'
-          },
+          // Removed X-Frame-Options to allow iframe embedding from any domain
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff'
           },
           {
             key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin'
+            value: 'origin-when-cross-origin'
           },
         ],
       },

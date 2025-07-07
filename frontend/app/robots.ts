@@ -12,11 +12,10 @@ export default function robots(): MetadataRoute.Robots {
           '/api/',
           '/_next/',
           '/private/',
-          '/*.json',
-          '/auth/signup',
           '/temp/',
         ],
       },
+      // Only block specific AI training bots, allow others
       {
         userAgent: 'GPTBot',
         disallow: '/',
