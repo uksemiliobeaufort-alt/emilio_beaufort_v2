@@ -10,11 +10,14 @@ import { toast } from 'sonner';
 import Journal from './journal/page';
 import CardGrid from '@/components/CardGrid';
 import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
+import FeedbackFormDialog from "@/components/ui/FeedbackFormDialog";
 import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
+  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -248,6 +251,17 @@ export default function Home() {
             >
               Fill Partnership Form
             </Button>
+            
+            {/* {Feedback form Button} */}
+            <br/>
+            <Button className="btn-primary-premium text-base sm:text-lg px-8 py-4 mt-1"
+             onClick={() => setIsFeedbackFormOpen(true)}>
+                Leave Feedback
+            </Button>
+            <FeedbackFormDialog isOpen={isFeedbackFormOpen}
+              onClose={() => setIsFeedbackFormOpen(false)}
+              />
+
           </motion.div>
         </div>
       </section>
@@ -259,6 +273,9 @@ export default function Home() {
         isOpen={isPartnershipFormOpen}
         onClose={() => setIsPartnershipFormOpen(false)}
       />
+
+
+      
     </div>
   );
 } 
