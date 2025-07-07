@@ -669,3 +669,66 @@
 .line-clamp-3 [style*="color: green"] {
   color: #10b981 !important;
 }
+
+.line-clamp-3 [style*="color: rgb(16, 185, 129)"],
+.line-clamp-3 [style*="color: rgb(34, 197, 94)"] {
+  color: #10b981 !important;
+}
+
+/* Shine animation for form border effect */
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) skewX(-12deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-12deg);
+  }
+}
+
+@keyframes rotatingBorder {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotatingBorderReverse {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes pulseSlow {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-shine {
+  animation: shine 3s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: rotatingBorder 4s linear infinite;
+}
+
+.animate-spin-reverse {
+  animation: rotatingBorderReverse 6s linear infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s ease-in-out infinite;
+}
+
+/* Conic gradient for rotating shine effect */
+.bg-gradient-conic {
+  background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.4), transparent, transparent);
+}

@@ -52,11 +52,10 @@ export interface WaitlistSignup {
 }
 
 export interface CreatePartnershipInquiryDto {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
+  fullName: string;
   companyName: string;
+  email: string;
+  inquiryType: string;
   message: string;
 }
 
