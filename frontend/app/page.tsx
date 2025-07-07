@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { api } from '@/lib/api';
 import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Journal from './journal/page';
@@ -266,8 +265,6 @@ export default function Home() {
         </div>
       </section>
       
-
-      <Footer />
 
       <PartnershipFormDialog 
         isOpen={isPartnershipFormOpen}
