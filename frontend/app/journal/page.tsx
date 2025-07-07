@@ -15,7 +15,7 @@ interface BlogPost {
   id: number;
   title: string;
   slug: string;
-  content: string;
+  content?: string;
   featured_image_url?: string;
   gallery?: string[];
   featured_image_base64?: string;
@@ -36,10 +36,12 @@ export default function JournalPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
+        // Optimize query: Only fetch needed fields and limit to 10 posts for marquee
         const { data, error } = await supabase
           .from('blog_posts')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .select('id, title, slug, featured_image_base64, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10);
 
         if (error) {
           console.error("Error fetching posts:", error);
@@ -127,7 +129,7 @@ export default function JournalPage() {
 
   const shareOnLinkedIn = (post: BlogPost) => {
     const url = getPostUrl(post);
-    const summary = stripHtmlAndTruncate(post.content, 200);
+    const summary = stripHtmlAndTruncate(post.content || '', 200);
     const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(post.title)}&summary=${encodeURIComponent(summary)}`;
     window.open(linkedinUrl, '_blank');
   };
@@ -150,7 +152,7 @@ export default function JournalPage() {
       try {
         await navigator.share({
           title: post.title,
-          text: stripHtmlAndTruncate(post.content, 100),
+          text: stripHtmlAndTruncate(post.content || '', 100),
           url: getPostUrl(post),
         });
       } catch (error) {
@@ -218,6 +220,8 @@ export default function JournalPage() {
                                 src={post.featured_image_base64}
                                 alt={post.title || 'Blog post image'}
                                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                                decoding="async"
                                 onError={(e) => {
                                   console.error(`Image failed to load for post: ${post.title}`);
                                   e.currentTarget.style.display = 'none';
@@ -234,7 +238,7 @@ export default function JournalPage() {
                               {post.title}
                             </h3>
                             <p className="text-gray-600 text-sm line-clamp-3 mb-3">
-                              {post.content ? stripHtmlAndTruncate(post.content, 100) : 'No content available'}
+                              Click to read this fascinating article and discover more insights.
                             </p>
                             <p className="text-xs text-gray-500 mb-4">
                               {new Date(post.created_at).toLocaleDateString("en-US", {
