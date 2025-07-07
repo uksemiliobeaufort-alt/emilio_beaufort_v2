@@ -1,3 +1,5 @@
+"use client";
+
 import "./globals.css";
 import { Inter, Playfair_Display, Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
@@ -8,23 +10,20 @@ import { Suspense } from "react";
 import { BagProvider } from '@/components/BagContext';
 import CookieConsent from '@/components/CookieConsent';
 import { generateMetadata as generateSEOMetadata, generateOrganizationSchema } from '@/lib/seo';
+import { usePathname } from 'next/navigation';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 const plusJakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-plus-jakarta" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
 
-export const metadata = generateSEOMetadata({
-  title: "Emilio Beaufort",
-  description: "Luxury grooming products and philosophy for the discerning gentleman. Premium skincare, shaving, and grooming essentials crafted for modern luxury.",
-  keywords: ["luxury grooming", "men's skincare", "premium shaving", "grooming products"],
-});
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isAdminPage = pathname?.startsWith('/admin');
   const organizationSchema = generateOrganizationSchema();
 
   return (
@@ -44,7 +43,7 @@ export default function RootLayout({
           <main>
             {children}
           </main>
-          <Footer />
+          {!isAdminPage && <Footer />}
         </BagProvider>
         <Toaster />
         <CookieConsent />
