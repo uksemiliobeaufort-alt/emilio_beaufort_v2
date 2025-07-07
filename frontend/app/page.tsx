@@ -100,9 +100,6 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Exclusive Products Marquee Section */}
-      <ExclusiveProductsMarquee />
-
       {/* Philosophy Section */}
       <section id="philosophy" className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-hidden section-premium">
         <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#f8f8f8]"></div>
@@ -162,6 +159,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Exclusive Products Marquee Section */}
+      <ExclusiveProductsMarquee />
 
       {/* The House Section */}
       <section id="house" className="py-8 sm:py-10 md:py-12 lg:py-16 relative overflow-hidden section-premium">
