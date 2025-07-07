@@ -243,24 +243,23 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-8 sm:mb-12 md:mb-16"
           >
-            <Button 
-              size="lg"
-              className="btn-primary-premium text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 font-sans-medium"
-              onClick={() => setIsPartnershipFormOpen(true)}
-            >
-              Fill Partnership Form
-            </Button>
-            
-            {/* {Feedback form Button} */}
-            <br/>
-            <Button className="btn-primary-premium text-base sm:text-lg px-8 py-4 mt-1"
-             onClick={() => setIsFeedbackFormOpen(true)}>
-                Leave Feedback
-            </Button>
-            <FeedbackFormDialog isOpen={isFeedbackFormOpen}
-              onClose={() => setIsFeedbackFormOpen(false)}
-              />
-
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button 
+                size="lg"
+                className="btn-primary-premium text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 font-sans-medium"
+                onClick={() => setIsPartnershipFormOpen(true)}
+              >
+                Fill Partnership Form
+              </Button>
+              
+              <Button 
+                size="lg"
+                className="btn-secondary-premium text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 font-sans-medium"
+                onClick={() => setIsFeedbackFormOpen(true)}
+              >
+                Share Your Experience
+              </Button>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -271,6 +270,10 @@ export default function Home() {
         onClose={() => setIsPartnershipFormOpen(false)}
       />
 
+      <FeedbackFormDialog 
+        isOpen={isFeedbackFormOpen}
+        onClose={() => setIsFeedbackFormOpen(false)}
+      />
 
       
     </div>

@@ -60,7 +60,9 @@ export default function FeedbackFormDialog({ isOpen, onClose }: FeedbackFormDial
 
       setIsSuccess(true);
       form.reset();
+      toast.success("Thank you! Your feedback has been submitted successfully.");
     } catch (error) {
+      console.error("Feedback submission error:", error);
       toast.error("Failed to submit feedback. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -150,7 +152,7 @@ export default function FeedbackFormDialog({ isOpen, onClose }: FeedbackFormDial
 
                   <Button
                     type="submit"
-                    className="w-full bg-accent hover:bg-accent/90"
+                    className="w-full btn-primary-premium"
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? "Submitting..." : "Send Feedback"}
@@ -166,7 +168,7 @@ export default function FeedbackFormDialog({ isOpen, onClose }: FeedbackFormDial
             <div className="text-gray-600 mb-6">
               Your feedback helps us improve and grow.
             </div>
-            <Button onClick={handleClose} className="bg-accent hover:bg-accent/90">
+            <Button onClick={handleClose} className="btn-primary-premium">
               Close
             </Button>
           </div>
