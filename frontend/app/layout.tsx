@@ -10,9 +10,17 @@ import { BagProvider } from '@/components/BagContext';
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
+// Construct favicon URL from Supabase bucket
+const faviconUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/favicon.ico`;
+
 export const metadata = {
   title: "Emilio Beaufort - Luxury Grooming",
-  description: "Luxury grooming products and philosophy by Emilio Beaufort.",
+  description: "Emilio Beaufort - Luxury grooming products and philosophy by Emilio Beaufort.",
+  icons: {
+    icon: faviconUrl,
+    shortcut: faviconUrl,
+    apple: faviconUrl,
+  },
 };
 
 export default function RootLayout({
