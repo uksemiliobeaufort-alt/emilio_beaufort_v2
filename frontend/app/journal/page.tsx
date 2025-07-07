@@ -12,19 +12,22 @@ import { Share2, Copy, MessageCircle, Linkedin, Twitter, Facebook, Check } from 
 import { toast } from "sonner";
 
 interface BlogPost {
-  id: number;
+  id: string;
   title: string;
   slug: string;
   content: string;
+  featured_image_url?: string;
+  gallery?: string[];
   featured_image_base64?: string;
   gallery_base64?: string[];
   created_at: string;
+  updated_at?: string;
 }
 
 export default function JournalPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copiedPostId, setCopiedPostId] = useState<number | null>(null);
+  const [copiedPostId, setCopiedPostId] = useState<string | null>(null);
 
   // Default placeholder image
   const defaultImageUrl = "/default-image.jpg";
@@ -33,7 +36,7 @@ export default function JournalPage() {
     const fetchPosts = async () => {
       try {
         const { data, error } = await supabase
-          .from('blog_posts')
+          .from('posts')
           .select('*')
           .order('created_at', { ascending: false });
 

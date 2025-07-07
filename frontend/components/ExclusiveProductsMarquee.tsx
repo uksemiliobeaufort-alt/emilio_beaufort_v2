@@ -88,14 +88,14 @@ export default function ExclusiveProductsMarquee() {
   const handleCardMouseLeave = () => setIsAutoScrollPaused(false);
 
   return (
-    <div className="w-full py-16 bg-premium overflow-hidden relative">
+    <div className="w-full py-16 bg-premium overflow-hidden relative scrollbar-hidden">
       <h2 className="text-4xl font-serif font-bold text-premium mb-10 text-center">
         Most Exclusive Collection
       </h2>
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden max-w-full mx-auto px-6">
         {/* Left Arrow */}
         <button
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-premium rounded-full p-2 shadow transition-all"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-premium rounded-full p-2 shadow transition-all"
           onClick={() => scrollByAmount(-350)}
           aria-label="Scroll left"
         >
@@ -103,7 +103,7 @@ export default function ExclusiveProductsMarquee() {
         </button>
         {/* Right Arrow */}
         <button
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-premium rounded-full p-2 shadow transition-all"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white border border-premium rounded-full p-2 shadow transition-all"
           onClick={() => scrollByAmount(350)}
           aria-label="Scroll right"
         >
@@ -111,7 +111,7 @@ export default function ExclusiveProductsMarquee() {
         </button>
         <div
           ref={scrollRef}
-          className="overflow-x-auto scrollbar-hide w-full px-12"
+          className="overflow-x-auto overflow-y-hidden scrollbar-hidden w-full"
           style={{ scrollBehavior: 'smooth' }}
         >
           <div className="flex gap-8 min-w-max">
