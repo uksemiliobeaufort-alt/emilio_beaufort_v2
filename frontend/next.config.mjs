@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       {
@@ -29,10 +28,16 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'mzvuuvtckcimzemivltz.supabase.co',
+        hostname: '*.supabase.co',
         port: '',
-        pathname: '/storage/v1/object/public/product-images/**',
+        pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/sign/**',
+      }
     ],
   },
   typescript: {
@@ -43,4 +48,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default nextConfig; 

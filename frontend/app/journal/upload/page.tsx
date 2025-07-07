@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,15 +8,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { auth } from '@/lib/auth';
 import { toast } from 'sonner';
-import { api } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
+
+interface FormData {
+  title: string;
+  content: string;
+  featuredImage: File | null;
+}
 
 export default function UploadBlogPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     content: '',
-    featuredImage: null as File | null,
-    excerpt: ''
+    featuredImage: null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -29,32 +34,65 @@ export default function UploadBlogPage() {
     }
   }, [router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      await api.createPost({
-        title: formData.title,
-        content: formData.content,
-        featuredImageUrl: formData.featuredImage ? URL.createObjectURL(formData.featuredImage) : null,
-        slug: formData.title.toLowerCase().replace(/\s+/g, '-'),
-      });
+      let featuredImageBase64 = null;
+      if (formData.featuredImage) {
+        featuredImageBase64 = await convertFileToBase64(formData.featuredImage);
+      }
+
+      const slug = formData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+      const { error } = await supabase.from('blog_posts').insert([
+        {
+          title: formData.title,
+          slug: slug,
+          content: formData.content,
+          featured_image_base64: featuredImageBase64,
+        }
+      ]);
+
+      if (error) {
+        console.error('Error creating post:', error);
+        throw error;
+      }
 
       toast.success('Post created successfully!');
       router.push('/journal');
-    } catch {
+    } catch (error) {
+      console.error('Error creating post:', error);
       toast.error('Failed to create post');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
-      setFormData(prev => ({
+      const file = e.target.files[0];
+      // Validate file type and size
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      setFormData((prev: FormData) => ({
         ...prev,
-        featuredImage: e.target.files![0]
+        featuredImage: file
       }));
     }
   };
@@ -83,17 +121,7 @@ export default function UploadBlogPage() {
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="excerpt">Excerpt</Label>
-            <Textarea
-              id="excerpt"
-              value={formData.excerpt}
-              onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData((prev: FormData) => ({ ...prev, title: e.target.value }))}
               required
             />
           </div>
@@ -103,14 +131,14 @@ export default function UploadBlogPage() {
             <Textarea
               id="content"
               value={formData.content}
-              onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFormData((prev: FormData) => ({ ...prev, content: e.target.value }))}
               className="min-h-[300px]"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="featuredImage">Featured Image</Label>
+            <Label htmlFor="featuredImage">Featured Image (Max 5MB)</Label>
             <Input
               id="featuredImage"
               type="file"
@@ -120,8 +148,12 @@ export default function UploadBlogPage() {
             />
           </div>
 
-          <Button type="submit" className="w-full mt-8" disabled={isSubmitting}>
-            Upload Blog Post
+          <Button 
+            type="submit" 
+            className="w-full mt-8" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Uploading...' : 'Upload Blog Post'}
           </Button>
         </form>
       </div>

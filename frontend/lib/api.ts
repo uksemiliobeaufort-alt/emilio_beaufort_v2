@@ -2,25 +2,29 @@
 
 import { supabase } from './supabaseClient';
 
+export type ProductCategory = 'COSMETICS' | 'HAIR';
+
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
+  category: ProductCategory;
   imageUrl: string;
+  gallery: string[];
   isSoldOut: boolean;
-  category: 'COSMETICS' | 'FOUNDATIONS' | 'LIPSTICKS' | 'SERUM' | 'POWDERS' | 'Moisturizer';
+  tags: string[];
   createdAt: string;
   updatedAt: string;
-  tags: string[];
 }
 
 export interface Post {
   id: string;
-  slug: string;
   title: string;
   content: string;
-  featuredImageUrl: string | null;
+  slug: string;
+  featuredImageUrl: string;
+  gallery: string[];
   excerpt?: string;
   createdAt: string;
   updatedAt: string;
@@ -32,6 +36,7 @@ export interface PartnershipInquiry {
   email: string;
   company: string;
   message: string;
+  inquiryType: string;
   createdAt: string;
 }
 
@@ -47,9 +52,11 @@ export interface WaitlistSignup {
 }
 
 export interface CreatePartnershipInquiryDto {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  company: string;
+  phoneNumber: string;
+  companyName: string;
   message: string;
 }
 
@@ -63,6 +70,7 @@ export interface CreatePostDto {
   title: string;
   content: string;
   featuredImageUrl: string | null;
+  gallery?: string[];
   slug: string;
 }
 
@@ -222,40 +230,131 @@ const MOCK_HOME_DATA: HomeData = {
 };
 
 // Products API
-export async function getProducts(category?: 'COSMETICS' | 'HAIR'): Promise<Product[]> {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return category ? MOCK_PRODUCTS.filter(p => p.category === category) : MOCK_PRODUCTS;
+export async function getProducts(): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('createdAt', { ascending: false });
+
+  if (error) throw error;
+  return data;
 }
 
-export async function getProductById(id: string): Promise<Product | null> {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return MOCK_PRODUCTS.find(p => p.id === id) || null;
+export async function getProductsByCategory(category: ProductCategory): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('category', category)
+    .order('createdAt', { ascending: false });
+
+  if (error) throw error;
+  return data;
 }
 
-export async function getFeaturedProduct(): Promise<Product | null> {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return MOCK_PRODUCTS[0] || null;
+export async function getProduct(id: string): Promise<Product> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
-// Posts API
+export async function createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+  const { data, error } = await supabase
+    .from('products')
+    .insert([product])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateProduct(id: string, product: Partial<Product>): Promise<Product> {
+  const { data, error } = await supabase
+    .from('products')
+    .update(product)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+// Blog Post API Functions
 export async function getPosts(): Promise<Post[]> {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return MOCK_POSTS;
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*')
+    .order('createdAt', { ascending: false });
+
+  if (error) throw error;
+  return data;
 }
 
-export async function getPostBySlug(slug: string): Promise<Post | null> {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return MOCK_POSTS.find(p => p.slug === slug) || null;
+export async function getPost(id: string): Promise<Post> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function createPost(post: Omit<Post, 'id' | 'createdAt' | 'updatedAt'>): Promise<Post> {
+  const { data, error } = await supabase
+    .from('posts')
+    .insert([post])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updatePost(id: string, post: Partial<Post>): Promise<Post> {
+  const { data, error } = await supabase
+    .from('posts')
+    .update(post)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deletePost(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('posts')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 // Partnership Inquiries API
-export async function submitPartnershipInquiry(data: CreatePartnershipInquiryDto): Promise<PartnershipInquiry> {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return {
-    id: '1',
-    ...data,
-    createdAt: new Date().toISOString()
-  };
+export async function submitPartnershipInquiry(data: CreatePartnershipInquiryDto): Promise<void> {
+  const { error } = await supabase
+    .from('partnership_inquiries')
+    .insert([data]);
+
+  if (error) throw error;
 }
 
 export async function submitCareerApplication(data: CareerApplication): Promise<void> {
