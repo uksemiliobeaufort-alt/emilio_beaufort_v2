@@ -52,27 +52,92 @@ export default function Home() {
     let timeoutId: NodeJS.Timeout;
     
     const handleScroll = () => {
+      // Check for both alliances section and footer
       const alliancesSection = document.getElementById('alliances');
-      if (!alliancesSection) return;
+      const footerElement = document.querySelector('footer');
+      
+      if (!alliancesSection && !footerElement) {
+        console.log('Neither alliances section nor footer found');
+        return;
+      }
 
-      const rect = alliancesSection.getBoundingClientRect();
-      const isInView = rect.top <= window.innerHeight && rect.bottom >= 0;
+      let isInView = false;
+      let targetElement = null;
+
+      // Check alliances section first
+      if (alliancesSection) {
+        const alliancesRect = alliancesSection.getBoundingClientRect();
+        const alliancesInView = alliancesRect.top <= window.innerHeight && alliancesRect.bottom >= 0;
+        if (alliancesInView) {
+          isInView = true;
+          targetElement = alliancesSection;
+        }
+      }
+
+      // Check footer if alliances not in view
+      if (!isInView && footerElement) {
+        const footerRect = footerElement.getBoundingClientRect();
+        const footerInView = footerRect.top <= window.innerHeight && footerRect.bottom >= 0;
+        if (footerInView) {
+          isInView = true;
+          targetElement = footerElement;
+        }
+      }
+
+      // Check if user is near the bottom of the page (within 200px)
+      const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200;
+      if (nearBottom) {
+        isInView = true;
+        targetElement = footerElement || alliancesSection;
+      }
+
+      console.log('Scroll check:', { 
+        isInView, 
+        hasScrolledToFooter, 
+        isFeedbackFormOpen, 
+        isPartnershipFormOpen, 
+        nearBottom 
+      });
 
       if (isInView && !hasScrolledToFooter) {
         setHasScrolledToFooter(true);
+        console.log('Setting hasScrolledToFooter to true, starting timer...');
         
         // Add a subtle delay to make it feel natural
         timeoutId = setTimeout(() => {
           // Double-check user is still in the area and hasn't already opened it
-          const currentRect = alliancesSection.getBoundingClientRect();
-          const stillInView = currentRect.top <= window.innerHeight && currentRect.bottom >= 0;
+          let stillInView = false;
           
-          // Check cooldown period (30 seconds) to prevent too frequent popups
+          if (targetElement) {
+            const currentRect = targetElement.getBoundingClientRect();
+            stillInView = currentRect.top <= window.innerHeight && currentRect.bottom >= 0;
+          }
+          
+          // Also check if near bottom again
+          const stillNearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200;
+          
+          if (!stillInView && !stillNearBottom) {
+            stillInView = false;
+          } else {
+            stillInView = true;
+          }
+          
+          // Check cooldown period (reduced to 10 seconds for better UX)
           const now = Date.now();
-          const cooldownPeriod = 30000; // 30 seconds
+          const cooldownPeriod = 10000; // 10 seconds
           
-          if (stillInView && !isFeedbackFormOpen && !isPartnershipFormOpen && 
+          console.log('Timer expired, checking conditions:', {
+            stillInView,
+            stillNearBottom,
+            isFeedbackFormOpen,
+            isPartnershipFormOpen,
+            timeSinceLastPopup: now - lastPopupTime,
+            cooldownPeriod
+          });
+          
+          if ((stillInView || stillNearBottom) && !isFeedbackFormOpen && !isPartnershipFormOpen && 
               (now - lastPopupTime > cooldownPeriod)) {
+            console.log('All conditions met, showing feedback form!');
             setIsAutoTriggeredFeedback(true);
             setIsFeedbackFormOpen(true);
             setLastPopupTime(now);
@@ -80,16 +145,33 @@ export default function Home() {
             // Subtle success toast to let them know it's not intrusive
             setTimeout(() => {
               toast.success('💭 We\'d love to hear your thoughts on your Emilio Beaufort experience', {
-                duration: 3000,
+                duration: 4000,
+                style: {
+                  background: 'white',
+                  color: 'black',
+                  border: '2px solid #D4AF37',
+                  boxShadow: '0 10px 40px -10px rgba(0, 0, 0, 0.3)',
+                  zIndex: 99999,
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                },
               });
             }, 500);
+          } else {
+            console.log('Conditions not met for showing feedback form');
           }
-        }, 2000); // 2 second delay after they reach the section
+        }, 1500); // Reduced to 1.5 second delay for quicker response
       } else if (!isInView && hasScrolledToFooter) {
         // Reset when user scrolls away from footer area
-        setHasScrolledToFooter(false);
-        if (timeoutId) {
-          clearTimeout(timeoutId);
+        const notNearBottom = window.innerHeight + window.scrollY < document.documentElement.scrollHeight - 400;
+        if (notNearBottom) {
+          console.log('User scrolled away, resetting hasScrolledToFooter');
+          setHasScrolledToFooter(false);
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
         }
       }
     };
