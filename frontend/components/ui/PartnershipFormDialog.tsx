@@ -512,11 +512,15 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
               </div>
               <div className="text-sm sm:text-base font-plus-jakarta text-gray-600 mb-4 sm:mb-6 leading-relaxed">
                 We've already received your partnership inquiry.<br/>
-                Our team will get back to you soon!
+                Let’s take the next step—book a call with our team.
               </div>
               <div className="flex gap-2 text-xl sm:text-2xl mb-4 sm:mb-6">
                 ⭐ 📨 💫
               </div>
+              <button onClick={() => window.open("https://cal.com/kunal-bisht-fwhv8b/15min?overlayCalendar=true")} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base font-space-grotesk font-medium m-1"
+              >
+                Book a meeting
+              </button>
               <Button 
                 onClick={handleClose}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base font-space-grotesk font-medium"
@@ -547,7 +551,7 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
               </div>
               <div className="text-sm sm:text-base font-plus-jakarta text-gray-600 mb-4 sm:mb-6 leading-relaxed">
                 Your inquiry has been successfully submitted.<br/>
-                We'll get back to you soon!
+                If you want a meeting with us click on book a meet
               </div>
               <div className="flex gap-2 text-xl sm:text-2xl mb-4 sm:mb-6">
                 🌟 🎯 💫
