@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { api } from '@/lib/api';
 import { Navbar } from '@/components/Navbar';
@@ -13,6 +14,7 @@ import FeedbackFormDialog from "@/components/ui/FeedbackFormDialog";
 import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
 
 export default function Home() {
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
   const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
@@ -47,24 +49,47 @@ export default function Home() {
     }
   }, []);
 
-  // Auto-popup feedback form when user reaches footer area
+  // Cleanup feedback form state when leaving home page
   useEffect(() => {
+    if (pathname !== '/') {
+      console.log('CLEANING UP FEEDBACK STATE - Left home page. Current path:', pathname);
+      setIsFeedbackFormOpen(false);
+      setIsAutoTriggeredFeedback(false);
+      setHasScrolledToFooter(false);
+    }
+  }, [pathname]);
+
+  // Auto-popup feedback form when user reaches footer area (HOME PAGE ONLY)
+  useEffect(() => {
+    // STRICT RESTRICTION: Only enable feedback form on home page
+    console.log('Feedback form check - current pathname:', pathname);
+    if (pathname !== '/') {
+      console.log('FEEDBACK FORM DISABLED - Not on home page. Current path:', pathname);
+      return;
+    }
+    
+    console.log('FEEDBACK FORM ENABLED - On home page');
+    
     let timeoutId: NodeJS.Timeout;
     
     const handleScroll = () => {
-      // Check for both alliances section and footer
-      const alliancesSection = document.getElementById('alliances');
+      // Only check footer on home page
       const footerElement = document.querySelector('footer');
+      const alliancesSection = document.getElementById('alliances');
       
-      if (!alliancesSection && !footerElement) {
-        console.log('Neither alliances section nor footer found');
+              if (!footerElement) {
+        console.log('Footer not found on home page');
         return;
       }
 
       let isInView = false;
       let targetElement = null;
 
-      // Check alliances section first
+      // Check footer visibility
+      const footerRect = footerElement.getBoundingClientRect();
+      const footerInView = footerRect.top <= window.innerHeight && footerRect.bottom >= 0;
+      
+      // Also check alliances section if it exists
       if (alliancesSection) {
         const alliancesRect = alliancesSection.getBoundingClientRect();
         const alliancesInView = alliancesRect.top <= window.innerHeight && alliancesRect.bottom >= 0;
@@ -73,22 +98,17 @@ export default function Home() {
           targetElement = alliancesSection;
         }
       }
-
-      // Check footer if alliances not in view
-      if (!isInView && footerElement) {
-        const footerRect = footerElement.getBoundingClientRect();
-        const footerInView = footerRect.top <= window.innerHeight && footerRect.bottom >= 0;
-        if (footerInView) {
-          isInView = true;
-          targetElement = footerElement;
-        }
+      
+      if (footerInView) {
+        isInView = true;
+        targetElement = footerElement;
       }
 
-      // Check if user is near the bottom of the page (within 200px)
-      const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200;
+      // Check if user is near the bottom of the HOME PAGE (within 300px)
+      const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300;
       if (nearBottom) {
         isInView = true;
-        targetElement = footerElement || alliancesSection;
+        targetElement = footerElement;
       }
 
       console.log('Scroll check:', { 
@@ -136,29 +156,31 @@ export default function Home() {
           });
           
           if ((stillInView || stillNearBottom) && !isFeedbackFormOpen && !isPartnershipFormOpen && 
-              (now - lastPopupTime > cooldownPeriod)) {
-            console.log('All conditions met, showing feedback form!');
+              (now - lastPopupTime > cooldownPeriod) && pathname === '/') {
+            console.log('All conditions met, showing feedback form on HOME PAGE!');
             setIsAutoTriggeredFeedback(true);
             setIsFeedbackFormOpen(true);
             setLastPopupTime(now);
             
-            // Subtle success toast to let them know it's not intrusive
-            setTimeout(() => {
-              toast.success('💭 We\'d love to hear your thoughts on your Emilio Beaufort experience', {
-                duration: 4000,
-                style: {
-                  background: 'white',
-                  color: 'black',
-                  border: '2px solid #D4AF37',
-                  boxShadow: '0 10px 40px -10px rgba(0, 0, 0, 0.3)',
-                  zIndex: 99999,
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  borderRadius: '8px',
-                  padding: '12px 16px',
-                },
-              });
-            }, 500);
+            // Subtle success toast ONLY in footer area of home page
+            if (pathname === '/' && targetElement) {
+              setTimeout(() => {
+                toast.success('💭 We\'d love to hear your thoughts on your Emilio Beaufort experience', {
+                  duration: 4000,
+                  style: {
+                    background: 'white',
+                    color: 'black',
+                    border: '2px solid #D4AF37',
+                    boxShadow: '0 10px 40px -10px rgba(0, 0, 0, 0.3)',
+                    zIndex: 99999,
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                  },
+                });
+              }, 500);
+            }
           } else {
             console.log('Conditions not met for showing feedback form');
           }
@@ -176,19 +198,23 @@ export default function Home() {
       }
     };
 
-    // Only add scroll listener if loading is complete
-    if (!loading) {
+    // Only add scroll listener if loading is complete AND on home page
+    if (!loading && pathname === '/') {
+      console.log('Adding scroll listener - On home page');
       window.addEventListener('scroll', handleScroll, { passive: true });
       
       // Also check on mount in case user is already at bottom
       handleScroll();
+    } else {
+      console.log('Scroll listener NOT added - Not on home page or still loading');
     }
 
     return () => {
+      console.log('Cleaning up scroll listener');
       window.removeEventListener('scroll', handleScroll);
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [loading, hasScrolledToFooter, isFeedbackFormOpen, isPartnershipFormOpen, lastPopupTime]);
+  }, [pathname, loading, hasScrolledToFooter, isFeedbackFormOpen, isPartnershipFormOpen, lastPopupTime]);
 
   if (loading) {
     return (
@@ -406,14 +432,17 @@ export default function Home() {
         onClose={() => setIsPartnershipFormOpen(false)}
       />
 
-      <FeedbackFormDialog 
-        isOpen={isFeedbackFormOpen}
-        onClose={() => {
-          setIsFeedbackFormOpen(false);
-          setIsAutoTriggeredFeedback(false);
-        }}
-        isAutoTriggered={isAutoTriggeredFeedback}
-      />
+      {/* Only render FeedbackFormDialog on home page */}
+      {pathname === '/' && (
+        <FeedbackFormDialog 
+          isOpen={isFeedbackFormOpen}
+          onClose={() => {
+            setIsFeedbackFormOpen(false);
+            setIsAutoTriggeredFeedback(false);
+          }}
+          isAutoTriggered={isAutoTriggeredFeedback}
+        />
+      )}
 
       
     </div>

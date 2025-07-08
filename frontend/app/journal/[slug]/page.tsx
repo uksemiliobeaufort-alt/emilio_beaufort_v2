@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { supabase } from "@/lib/supabase";
+import HtmlContent from "@/components/ui/HtmlContent";
 
 interface BlogPost {
   id: number;
@@ -135,8 +136,11 @@ export default function BlogPostPage({ params }: Props) {
               />
             </div>
 
-            <div className="prose prose-lg max-w-none mb-12">
-              <div dangerouslySetInnerHTML={{ __html: post.content }} />
+            <div className="mb-12">
+              <HtmlContent 
+                content={post.content} 
+                className="prose prose-lg max-w-none text-gray-800 leading-relaxed" 
+              />
             </div>
 
             <button 
