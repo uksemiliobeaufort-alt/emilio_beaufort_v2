@@ -557,6 +557,11 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
               <div className="flex gap-2 text-xl sm:text-2xl mb-4 sm:mb-6">
                 🌟 🎯 💫
               </div>
+              <button
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base font-space-grotesk font-medium"
+              >
+                <a href="">Apply</a>
+              </button>
               <Button 
                 onClick={handleClose}
                 className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl text-sm sm:text-base font-space-grotesk font-medium"
