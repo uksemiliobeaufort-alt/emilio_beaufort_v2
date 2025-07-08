@@ -40,7 +40,7 @@
     "@types/react-router-dom": "^5.3.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
-    "framer-motion": "^12.20.4",
+    "framer-motion": "^12.23.0",
     "react-hook-form": "^7.59.0",
     "sonner": "^2.0.5",
     "tailwindcss": "^4",

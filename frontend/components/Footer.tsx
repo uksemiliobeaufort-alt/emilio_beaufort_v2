@@ -4,17 +4,15 @@ import { useState } from "react";
 import { Instagram, Twitter, Facebook, Linkedin, ArrowLeft } from "lucide-react";
 import AdminPannel from './AdminPannel/AdminPannel';
 
-
-
-
 export function Footer() {
   const currentYear = new Date().getFullYear();
   const [showAdmin, setShowAdmin] = useState(false);
-  
+
   return (
     <>
       <footer className="bg-premium-dark border-t border-premium py-16 relative">
         <div className="container-premium">
+          {/* Footer content... (unchanged) */}
           <div className="grid md:grid-cols-3 gap-12 mb-12">
             {/* Brand Section */}
             <div className="text-center md:text-left">
@@ -97,10 +95,10 @@ export function Footer() {
         </div>
       </footer>
 
-      {/* 🪟 Admin Modal */}
+      {/* 🪟 Fullscreen Admin Modal */}
       {showAdmin && (
         <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
-          <div className="bg-white rounded-xl shadow-xl w-[90vw] md:w-[80vw] h-[80vh] flex flex-col relative overflow-hidden border border-gray-300">
+          <div className="bg-white w-full h-full flex flex-col relative overflow-hidden border border-gray-300">
             {/* Mac-style top bar */}
             <div className="bg-[#e5e5e5] px-4 py-2 flex items-center space-x-2">
               {/* MacOS traffic lights */}
@@ -112,17 +110,14 @@ export function Footer() {
               <div className="w-3 h-3 bg-green-500 rounded-full" />
               <div className="flex-1" />
               {/* Back button */}
-              <button
-                
-                className="text-gray-700 hover:text-black text-sm flex items-center space-x-1"
-              >
+              <button className="text-gray-700 hover:text-black text-sm flex items-center space-x-1">
                 <ArrowLeft size={16} />
                 <span>Back</span>
               </button>
             </div>
 
             {/* Admin Content */}
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+            <div className="flex-1 overflow-y-auto bg-gray-50">
               <AdminPannel />
             </div>
           </div>
