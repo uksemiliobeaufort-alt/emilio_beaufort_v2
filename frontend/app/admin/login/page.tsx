@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { auth, AuthError } from '@/lib/auth';
-import { Loader2, Eye, EyeOff, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Lock, CheckCircle2, AlertCircle, Home } from 'lucide-react';
 
 interface AlertProps {
   type: 'success' | 'error';
@@ -77,6 +77,19 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-50">
+      {/* Back to Home Button */}
+      <div className="absolute top-6 left-6 z-20">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push('/')}
+          className="bg-white/90 hover:bg-white border-gray-200 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl hover:translate-y-[-1px] text-gray-700 hover:text-gray-900"
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Back to Home
+        </Button>
+      </div>
+
       {/* Animated background elements */}
       <div className="absolute inset-0 w-full h-full">
         <div className="absolute top-0 -left-4 w-72 h-72 bg-gray-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>

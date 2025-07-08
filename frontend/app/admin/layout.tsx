@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Home } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import { Toaster } from 'sonner';
 import { Analytics } from "@vercel/analytics/next"
@@ -130,10 +130,31 @@ export default function AdminLayout({
           <span className="font-semibold text-gray-900">Admin Panel</span>
         </div>
         
-        {/* Quick actions on mobile header if needed */}
+        {/* Quick actions on mobile header */}
         <div className="flex items-center gap-2">
-          {/* Can add quick action buttons here */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/')}
+            className="bg-white hover:bg-gray-50 border-gray-200 shadow-sm transition-all duration-200 text-gray-700 hover:text-gray-900"
+          >
+            <Home className="h-4 w-4 mr-1" />
+            Home
+          </Button>
         </div>
+      </div>
+
+      {/* Desktop Back to Home Button */}
+      <div className="hidden lg:block fixed top-6 left-6 z-30">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push('/')}
+          className="bg-white/90 hover:bg-white border-gray-200 shadow-lg backdrop-blur-sm transition-all duration-200 hover:shadow-xl hover:translate-y-[-1px] text-gray-700 hover:text-gray-900"
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Back to Home
+        </Button>
       </div>
 
       {/* Mobile/Tablet Backdrop */}
