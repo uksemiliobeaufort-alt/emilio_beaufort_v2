@@ -187,7 +187,7 @@ export function generateOrganizationSchema() {
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'Customer Service',
-      email: 'hello@emiliobeaufort.com',
+      email: 'info@emiliocosmetics.com',
       availableLanguage: 'English'
     },
     sameAs: [

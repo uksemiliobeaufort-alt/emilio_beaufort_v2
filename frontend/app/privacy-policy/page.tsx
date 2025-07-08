@@ -64,8 +64,8 @@ export default function PrivacyPolicyPage() {
             </h2>
             <p className="text-gray-700 leading-relaxed">
               If you have any questions about this Privacy Policy, please contact us at{" "}
-              <a href="mailto:privacy@emiliobeaufort.com" className="text-blue-600 hover:text-blue-700">
-                privacy@emiliobeaufort.com
+              <a href="mailto:info@emiliocosmetics.com" className="text-blue-600 hover:text-blue-700">
+                info@emiliocosmetics.com
               </a>
             </p>
           </section>

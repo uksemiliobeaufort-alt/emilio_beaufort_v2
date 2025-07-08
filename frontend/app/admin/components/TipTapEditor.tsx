@@ -10,6 +10,9 @@ import Color from '@tiptap/extension-color';
 import Underline from '@tiptap/extension-underline';
 import Strike from '@tiptap/extension-strike';
 import Highlight from '@tiptap/extension-highlight';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
+import ListItem from '@tiptap/extension-list-item';
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
@@ -220,12 +223,12 @@ const MenuBar = ({ editor }: { editor: any }) => {
     {
       label: 'Bullet List',
       icon: <List className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleBulletList().run(),
-      isActive: editor.isActive('bulletList'), can: true
+      isActive: editor.isActive('bulletList'), can: editor.can().chain().focus().toggleBulletList().run()
     },
     {
       label: 'Ordered List',
       icon: <ListOrdered className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleOrderedList().run(),
-      isActive: editor.isActive('orderedList'), can: true
+      isActive: editor.isActive('orderedList'), can: editor.can().chain().focus().toggleOrderedList().run()
     },
     {
       label: 'Blockquote',
@@ -315,7 +318,14 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 key={action.label}
                 variant={action.isActive ? 'default' : 'ghost'}
                 size="sm"
-                onClick={action.isColor ? (e) => { action.onClick(e); } : () => { action.onClick(); setPopoverOpen(false); }}
+                onClick={(e) => { 
+                  if (action.isColor) {
+                    action.onClick(e);
+                  } else {
+                    action.onClick(e);
+                    setPopoverOpen(false);
+                  }
+                }}
                 disabled={!action.can}
                 aria-label={action.label}
                 className={`flex flex-row items-center gap-2 justify-start w-full px-2 py-2 text-left
@@ -381,7 +391,30 @@ const MenuBar = ({ editor }: { editor: any }) => {
 export default function TipTapEditor({ content, onChange, placeholder }: TipTapEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bulletList: false,
+        orderedList: false,
+        listItem: false,
+      }),
+      BulletList.configure({
+        keepMarks: true,
+        keepAttributes: true,
+        HTMLAttributes: {
+          class: 'tiptap-bullet-list',
+        },
+      }),
+      OrderedList.configure({
+        keepMarks: true,
+        keepAttributes: true,
+        HTMLAttributes: {
+          class: 'tiptap-ordered-list',
+        },
+      }),
+      ListItem.configure({
+        HTMLAttributes: {
+          class: 'tiptap-list-item',
+        },
+      }),
       Image,
       Link.configure({
         openOnClick: false,
@@ -469,6 +502,74 @@ export default function TipTapEditor({ content, onChange, placeholder }: TipTapE
         .ProseMirror ol {
           padding-left: 1.5em;
           margin: 0.5em 0;
+        }
+        
+        .ProseMirror ul {
+          list-style-type: disc;
+          list-style-position: outside;
+          margin: 1em 0;
+          padding-left: 2em;
+        }
+        
+        .ProseMirror ol {
+          list-style-type: decimal;
+          list-style-position: outside;
+          margin: 1em 0;
+          padding-left: 2em;
+        }
+        
+        .ProseMirror li {
+          display: list-item;
+          margin: 0.5em 0;
+          padding-left: 0.5em;
+        }
+        
+        .ProseMirror ul li::marker,
+        .ProseMirror ol li::marker {
+          color: currentColor;
+        }
+        
+        /* Nested list styling in editor with proper indentation */
+        .ProseMirror ul ul,
+        .ProseMirror ol ol,
+        .ProseMirror ul ol,
+        .ProseMirror ol ul {
+          margin: 0.5em 0;
+          padding-left: 1.5em;
+        }
+        
+        .ProseMirror ul ul ul,
+        .ProseMirror ol ol ol,
+        .ProseMirror ul ol ol,
+        .ProseMirror ol ul ul {
+          padding-left: 1.5em;
+        }
+        
+        .ProseMirror ul ul {
+          list-style-type: circle;
+        }
+        
+        .ProseMirror ul ul ul {
+          list-style-type: square;
+        }
+        
+        /* Support for TipTap indentation attributes */
+        .ProseMirror [data-indent="1"] {
+          padding-left: 2em !important;
+        }
+        
+        .ProseMirror [data-indent="2"] {
+          padding-left: 3.5em !important;
+        }
+        
+        .ProseMirror [data-indent="3"] {
+          padding-left: 5em !important;
+        }
+        
+        /* Ensure spacing is preserved */
+        .ProseMirror [style*="margin"],
+        .ProseMirror [style*="padding"] {
+          /* Preserve inline spacing */
         }
         
         .ProseMirror blockquote {
