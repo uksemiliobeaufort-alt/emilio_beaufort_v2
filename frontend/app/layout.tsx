@@ -45,7 +45,16 @@ export default function RootLayout({
           </main>
           {!isAdminPage && <Footer />}
         </BagProvider>
-        <Toaster />
+        <Toaster 
+          position="bottom-right" 
+          richColors 
+          toastOptions={{
+            style: {
+              zIndex: 99999,
+            },
+            className: 'custom-toast',
+          }}
+        />
         <CookieConsent />
       </body>
     </html>

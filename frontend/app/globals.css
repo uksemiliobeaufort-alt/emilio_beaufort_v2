@@ -428,6 +428,20 @@
     transition: all 0.3s ease;
   }
 
+  /* Toast overrides to ensure visibility */
+  [data-sonner-toaster] {
+    z-index: 999999 !important;
+  }
+
+  [data-sonner-toast] {
+    z-index: 999999 !important;
+  }
+
+  .custom-toast {
+    z-index: 999999 !important;
+    position: relative !important;
+  }
+
   .btn-primary-premium:hover {
     background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
     transform: translateY(-1px);
