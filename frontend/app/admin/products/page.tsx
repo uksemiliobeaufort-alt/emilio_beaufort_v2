@@ -41,13 +41,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import ProductFormDialog from './ProductFormDialog';
+import CategorySelectionDialog from './CategorySelectionDialog';
 
 const categoryLabels = {
-  'skincare': 'Skincare',
-  'shaving': 'Shaving',
-  'fragrance': 'Fragrance',
-  'accessories': 'Accessories',
-  'grooming-tools': 'Grooming Tools'
+  'cosmetics': 'Cosmetics',
+  'hair-extension': 'Hair Extension'
 };
 
 const statusLabels = {
@@ -73,10 +71,11 @@ export default function ProductsAdmin() {
     open: false,
     product: null
   });
-  const [productFormDialog, setProductFormDialog] = useState<{ open: boolean; product: Product | null }>({
+  const [productFormDialog, setProductFormDialog] = useState<{ open: boolean; product: Product | null; selectedCategory?: string }>({
     open: false,
     product: null
   });
+  const [categorySelectionDialog, setCategorySelectionDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
@@ -111,7 +110,12 @@ export default function ProductsAdmin() {
   };
 
   const handleAddClick = () => {
-    setProductFormDialog({ open: true, product: null });
+    setCategorySelectionDialog(true);
+  };
+
+  const handleCategorySelect = (category: 'cosmetics' | 'hair-extension') => {
+    setCategorySelectionDialog(false);
+    setProductFormDialog({ open: true, product: null, selectedCategory: category });
   };
 
   const handleDeleteProduct = async () => {
@@ -459,10 +463,18 @@ export default function ProductsAdmin() {
         </DialogContent>
       </Dialog>
 
+      {/* Category Selection Dialog */}
+      <CategorySelectionDialog
+        open={categorySelectionDialog}
+        onClose={() => setCategorySelectionDialog(false)}
+        onCategorySelect={handleCategorySelect}
+      />
+
       {/* Product Form Dialog */}
       <ProductFormDialog
         open={productFormDialog.open}
         product={productFormDialog.product}
+        selectedCategory={productFormDialog.selectedCategory}
         onClose={() => setProductFormDialog({ open: false, product: null })}
         onSuccess={() => {
           setProductFormDialog({ open: false, product: null });

@@ -63,6 +63,31 @@ export interface Product {
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string[];
+  
+  // Cosmetics specific fields
+  skin_type?: string;
+  product_benefits?: string;
+  application_instructions?: string;
+  spf_level?: string;
+  fragrance_notes?: string;
+  volume_size?: string;
+  dermatologist_tested?: boolean;
+  cruelty_free?: boolean;
+  organic_natural?: boolean;
+  
+  // Hair extension specific fields
+  hair_type?: string;
+  hair_texture?: string;
+  hair_length?: string;
+  hair_weight?: string;
+  hair_color_shade?: string;
+  installation_method?: string;
+  hair_grade?: string;
+  hair_origin?: string;
+  care_instructions?: string;
+  quantity_in_set?: string;
+  attachment_type?: string;
+  
   created_at: string;
   updated_at: string;
   created_by?: string;
