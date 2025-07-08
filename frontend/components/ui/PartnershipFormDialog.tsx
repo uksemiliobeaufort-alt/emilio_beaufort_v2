@@ -15,18 +15,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { useState, useEffect, useRef } from "react";
 import { savePartnershipInquiry, DuplicateEmailError } from "@/lib/supabase";
 import { Toaster, toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import BootstrapDropdown from "./BootstrapDropdown";
 
 const formSchema = z.object({
   fullName: z
@@ -414,18 +409,18 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-sm font-space-grotesk font-medium text-gray-700">Inquiry Type *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm sm:text-base font-plus-jakarta">
-                              <SelectValue placeholder="Select inquiry type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="font-plus-jakarta animate-none">
-                            <SelectItem value="supplier">Supplier Partnership</SelectItem>
-                            <SelectItem value="distributor">Distribution Partnership</SelectItem>
-                            <SelectItem value="other">Other Opportunity</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <BootstrapDropdown
+                            options={[
+                              { value: "supplier", label: "Supplier Partnership" },
+                              { value: "distributor", label: "Distribution Partnership" },
+                              { value: "other", label: "Other Opportunity" }
+                            ]}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Select inquiry type"
+                          />
+                        </FormControl>
                         <FormMessage className="text-xs sm:text-sm" />
                       </FormItem>
                     )}

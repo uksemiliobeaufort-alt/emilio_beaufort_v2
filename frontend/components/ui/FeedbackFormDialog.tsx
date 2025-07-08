@@ -10,15 +10,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select";
+
 
 import { saveFeedback } from "@/lib/supabase"; // Add this import at the top
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
+import BootstrapDropdown from "./BootstrapDropdown";
 
 const feedbackSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").optional(),
@@ -120,9 +119,9 @@ export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = 
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Name (optional)</FormLabel>
+                        <FormLabel>Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Your name" {...field} />
+                          <Input required placeholder="Your name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -149,18 +148,18 @@ export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = 
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="bug">Bug</SelectItem>
-                            <SelectItem value="suggestion">Suggestion</SelectItem>
-                            <SelectItem value="compliment">Compliment</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <BootstrapDropdown
+                            options={[
+                              { value: "bug", label: "Bug" },
+                              { value: "suggestion", label: "Suggestion" },
+                              { value: "compliment", label: "Compliment" }
+                            ]}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Select feedback type"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
