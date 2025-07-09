@@ -11,7 +11,7 @@ import Journal from './journal/page';
 import CardGrid from '@/components/CardGrid';
 import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
 import FeedbackFormDialog from "@/components/ui/FeedbackFormDialog";
-import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
+import { VideoText } from "@/components/magicui/video-text";
 
 export default function Home() {
   const pathname = usePathname();
@@ -229,9 +229,21 @@ export default function Home() {
       <Navbar />
       
       {/* Hero Section */}
-      <section id="hero" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-premium">
+      <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-premium">
+        {/* Video background */}
+        <video
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          src="/images/heroVideo.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+        {/* Optional overlay for readability */}
+        <div className="absolute inset-0 bg-black/30 z-10" />
+        {/* Content */}
         <motion.div 
-          className="relative z-10 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
+          className="relative z-20 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
@@ -240,29 +252,17 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.3 }}
-            className="mb-4 w-full"
+            className="mb-6 w-full"
           >
-            <h1 className="text-7xl md:text-9xl font-serif font-bold text-black mb-4 leading-tight tracking-tight text-center w-full">
+            <h1 className="text-7xl md:text-9xl font-serif font-bold text-white mb-2 leading-tight tracking-tight text-center w-full">
               Emilio Beaufort
             </h1>
           </motion.div>
           <motion.p 
-            className="text-xl md:text-2xl body-premium mb-8 max-w-3xl leading-relaxed text-center mx-auto"
+            className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-center mx-auto text-white"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6 }}
-          >
-            Where luxury meets precision. A curated collection of grooming essentials for the discerning gentleman.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.9 }}
-            className="w-full flex justify-center"
-          >
-            <Button
-              size="lg"
-              className="text-lg px-12 py-6 text-base font-sans-medium transition-colors duration-200 bg-black text-white hover:bg-white hover:text-black border border-white"
               onClick={() => document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Discover Our Philosophy
