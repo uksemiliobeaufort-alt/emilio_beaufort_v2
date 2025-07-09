@@ -1,9 +1,16 @@
 "use client";
 
-import { Instagram, Twitter, Facebook, Linkedin } from "lucide-react";
+import { Instagram, Twitter, Facebook, Linkedin, MessageCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { api } from "@/lib/api";
+import { useEffect, useState } from "react";
+import FeedbackFormDialog from "@/components/ui/FeedbackFormDialog";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const router = useRouter();
+  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
   
   return (
     <footer className="bg-premium-dark border-t border-premium py-16">
@@ -22,18 +29,38 @@ export function Footer() {
             <h4 className="font-sans-semibold text-white mb-6">Quick Links</h4>
             <div className="space-y-3">
               {[
-                { name: 'Philosophy', href: '#philosophy' },
-                { name: 'The House', href: '#house' },
-                { name: 'Journal', href: '#journal' },
-                { name: 'Alliances', href: '#alliances' }
-              ].map((link) => (
-                <button
-                  key={link.name}
-                  onClick={() => document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' })}
-                  className="block text-gray-300 hover:text-gold transition-premium font-sans-medium"
-                >
-                  {link.name}
-                </button>
+                { name: 'Philosophy', href: '#philosophy', isExternal: false },
+                { name: 'The House', href: '#house', isExternal: false },
+                { name: 'Journal', href: '#journal', isExternal: false },
+                { name: 'Give Feedback', href: '#feedback', isExternal: false, isFeedback: true },
+                { name: 'Admin Login', href: '/admin/login', isExternal: true }
+              ].map((link: any) => (
+                link.isExternal ? (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className="block text-gray-300 hover:text-gold transition-premium font-sans-medium"
+                  >
+                    {link.name}
+                  </Link>
+                ) : link.isFeedback ? (
+                  <button
+                    key={link.name}
+                    onClick={() => setIsFeedbackFormOpen(true)}
+                    className="block text-gray-300 hover:text-gold transition-premium font-sans-medium flex items-center"
+                  >
+                    <MessageCircle size={16} className="mr-2" />
+                    {link.name}
+                  </button>
+                ) : (
+                  <button
+                    key={link.name}
+                    onClick={() => document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' })}
+                    className="block text-gray-300 hover:text-gold transition-premium font-sans-medium"
+                  >
+                    {link.name}
+                  </button>
+                )
               ))}
             </div>
           </div>
@@ -65,19 +92,30 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        {/* <div className="border-t border-premium pt-8"> */}
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="body-premium text-gray-400 mb-4 md:mb-0">
-              © {currentYear} Emilio Beaufort. All rights reserved.
-            </p>
-            <div className="flex space-x-6 text-sm">
-              <a href="#" className="text-gray-400 hover:text-gold transition-premium">Privacy Policy</a>
-              <a href="#" className="text-gray-400 hover:text-gold transition-premium">Terms of Service</a>
-              <a href="#" className="text-gray-400 hover:text-gold transition-premium">Cookie Policy</a>
-            </div>
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <p className="body-premium text-gray-400 mb-4 md:mb-0">
+            © {currentYear} Emilio Beaufort. All rights reserved.
+          </p>
+          <div className="flex space-x-6 text-sm">
+            <Link href="/privacy-policy" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta">
+              Privacy Policy
+            </Link>
+            <a href="#" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta">
+              Terms of Service
+            </a>
+            <Link href="/cookie-policy" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta">
+              Cookie Policy
+            </Link>
           </div>
-        {/* </div> */}
+        </div>
       </div>
+
+      {/* Feedback Form Dialog */}
+      <FeedbackFormDialog 
+        isOpen={isFeedbackFormOpen}
+        onClose={() => setIsFeedbackFormOpen(false)}
+        isAutoTriggered={false}
+      />
     </footer>
   );
 } 

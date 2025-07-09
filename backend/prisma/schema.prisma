@@ -9,16 +9,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model admin_user {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  password   String
+  created_at DateTime @default(now())
+}
+
 model Product {
-  id          String    @id @default(cuid())
+  id          Int      @id @default(autoincrement())
   name        String
   description String
-  price       Float
-  imageUrl    String
-  isSoldOut   Boolean   @default(false)
-  category    Category
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  image_url   String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 }
 
 enum Category {
@@ -27,22 +31,20 @@ enum Category {
 }
 
 model Post {
-  id              String    @id @default(cuid())
-  slug            String    @unique
-  title           String
-  content         String
-  featuredImageUrl String
-  excerpt         String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id         Int      @id @default(autoincrement())
+  title      String
+  content    String
+  image_url  String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model PartnershipInquiry {
-    id          String @id @default(cuid())
-    fullName    String
-    companyName String
-    email       String
-    inquiryType String
-    message     String
-    createdAt   DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  full_name    String
+  email        String   @unique
+  company      String
+  message      String
+  inquiry_type String
+  created_at   DateTime @default(now())
 }
