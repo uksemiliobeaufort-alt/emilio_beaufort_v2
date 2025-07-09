@@ -244,25 +244,25 @@ export default function Home() {
         {/* Content */}
         <motion.div 
           className="relative z-20 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            className="mb-6 w-full"
+          >
+            <h1 className="text-7xl md:text-9xl font-serif font-bold text-white mb-2 leading-tight tracking-tight text-center w-full">
+              Emilio Beaufort
             </h1>
           </motion.div>
           <motion.p 
-            className="text-xl md:text-2xl body-premium mb-8 max-w-3xl leading-relaxed text-center mx-auto"
+            className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-center mx-auto text-white"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6 }}
-          >
-            Where luxury meets precision. A curated collection of grooming essentials for the discerning gentleman.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.9 }}
-            className="w-full flex justify-center"
-          >
-            <Button
-              size="lg"
-              className="text-lg px-12 py-6 text-base font-sans-medium transition-colors duration-200 bg-black text-white hover:bg-white hover:text-black border border-white"
               onClick={() => document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Discover Our Philosophy
