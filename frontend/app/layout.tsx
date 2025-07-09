@@ -1,63 +1,46 @@
-"use client";
-
 import "./globals.css";
-import { Inter, Playfair_Display, Plus_Jakarta_Sans, Space_Grotesk } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import PageTransitionProgressBar from "@/components/PageTransitionProgressBar";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import FloatingFeedbackButton from "@/components/FloatingFeedbackButton";
+import ConditionalNavbar from "@/components/ConditionalNavbar";
+// import { Footer } from "@/components/Footer";
 import { Suspense } from "react";
 import { BagProvider } from '@/components/BagContext';
-import CookieConsent from '@/components/CookieConsent';
-import { generateMetadata as generateSEOMetadata, generateOrganizationSchema } from '@/lib/seo';
-import { usePathname } from 'next/navigation';
+import { Toaster as ReactHotToastToaster } from 'react-hot-toast';
+import ConditionalAutoFeedback from '@/components/ConditionalAutoFeedback';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
-const plusJakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-plus-jakarta" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
+
+// Construct favicon URL from Supabase bucket
+const faviconUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/favicon.ico`;
+
+export const metadata = {
+  title: "Emilio Beaufort - Luxury Grooming",
+  description: "Emilio Beaufort - Luxury grooming products and philosophy by Emilio Beaufort.",
+  icons: {
+    icon: faviconUrl,
+    shortcut: faviconUrl,
+    apple: faviconUrl,
+  },
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const isAdminPage = pathname?.startsWith('/admin');
-  const organizationSchema = generateOrganizationSchema();
-
   return (
     <html lang="en">
-      <head>
-        {/* Structured Data */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema),
-          }}
-        />
-      </head>
-      <body className={`${inter.variable} ${playfair.variable} ${plusJakarta.variable} ${spaceGrotesk.variable} bg-white text-gray-900 font-sans`}>
+      <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>
         <BagProvider>
-          {/* <Navbar /> */}
+          <ConditionalNavbar />
           <main>
             {children}
           </main>
-          {!isAdminPage && <Footer />}
         </BagProvider>
-        <Toaster 
-          position="bottom-right" 
-          richColors 
-          toastOptions={{
-            style: {
-              zIndex: 99999,
-            },
-            className: 'custom-toast',
-          }}
-        />
-        <CookieConsent />
-        {!isAdminPage && <FloatingFeedbackButton />}
+        <ConditionalAutoFeedback />
+        <ReactHotToastToaster position="top-center" reverseOrder={false} />
       </body>
     </html>
   );
