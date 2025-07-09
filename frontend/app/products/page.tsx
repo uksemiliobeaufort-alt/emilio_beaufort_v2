@@ -1,12 +1,30 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { api, Product } from "@/lib/api";
+import { getProducts, Product as SupabaseProduct } from "@/lib/supabase";
+import { Product } from "@/lib/api";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Button } from "@/components/ui/button";
 import { ProductDetailDialog } from '@/components/ui/ProductDetailDialog';
 import { RippleButton } from '@/components/ui/RippleButton';
 import MyBagButton from '@/components/MyBagButton';
+
+// Mapping function to convert Supabase Product to API Product format
+const mapSupabaseProductToAPIProduct = (supabaseProduct: SupabaseProduct): Product => {
+  return {
+    id: supabaseProduct.id,
+    name: supabaseProduct.name,
+    description: supabaseProduct.description || '',
+    price: supabaseProduct.price || 0,
+    category: supabaseProduct.category === 'cosmetics' ? 'COSMETICS' : 'HAIR',
+    imageUrl: supabaseProduct.main_image_url || '',
+    gallery: supabaseProduct.gallery_urls || [],
+    isSoldOut: !supabaseProduct.in_stock,
+    tags: [],
+    createdAt: supabaseProduct.created_at || new Date().toISOString(),
+    updatedAt: supabaseProduct.updated_at || new Date().toISOString(),
+  };
+};
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -20,8 +38,9 @@ export default function ProductsPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const allProducts = await api.getProducts();
-        setProducts(allProducts);
+        const supabaseProducts = await getProducts();
+        const mappedProducts = supabaseProducts.map(mapSupabaseProductToAPIProduct);
+        setProducts(mappedProducts);
       } catch {
         console.error('Failed to fetch products');
       } finally {

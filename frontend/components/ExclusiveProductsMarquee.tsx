@@ -4,31 +4,65 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { getImageUrl } from "@/lib/supabase";
+import { getImageUrl, getProducts, Product as SupabaseProduct } from "@/lib/supabase";
+
+interface DisplayProduct {
+  title: string;
+  description: string;
+  image: string;
+  price?: number;
+  id: string;
+}
 
 export default function ExclusiveProductsMarquee() {
-  const exclusiveProducts = [
-    {
-      title: "Luminous Silk Foundation",
-      description: "A weightless, buildable foundation for a radiant, flawless finish.",
-      image: getImageUrl("product-images", "cosmetic5.jpg"),
-    },
-    {
-      title: "Matte Lipstick",
-      description: "Intense color payoff with a soft, hydrating matte finish.",
-      image: getImageUrl("product-images", "cosmetic9.jpg"),
-    },
-    {
-      title: "Radiance Glow Serum",
-      description: "Revitalize your skin with our luxurious, illuminating serum.",
-      image: getImageUrl("product-images", "cosmetic6.jpg"),
-    },
-    {
-      title: "Radiance Sunscreen",
-      description: "Revitalize your skin with our luxurious, illuminating sunscreen.",
-      image: getImageUrl("product-images", "cosmetic10.jpg"),
-    },
-  ];
+  const [exclusiveProducts, setExclusiveProducts] = useState<DisplayProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real products from Supabase
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const products = await getProducts();
+        // Filter for featured products or take the first few
+        const featuredProducts = products
+          .filter(product => product.featured || product.in_stock)
+          .slice(0, 6)
+          .map(product => ({
+            id: product.id,
+            title: product.name,
+            description: product.description || '',
+            image: product.main_image_url || getImageUrl("product-images", "cosmetics1.jpg"),
+            price: product.price
+          }));
+
+        // If we don't have enough featured products, use any available products
+        if (featuredProducts.length < 4) {
+          const additionalProducts = products
+            .filter(product => !featuredProducts.find(fp => fp.id === product.id))
+            .slice(0, 4 - featuredProducts.length)
+            .map(product => ({
+              id: product.id,
+              title: product.name,
+              description: product.description || '',
+              image: product.main_image_url || getImageUrl("product-images", "cosmetics1.jpg"),
+              price: product.price
+            }));
+          
+          setExclusiveProducts([...featuredProducts, ...additionalProducts]);
+        } else {
+          setExclusiveProducts(featuredProducts);
+        }
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        // Fallback to empty array or show error message
+        setExclusiveProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
   const marqueeProducts = [...exclusiveProducts, ...exclusiveProducts]; // repeat twice for seamless loop
   const fallbackImage = getImageUrl("product-images", "cosmetics1.jpg");
   const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
@@ -78,6 +112,25 @@ export default function ExclusiveProductsMarquee() {
   // Track hover state to pause auto-scroll
   const handleCardMouseEnter = () => setIsAutoScrollPaused(true);
   const handleCardMouseLeave = () => setIsAutoScrollPaused(false);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="w-full py-16 bg-premium overflow-hidden relative">
+        <h2 className="text-4xl font-serif font-bold text-premium mb-10 text-center">
+          Most Exclusive Collection
+        </h2>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-premium"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if no products
+  if (exclusiveProducts.length === 0) {
+    return null;
+  }
 
   return (
     <div className="w-full py-16 bg-premium overflow-hidden relative">
@@ -137,6 +190,9 @@ export default function ExclusiveProductsMarquee() {
                     {product.title}
                   </h3>
                   <p className="text-gray-700 text-base">{product.description}</p>
+                  {product.price && (
+                    <p className="text-xl font-semibold text-premium">₹{product.price.toFixed(2)}</p>
+                  )}
                   <div className="flex-1" />
                   <button className="mt-2 bg-black text-white px-4 py-2 rounded-lg font-semibold hover:bg-white hover:text-black border border-black transition-colors duration-200">
                     Add To Bag

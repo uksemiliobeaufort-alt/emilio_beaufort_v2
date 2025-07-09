@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Script from 'next/script';
-import { Sheet, SheetContent, SheetClose } from './ui/sheet';
+import { Sheet, SheetContent, SheetClose, SheetTitle, SheetDescription } from './ui/sheet';
 
 export default function BagModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { bagItems, removeFromBag, clearBag, addToBag } = useBag();
@@ -91,6 +91,14 @@ export default function BagModal({ open, onClose }: { open: boolean; onClose: ()
       )}
       <Sheet open={open} onOpenChange={v => { if (!v) onClose(); }}>
         <SheetContent side="right" className="p-0 max-w-lg w-full">
+          {/* Hidden accessibility elements */}
+          <SheetTitle className="sr-only">
+            My Shopping Bag
+          </SheetTitle>
+          <SheetDescription className="sr-only">
+            View and manage items in your shopping bag, update quantities, and proceed to checkout.
+          </SheetDescription>
+          
           <div className="p-6">
             <h2 className="text-2xl font-bold mb-4 text-premium">My Bag</h2>
             {bagItems.length === 0 ? (

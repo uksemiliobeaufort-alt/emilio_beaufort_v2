@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { api } from '@/lib/api';
 // import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -19,17 +18,8 @@ export default function Home() {
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await api.getHomeData();
-      } catch {
-        toast.error("Failed to load data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    // No need to fetch home data as components handle their own data fetching
+    setLoading(false);
   }, []);
 
   // Handle initial hash navigation
