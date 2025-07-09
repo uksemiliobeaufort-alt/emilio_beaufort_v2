@@ -11,7 +11,7 @@ import MyBagButton from '@/components/MyBagButton';
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'LIPSTICKS' | 'FOUNDATIONS' | 'POWDERS' | 'SERUM' | 'MOISTURIZER'>('ALL');
+  const [selectedCategory, setSelectedCategory] = useState<'COSMETICS' | 'HAIR'>('COSMETICS');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -32,9 +32,9 @@ export default function ProductsPage() {
     fetchProducts();
   }, []);
 
-  const filteredProducts = (selectedCategory === 'ALL' 
-    ? products 
-    : products.filter(product => product.category && product.category.toLowerCase() === selectedCategory.toLowerCase())
+  const filteredProducts = (selectedCategory === 'COSMETICS' 
+    ? products.filter(product => product.category && product.category.toLowerCase() === 'cosmetics')
+    : products.filter(product => product.category && product.category.toLowerCase() === 'hair')
   ).filter(product =>
     product.name.toLowerCase().includes(search.toLowerCase()) ||
     (product.description && product.description.toLowerCase().includes(search.toLowerCase()))
@@ -92,17 +92,13 @@ export default function ProductsPage() {
         <div className="flex justify-center mb-12">
           <div className="flex space-x-4">
             {[
-              { value: 'ALL', label: 'All Products' },
-              { value: 'LIPSTICKS', label: 'Lipsticks' },
-              { value: 'FOUNDATIONS', label: 'Foundations' },
-              { value: 'POWDERS', label: 'Powders' },
-              { value: 'SERUM', label: 'Serum' },
-              { value: 'MOISTURIZER', label: 'Moisturizer' },
+              { value: 'COSMETICS', label: 'Cosmetics' },
+              { value: 'HAIR', label: 'Hairs' },
             ].map((category) => (
               <RippleButton
                 key={category.value}
                 type="button"
-                onClick={() => setSelectedCategory(category.value as 'ALL' | 'LIPSTICKS' | 'FOUNDATIONS' | 'POWDERS' | 'SERUM' | 'MOISTURIZER')}
+                onClick={() => setSelectedCategory(category.value as 'COSMETICS' | 'HAIR')}
                 className={
                   (selectedCategory === category.value
                     ? 'bg-black text-white shadow-lg scale-105 border-[#B7A16C]'

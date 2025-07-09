@@ -109,7 +109,7 @@ import {
   
                 <div className="flex items-center gap-4 mt-2">
                   <span className="text-2xl font-bold text-premium">
-                    ${product.price.toFixed(2)}
+                    ₹{product.price.toFixed(2)}
                   </span>
                   {product.isSoldOut && (
                     <span className="text-red-500 font-semibold">Sold Out</span>

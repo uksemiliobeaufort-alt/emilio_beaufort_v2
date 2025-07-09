@@ -6,6 +6,7 @@ import { Navbar } from "@/components/Navbar";
 // import { Footer } from "@/components/Footer";
 import { Suspense } from "react";
 import { BagProvider } from '@/components/BagContext';
+import { Toaster as ReactHotToastToaster } from 'react-hot-toast';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
@@ -37,7 +38,7 @@ export default function RootLayout({
             {children}
           </main>
         </BagProvider>
-        <Toaster />
+        <ReactHotToastToaster position="top-center" reverseOrder={false} />
       </body>
     </html>
   );

@@ -6,37 +6,29 @@ import { useRef, useState, useEffect } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { getImageUrl } from "@/lib/supabase";
 
-// ... existing code ...
-const exclusiveProducts = [
+export default function ExclusiveProductsMarquee() {
+  const exclusiveProducts = [
     {
       title: "Luminous Silk Foundation",
       description: "A weightless, buildable foundation for a radiant, flawless finish.",
-      image: getImageUrl("product-images", "cosmetics1.jpg"),
+      image: getImageUrl("product-images", "cosmetic5.jpg"),
     },
     {
-      title: "Velvet Matte Lipstick",
+      title: "Matte Lipstick",
       description: "Intense color payoff with a soft, hydrating matte finish.",
-      image: getImageUrl("product-images", "cosmetics2.jpg"),
+      image: getImageUrl("product-images", "cosmetic9.jpg"),
     },
     {
       title: "Radiance Glow Serum",
       description: "Revitalize your skin with our luxurious, illuminating serum.",
-      image: getImageUrl("product-images", "cosmetics3.jpg"),
+      image: getImageUrl("product-images", "cosmetic6.jpg"),
     },
     {
-      title: "Opulent Eyeshadow Palette",
-      description: "A curated palette of rich, blendable shades for every occasion.",
-      image: getImageUrl("product-images", "cosmetics4.jpg"),
-    },
-    {
-      title: "Silk Touch Setting Powder",
-      description: "Lock in your look with a silky, translucent powder for all-day perfection.",
-      image: getImageUrl("product-images", "cosmetics5.jpg"),
+      title: "Radiance Sunscreen",
+      description: "Revitalize your skin with our luxurious, illuminating sunscreen.",
+      image: getImageUrl("product-images", "cosmetic10.jpg"),
     },
   ];
-  // ... existing code ...
-
-export default function ExclusiveProductsMarquee() {
   const marqueeProducts = [...exclusiveProducts, ...exclusiveProducts]; // repeat twice for seamless loop
   const fallbackImage = getImageUrl("product-images", "cosmetics1.jpg");
   const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
@@ -130,7 +122,7 @@ export default function ExclusiveProductsMarquee() {
                       fill
                       className="object-cover transition-opacity duration-300"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority={idx < 5} // Prioritize loading first 5 images
+                      priority={idx < 5}
                       quality={85}
                       onError={() => handleImageError(idx, product.title)}
                     />
