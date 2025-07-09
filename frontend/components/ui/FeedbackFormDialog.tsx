@@ -36,14 +36,6 @@ interface FeedbackFormDialogProps {
 
 export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = false }: FeedbackFormDialogProps) {
   const pathname = usePathname();
-  
-  // ABSOLUTE SAFETY CHECK: Only allow feedback form on home page
-  useEffect(() => {
-    if (pathname !== '/' && isOpen) {
-      console.log('FEEDBACK FORM FORCE CLOSED - Not on home page. Current path:', pathname);
-      onClose();
-    }
-  }, [pathname, isOpen, onClose]);
 
   const form = useForm<FeedbackFormData>({
     resolver: zodResolver(feedbackSchema),
@@ -57,12 +49,6 @@ export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = 
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  
-  // Block rendering completely if not on home page
-  if (pathname !== '/') {
-    console.log('FEEDBACK FORM BLOCKED - Not on home page:', pathname);
-    return null;
-  }
 
   const onSubmit = async (data: FeedbackFormData) => {
     setIsSubmitting(true);

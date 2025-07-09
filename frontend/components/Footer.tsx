@@ -1,14 +1,16 @@
 "use client";
 
-import { Instagram, Twitter, Facebook, Linkedin } from "lucide-react";
+import { Instagram, Twitter, Facebook, Linkedin, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import FeedbackFormDialog from "@/components/ui/FeedbackFormDialog";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
   const router = useRouter();
+  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
   
   return (
     <footer className="bg-premium-dark border-t border-premium py-16">
@@ -30,8 +32,9 @@ export function Footer() {
                 { name: 'Philosophy', href: '#philosophy', isExternal: false },
                 { name: 'The House', href: '#house', isExternal: false },
                 { name: 'Journal', href: '#journal', isExternal: false },
+                { name: 'Give Feedback', href: '#feedback', isExternal: false, isFeedback: true },
                 { name: 'Admin Login', href: '/admin/login', isExternal: true }
-              ].map((link) => (
+              ].map((link: any) => (
                 link.isExternal ? (
                   <Link
                     key={link.name}
@@ -40,6 +43,15 @@ export function Footer() {
                   >
                     {link.name}
                   </Link>
+                ) : link.isFeedback ? (
+                  <button
+                    key={link.name}
+                    onClick={() => setIsFeedbackFormOpen(true)}
+                    className="block text-gray-300 hover:text-gold transition-premium font-sans-medium flex items-center"
+                  >
+                    <MessageCircle size={16} className="mr-2" />
+                    {link.name}
+                  </button>
                 ) : (
                   <button
                     key={link.name}
@@ -97,6 +109,13 @@ export function Footer() {
           </div>
         </div>
       </div>
+
+      {/* Feedback Form Dialog */}
+      <FeedbackFormDialog 
+        isOpen={isFeedbackFormOpen}
+        onClose={() => setIsFeedbackFormOpen(false)}
+        isAutoTriggered={false}
+      />
     </footer>
   );
 } 

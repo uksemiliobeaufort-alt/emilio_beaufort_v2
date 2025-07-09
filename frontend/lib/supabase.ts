@@ -1,29 +1,103 @@
 import { createClient } from '@supabase/supabase-js';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_URL');
+  throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
 }
-
 if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  throw new Error('Missing environment variable NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY');
 }
 
-// Create Supabase client with additional headers
 export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  {
-    auth: {
-      persistSession: false // Don't persist the session
-    },
-    global: {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  }
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
+
+// Storage bucket names
+export const STORAGE_BUCKETS = {
+  COSMETICS: 'cosmetics-images',
+  HAIR_EXTENSIONS: 'hair-extensions-images'
+} as const;
+
+// Helper function to get bucket name based on product category
+export const getBucketForCategory = (category: 'cosmetics' | 'hair-extension') => {
+  return category === 'cosmetics' ? STORAGE_BUCKETS.COSMETICS : STORAGE_BUCKETS.HAIR_EXTENSIONS;
+};
+
+// Upload a single image and return its URL
+export const uploadProductImage = async (
+  file: File,
+  category: 'cosmetics' | 'hair-extension',
+  fileName?: string
+): Promise<string> => {
+  try {
+    const bucket = getBucketForCategory(category);
+    const fileExt = file.name.split('.').pop();
+    const filePath = fileName 
+      ? `${fileName}.${fileExt}`
+      : `${Math.random().toString(36).slice(2)}_${Date.now()}.${fileExt}`;
+
+    const { error: uploadError, data } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    throw error;
+  }
+};
+
+// Upload multiple images and return their URLs
+export const uploadMultipleImages = async (
+  files: File[],
+  category: 'cosmetics' | 'hair-extension'
+): Promise<string[]> => {
+  try {
+    const uploadPromises = files.map(file => uploadProductImage(file, category));
+    return await Promise.all(uploadPromises);
+  } catch (error) {
+    console.error('Error uploading multiple images:', error);
+    throw error;
+  }
+};
+
+// Delete an image from storage
+export const deleteProductImage = async (
+  imageUrl: string,
+  category: 'cosmetics' | 'hair-extension'
+): Promise<void> => {
+  try {
+    const bucket = getBucketForCategory(category);
+    
+    // Extract file path from URL
+    const url = new URL(imageUrl);
+    const filePath = url.pathname.split(`${bucket}/`)[1];
+    
+    if (!filePath) {
+      throw new Error('Invalid image URL');
+    }
+
+    const { error } = await supabase.storage
+      .from(bucket)
+      .remove([filePath]);
+
+    if (error) {
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    throw error;
+  }
+};
 
 export async function saveFeedback(data: {
   name?: string;
@@ -39,15 +113,14 @@ export async function saveFeedback(data: {
   }
 }
 
-// Product management functions
-export interface Product {
+// Base product interface with common fields
+export interface BaseProduct {
   id: string;
   name: string;
   description?: string;
   detailed_description?: string;
   price?: number;
   original_price?: number;
-  category: string;
   status: 'draft' | 'published' | 'archived';
   featured: boolean;
   in_stock: boolean;
@@ -55,25 +128,77 @@ export interface Product {
   sku?: string;
   weight?: number;
   dimensions?: string;
-  ingredients?: string;
-  usage_instructions?: string;
   main_image_url?: string;
   gallery_images?: string[];
+  main_image_base64?: string;
+  gallery_base64?: string[];
   metadata?: Record<string, any>;
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string[];
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
+// Cosmetics product interface (includes all fields, hair extension fields will be empty)
+export interface Cosmetics {
+  id: string;
+  name: string;
+  description?: string;
+  detailed_description?: string;
+  price?: number;
+  original_price?: number;
+  category: 'cosmetics';
+  status: 'draft' | 'published' | 'archived';
+  featured: boolean;
+  in_stock: boolean;
+  stock_quantity?: number;
+  sku?: string;
+  weight?: number;
+  dimensions?: string;
+  created_at?: string;
+  updated_at?: string;
   
   // Cosmetics specific fields
+  ingredients?: string;
   skin_type?: string;
   product_benefits?: string;
-  application_instructions?: string;
   spf_level?: string;
-  fragrance_notes?: string;
   volume_size?: string;
   dermatologist_tested?: boolean;
   cruelty_free?: boolean;
   organic_natural?: boolean;
+  
+  // Image fields
+  main_image_url?: string;
+  gallery_urls?: string[];
+  
+  // SEO fields
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string[];
+}
+
+// Hair Extensions product interface (includes all fields, cosmetics fields will be empty)
+export interface HairExtensions {
+  id: string;
+  name: string;
+  description?: string;
+  detailed_description?: string;
+  price?: number;
+  original_price?: number;
+  category: 'hair-extension';
+  status: 'draft' | 'published' | 'archived';
+  featured: boolean;
+  in_stock: boolean;
+  stock_quantity?: number;
+  sku?: string;
+  weight?: number;
+  dimensions?: string;
+  created_at?: string;
+  updated_at?: string;
   
   // Hair extension specific fields
   hair_type?: string;
@@ -82,35 +207,100 @@ export interface Product {
   hair_weight?: string;
   hair_color_shade?: string;
   installation_method?: string;
-  hair_grade?: string;
-  hair_origin?: string;
   care_instructions?: string;
   quantity_in_set?: string;
-  attachment_type?: string;
   
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  updated_by?: string;
+  // Image fields
+  main_image_url?: string;
+  gallery_urls?: string[];
+  
+  // SEO fields
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string[];
+}
+
+// Union type for all products
+export type Product = Cosmetics | HairExtensions;
+
+// Type guards
+export function isCosmeticsProduct(product: Product): product is Cosmetics {
+  return product.category === 'cosmetics';
+}
+
+export function isHairExtensionsProduct(product: Product): product is HairExtensions {
+  return product.category === 'hair-extension';
 }
 
 export const getProducts = async (): Promise<Product[]> => {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .order('created_at', { ascending: false });
+  console.log('Starting getProducts...');
+  // Try to use admin operations first (bypasses RLS)
+  try {
+    console.log('Attempting to use admin operations...');
+    const { adminOperations } = await import('./supabase-admin');
+    const products = await adminOperations.getProducts();
+    console.log('Successfully fetched products via admin:', products.length);
+    // Sort by created_at descending
+    return products.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  } catch (adminError) {
+    console.warn('Admin operations not available, using regular client:', adminError);
+    
+    console.log('Fetching cosmetics products...');
+    // Get cosmetics products
+    const { data: cosmeticsData, error: cosmeticsError } = await supabase
+      .from('cosmetics')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching products:', error);
-    throw error;
+    if (cosmeticsError) {
+      console.error('Error fetching cosmetics:', cosmeticsError);
+      throw cosmeticsError;
+    }
+    console.log('Successfully fetched cosmetics:', cosmeticsData?.length || 0);
+
+    console.log('Fetching hair extensions products...');
+    // Get hair extensions products
+    const { data: hairExtensionsData, error: hairExtensionsError } = await supabase
+      .from('hair_extensions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (hairExtensionsError) {
+      console.error('Error fetching hair extensions:', hairExtensionsError);
+      throw hairExtensionsError;
+    }
+    console.log('Successfully fetched hair extensions:', hairExtensionsData?.length || 0);
+
+    // Add category field to products and combine
+    const cosmeticsWithCategory = (cosmeticsData || []).map(product => ({
+      ...product,
+      category: 'cosmetics' as const
+    }));
+
+    const hairExtensionsWithCategory = (hairExtensionsData || []).map(product => ({
+      ...product,
+      category: 'hair-extension' as const
+    }));
+
+    const allProducts: Product[] = [
+      ...cosmeticsWithCategory,
+      ...hairExtensionsWithCategory
+    ];
+
+    console.log('Total products combined:', allProducts.length);
+
+    // Sort by created_at descending
+    allProducts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    return allProducts;
   }
-
-  return data || [];
 };
 
-export const getProduct = async (id: string): Promise<Product | null> => {
+export const getProduct = async (id: string, category: 'cosmetics' | 'hair-extension'): Promise<Product | null> => {
+  const tableName = category === 'cosmetics' ? 'cosmetics' : 'hair_extensions';
+  
   const { data, error } = await supabase
-    .from('products')
+    .from(tableName)
     .select('*')
     .eq('id', id)
     .single();
@@ -120,88 +310,122 @@ export const getProduct = async (id: string): Promise<Product | null> => {
     throw error;
   }
 
-  return data;
+  return data ? { ...data, category } : null;
 };
 
-export const createProduct = async (productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> => {
-  const { data, error } = await supabase
-    .from('products')
-    .insert([productData])
-    .select()
-    .single();
+export const createProduct = async (productData: any): Promise<Product> => {
+  console.log('Creating product with data:', productData);
+  
+  // Try to use admin operations first (bypasses RLS)
+  try {
+    const { adminOperations } = await import('./supabase-admin');
+    return await adminOperations.createProduct(productData);
+  } catch (adminError) {
+    console.warn('Admin operations not available, using regular client:', adminError);
+    
+    const { category, ...cleanedProductData } = productData;
+    
+    // Determine which table to use based on category
+    const tableName = category === 'cosmetics' ? 'cosmetics' : 'hair_extensions';
+    
+    console.log('Saving to table:', tableName);
+    console.log('Product data:', cleanedProductData);
 
-  if (error) {
-    console.error('Error creating product:', error);
-    throw error;
-  }
+    // Save directly to the appropriate table (all fields, some will be empty)
+    const { data, error } = await supabase
+      .from(tableName)
+      .insert([cleanedProductData])
+      .select()
+      .single();
 
-  return data;
-};
+    if (error) {
+      console.error('Error creating product:', error);
+      console.error('Error details:', error.message, error.details, error.hint);
+      throw error;
+    }
 
-export const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product> => {
-  const { data, error } = await supabase
-    .from('products')
-    .update(productData)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error updating product:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-export const deleteProduct = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('products')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error('Error deleting product:', error);
-    throw error;
+    return data;
   }
 };
 
-export const uploadProductImage = async (file: File, productId: string, imageType: 'main' | 'gallery' = 'gallery'): Promise<string> => {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${productId}/${imageType}_${Date.now()}.${fileExt}`;
+export const updateProduct = async (id: string, productData: any, category: 'cosmetics' | 'hair-extension'): Promise<Product> => {
+  console.log('Starting product update:', { id, category });
+  console.log('Update data:', productData);
+  
+  // Try to use admin operations first (bypasses RLS)
+  try {
+    console.log('Attempting admin operations update...');
+    const { adminOperations } = await import('./supabase-admin');
+    const result = await adminOperations.updateProduct(id, productData, category);
+    console.log('Admin update successful:', result);
+    return result;
+  } catch (adminError) {
+    console.warn('Admin operations not available, using regular client:', adminError);
+    
+    const { category: _, ...cleanedProductData } = productData;
+    
+    // Determine which table to use based on category
+    const tableName = category === 'cosmetics' ? 'cosmetics' : 'hair_extensions';
+    console.log('Using table:', tableName);
 
-  const { data, error } = await supabase.storage
-    .from('product-images')
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: true,
+    // Remove undefined values to avoid unnecessary updates
+    Object.keys(cleanedProductData).forEach(key => {
+      if (cleanedProductData[key] === undefined) {
+        delete cleanedProductData[key];
+      }
     });
+    
+    console.log('Cleaned product data:', cleanedProductData);
 
-  if (error) {
-    console.error('Error uploading image:', error);
-    throw error;
+    // Update directly in the appropriate table (all fields, some will be empty)
+    try {
+      console.log('Executing Supabase update...');
+      const { data, error } = await supabase
+        .from(tableName)
+        .update(cleanedProductData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase update error:', error);
+        console.error('Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+
+      console.log('Update successful:', data);
+      return data;
+    } catch (error) {
+      console.error('Error during Supabase update:', error);
+      throw error;
+    }
   }
-
-  const { data: urlData } = supabase.storage
-    .from('product-images')
-    .getPublicUrl(fileName);
-
-  return urlData.publicUrl;
 };
 
-export const deleteProductImage = async (imageUrl: string): Promise<void> => {
-  // Extract the file path from the URL
-  const url = new URL(imageUrl);
-  const pathParts = url.pathname.split('/');
-  const fileName = pathParts.slice(-2).join('/'); // Get the last two parts (productId/filename)
+export const deleteProduct = async (id: string, category: 'cosmetics' | 'hair-extension'): Promise<void> => {
+  // Try to use admin operations first (bypasses RLS)
+  try {
+    const { adminOperations } = await import('./supabase-admin');
+    return await adminOperations.deleteProduct(id, category);
+  } catch (adminError) {
+    console.warn('Admin operations not available, using regular client:', adminError);
+    
+    const tableName = category === 'cosmetics' ? 'cosmetics' : 'hair_extensions';
+    
+    const { error } = await supabase
+      .from(tableName)
+      .delete()
+      .eq('id', id);
 
-  const { error } = await supabase.storage
-    .from('product-images')
-    .remove([fileName]);
-
-  if (error) {
-    console.error('Error deleting image:', error);
-    throw error;
+    if (error) {
+      console.error('Error deleting product:', error);
+      throw error;
+    }
   }
 };
 

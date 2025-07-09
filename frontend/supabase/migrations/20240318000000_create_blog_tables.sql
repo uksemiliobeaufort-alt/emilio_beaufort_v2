@@ -1,5 +1,5 @@
--- Create posts table
-CREATE TABLE IF NOT EXISTS posts (
+-- Create blog_posts table
+CREATE TABLE IF NOT EXISTS blog_posts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   slug TEXT UNIQUE NOT NULL,
   title TEXT NOT NULL,
@@ -12,21 +12,21 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 
 -- Add RLS policies
-ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
 
--- Allow anyone to read posts
-CREATE POLICY "Allow public read access" ON posts
+-- Allow anyone to read blog posts
+CREATE POLICY "Allow public read access" ON blog_posts
   FOR SELECT
   USING (true);
 
--- Allow authenticated users to create/update/delete posts
-CREATE POLICY "Allow authenticated users to manage posts" ON posts
+-- Allow authenticated users to create/update/delete blog posts
+CREATE POLICY "Allow authenticated users to manage blog posts" ON blog_posts
   FOR ALL
   USING (auth.role() = 'authenticated')
   WITH CHECK (auth.role() = 'authenticated');
 
 -- Create function to automatically update updated_at
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+CREATE OR REPLACE FUNCTION update_blog_posts_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = timezone('utc', now());
@@ -35,7 +35,7 @@ END;
 $$ language 'plpgsql';
 
 -- Create trigger to automatically update updated_at
-CREATE TRIGGER update_posts_updated_at
-  BEFORE UPDATE ON posts
+CREATE TRIGGER update_blog_posts_updated_at
+  BEFORE UPDATE ON blog_posts
   FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column(); 
+  EXECUTE FUNCTION update_blog_posts_updated_at_column(); 
