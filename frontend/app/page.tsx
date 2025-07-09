@@ -12,7 +12,7 @@ import CardGrid from '@/components/CardGrid';
 import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
 import FeedbackFormDialog from "@/components/ui/FeedbackFormDialog";
 import { VideoText } from "@/components/magicui/video-text";
-
+import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
 export default function Home() {
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
