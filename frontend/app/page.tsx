@@ -15,9 +15,9 @@ import { VideoText } from "@/components/magicui/video-text";
 import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
 
 export default function Home() {
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
-  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
   const [hasScrolledToFooter, setHasScrolledToFooter] = useState(false);
   const [isAutoTriggeredFeedback, setIsAutoTriggeredFeedback] = useState(false);
   const [lastPopupTime, setLastPopupTime] = useState(0);
