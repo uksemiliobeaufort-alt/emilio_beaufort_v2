@@ -290,7 +290,11 @@ export const getProducts = async (): Promise<Product[]> => {
     console.log('Total products combined:', allProducts.length);
 
     // Sort by created_at descending
-    allProducts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    allProducts.sort((a, b) => {
+      const dateA = new Date(a.created_at || new Date()).getTime();
+      const dateB = new Date(b.created_at || new Date()).getTime();
+      return dateB - dateA;
+    });
 
     return allProducts;
   }
@@ -306,7 +310,6 @@ export const getProduct = async (id: string, category: 'cosmetics' | 'hair-exten
     .single();
 
   if (error) {
-    console.error('Error fetching product:', error);
     throw error;
   }
 
@@ -339,8 +342,6 @@ export const createProduct = async (productData: any): Promise<Product> => {
       .single();
 
     if (error) {
-      console.error('Error creating product:', error);
-      console.error('Error details:', error.message, error.details, error.hint);
       throw error;
     }
 
@@ -388,20 +389,12 @@ export const updateProduct = async (id: string, productData: any, category: 'cos
         .single();
 
       if (error) {
-        console.error('Supabase update error:', error);
-        console.error('Error details:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
         throw error;
       }
 
       console.log('Update successful:', data);
       return data;
     } catch (error) {
-      console.error('Error during Supabase update:', error);
       throw error;
     }
   }
@@ -423,7 +416,6 @@ export const deleteProduct = async (id: string, category: 'cosmetics' | 'hair-ex
       .eq('id', id);
 
     if (error) {
-      console.error('Error deleting product:', error);
       throw error;
     }
   }
@@ -432,7 +424,6 @@ export const deleteProduct = async (id: string, category: 'cosmetics' | 'hair-ex
 // Helper function to get public URL for an image in a bucket
 export const getImageUrl = (bucketName: string, path: string) => {
   if (!bucketName || !path) {
-    console.error('Missing bucket name or path:', { bucketName, path });
     return '';
   }
 
@@ -443,7 +434,6 @@ export const getImageUrl = (bucketName: string, path: string) => {
       .getPublicUrl(path);
 
     if (!data?.publicUrl) {
-      console.error('No public URL returned for', { bucketName, path });
       return '';
     }
 
@@ -451,7 +441,6 @@ export const getImageUrl = (bucketName: string, path: string) => {
     const url = new URL(data.publicUrl);
     return url.toString();
   } catch (error) {
-    console.error('Error getting public URL:', error, 'for', { bucketName, path });
     return '';
   }
 };

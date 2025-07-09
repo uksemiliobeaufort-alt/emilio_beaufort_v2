@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { api } from '@/lib/api';
-import { Navbar } from '@/components/Navbar';
+// import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -11,7 +11,8 @@ import Journal from './journal/page';
 import CardGrid from '@/components/CardGrid';
 import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
 import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
-import { VideoText } from "@/components/magicui/video-text";
+import { getImageUrl } from '@/lib/supabase';
+
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -53,14 +54,14 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-premium">
-      <Navbar />
+      {/* <Navbar /> */}
       
       {/* Hero Section */}
       <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-premium">
         {/* Video background */}
         <video
           className="absolute inset-0 w-full h-full object-cover z-0"
-          src="/images/heroVideo.mp4"
+          src={getImageUrl("product-images", "heroVideo.mp4")}
           autoPlay
           muted
           loop
