@@ -263,18 +263,18 @@ export default function Home() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6 }}
-              onClick={() => document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Discover Our Philosophy
-            </Button>
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* Philosophy Section */}
-      <section id="philosophy" className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-hidden section-premium">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#f8f8f8]"></div>
-        <div className="absolute inset-0 bg-pattern-dots opacity-[0.1]"></div>
+          >
+            Where luxury meets precision. A curated collection of grooming essentials for the discerning gentleman.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.9 }}
+            className="w-full flex justify-center"
+          >
+            <Button
+              size="lg"
+              className="text-lg px-12 py-6 text-base font-sans-medium transition-colors duration-200 bg-black text-white hover:bg-white hover:text-black border border-white"
         <div className="container-premium relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
