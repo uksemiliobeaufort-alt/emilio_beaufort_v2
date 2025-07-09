@@ -316,6 +316,15 @@ export const getProduct = async (id: string, category: 'cosmetics' | 'hair-exten
   return data ? { ...data, category } : null;
 };
 
+// Helper function to generate a unique SKU
+const generateUniqueSKU = async (category: 'cosmetics' | 'hair-extension', productName: string): Promise<string> => {
+  const prefix = category === 'cosmetics' ? 'COS' : 'HE';
+  const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
+  const namePrefix = productName.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'PRD';
+  
+  return `${prefix}-${namePrefix}-${timestamp}`;
+};
+
 export const createProduct = async (productData: any): Promise<Product> => {
   console.log('Creating product with data:', productData);
   
@@ -327,6 +336,11 @@ export const createProduct = async (productData: any): Promise<Product> => {
     console.warn('Admin operations not available, using regular client:', adminError);
     
     const { category, ...cleanedProductData } = productData;
+    
+    // Handle empty SKU - generate unique SKU or set to null
+    if (!cleanedProductData.sku || cleanedProductData.sku.trim() === '') {
+      cleanedProductData.sku = await generateUniqueSKU(category, cleanedProductData.name || 'Product');
+    }
     
     // Determine which table to use based on category
     const tableName = category === 'cosmetics' ? 'cosmetics' : 'hair_extensions';
@@ -364,6 +378,11 @@ export const updateProduct = async (id: string, productData: any, category: 'cos
     console.warn('Admin operations not available, using regular client:', adminError);
     
     const { category: _, ...cleanedProductData } = productData;
+    
+    // Handle empty SKU during update - generate unique SKU if being set to empty
+    if (cleanedProductData.hasOwnProperty('sku') && (!cleanedProductData.sku || cleanedProductData.sku.trim() === '')) {
+      cleanedProductData.sku = await generateUniqueSKU(category, cleanedProductData.name || 'Product');
+    }
     
     // Determine which table to use based on category
     const tableName = category === 'cosmetics' ? 'cosmetics' : 'hair_extensions';
