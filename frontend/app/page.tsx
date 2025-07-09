@@ -229,21 +229,21 @@ export default function Home() {
       <Navbar />
       
       {/* Hero Section */}
-      <section id="hero" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-premium">
+      <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-premium">
+        {/* Video background */}
+        <video
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          src="/images/heroVideo.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+        {/* Optional overlay for readability */}
+        <div className="absolute inset-0 bg-black/30 z-10" />
+        {/* Content */}
         <motion.div 
-          className="relative z-10 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.3 }}
-            className="mb-4 w-full"
-          >
-            <h1 className="text-7xl md:text-9xl font-serif font-bold text-black mb-4 leading-tight tracking-tight text-center w-full">
-              Emilio Beaufort
+          className="relative z-20 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
             </h1>
           </motion.div>
           <motion.p 
