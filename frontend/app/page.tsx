@@ -77,7 +77,7 @@ export default function Home() {
       const footerElement = document.querySelector('footer');
       const alliancesSection = document.getElementById('alliances');
       
-              if (!footerElement) {
+      if (!footerElement) {
         console.log('Footer not found on home page');
         return;
       }
