@@ -22,13 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import BootstrapDropdown from '@/components/ui/BootstrapDropdown';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -41,12 +35,13 @@ import {
   DollarSign,
   Sparkles
 } from 'lucide-react';
+import { uploadProductImage, uploadMultipleImages, deleteProductImage } from '@/lib/supabase';
 import { 
   createProduct, 
   updateProduct, 
-  uploadProductImage, 
-  deleteProductImage,
-  Product 
+  Product,
+  isCosmeticsProduct,
+  isHairExtensionsProduct
 } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -54,24 +49,22 @@ const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
   description: z.string().optional(),
   detailed_description: z.string().optional(),
-  price: z.string().transform((val) => val ? parseFloat(val) : undefined),
-  original_price: z.string().transform((val) => val ? parseFloat(val) : undefined),
+  original_price: z.string().min(1, 'Original price is required'),
+  price: z.string().optional(),
   category: z.enum(['cosmetics', 'hair-extension']),
   status: z.enum(['draft', 'published', 'archived']),
   featured: z.boolean(),
   in_stock: z.boolean(),
-  stock_quantity: z.string().transform((val) => val ? parseInt(val) : 0),
+  stock_quantity: z.string().optional(),
   sku: z.string().optional(),
-  weight: z.string().transform((val) => val ? parseFloat(val) : undefined),
+  weight: z.string().optional(),
   dimensions: z.string().optional(),
   
   // Cosmetics specific fields
   ingredients: z.string().optional(),
   skin_type: z.string().optional(),
   product_benefits: z.string().optional(),
-  application_instructions: z.string().optional(),
   spf_level: z.string().optional(),
-  fragrance_notes: z.string().optional(),
   volume_size: z.string().optional(),
   dermatologist_tested: z.boolean().optional(),
   cruelty_free: z.boolean().optional(),
@@ -84,13 +77,9 @@ const productSchema = z.object({
   hair_weight: z.string().optional(),
   hair_color_shade: z.string().optional(),
   installation_method: z.string().optional(),
-  hair_grade: z.string().optional(),
-  hair_origin: z.string().optional(),
   care_instructions: z.string().optional(),
   quantity_in_set: z.string().optional(),
-  attachment_type: z.string().optional(),
   
-  usage_instructions: z.string().optional(),
   seo_title: z.string().optional(),
   seo_description: z.string().optional(),
   seo_keywords: z.string().optional(),
@@ -154,11 +143,9 @@ const installationMethodOptions = [
 
 export default function ProductFormDialog({ open, product, selectedCategory, onClose, onSuccess }: ProductFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
-  const [mainImagePreview, setMainImagePreview] = useState<string>('');
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
-  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
-  const [existingGalleryImages, setExistingGalleryImages] = useState<string[]>([]);
+  const [mainImageUrl, setMainImageUrl] = useState<string>('');
+  const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
+  const [existingGalleryUrls, setExistingGalleryUrls] = useState<string[]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
 
   const form = useForm<ProductFormData>({
@@ -167,8 +154,8 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
       name: '',
       description: '',
       detailed_description: '',
-      price: '',
       original_price: '',
+      price: '',
       category: 'cosmetics',
       status: 'draft',
       featured: false,
@@ -182,9 +169,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
       ingredients: '',
       skin_type: '',
       product_benefits: '',
-      application_instructions: '',
       spf_level: '',
-      fragrance_notes: '',
       volume_size: '',
       dermatologist_tested: false,
       cruelty_free: false,
@@ -197,13 +182,9 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
       hair_weight: '',
       hair_color_shade: '',
       installation_method: '',
-      hair_grade: '',
-      hair_origin: '',
       care_instructions: '',
       quantity_in_set: '',
-      attachment_type: '',
       
-      usage_instructions: '',
       seo_title: '',
       seo_description: '',
       seo_keywords: '',
@@ -213,13 +194,13 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
   // Reset form when product changes
   useEffect(() => {
     if (product) {
-      form.reset({
+      const baseData = {
         name: product.name,
         description: product.description || '',
         detailed_description: product.detailed_description || '',
-        price: product.price?.toString() || '',
         original_price: product.original_price?.toString() || '',
-        category: product.category as any,
+        price: product.price?.toString() || '',
+        category: product.category,
         status: product.status,
         featured: product.featured,
         in_stock: product.in_stock,
@@ -227,19 +208,46 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
         sku: product.sku || '',
         weight: product.weight?.toString() || '',
         dimensions: product.dimensions || '',
+        seo_title: product.seo_title || '',
+        seo_description: product.seo_description || '',
+        seo_keywords: product.seo_keywords?.join(', ') || '',
+      };
         
+      // Add category-specific fields
+      if (isCosmeticsProduct(product)) {
+        form.reset({
+          ...baseData,
         // Cosmetics fields
         ingredients: product.ingredients || '',
         skin_type: product.skin_type || '',
         product_benefits: product.product_benefits || '',
-        application_instructions: product.application_instructions || '',
         spf_level: product.spf_level || '',
-        fragrance_notes: product.fragrance_notes || '',
         volume_size: product.volume_size || '',
         dermatologist_tested: product.dermatologist_tested || false,
         cruelty_free: product.cruelty_free || false,
         organic_natural: product.organic_natural || false,
-        
+          // Hair extension fields (empty)
+          hair_type: '',
+          hair_texture: '',
+          hair_length: '',
+          hair_weight: '',
+          hair_color_shade: '',
+          installation_method: '',
+          care_instructions: '',
+          quantity_in_set: '',
+        });
+      } else if (isHairExtensionsProduct(product)) {
+        form.reset({
+          ...baseData,
+          // Cosmetics fields (empty)
+          ingredients: '',
+          skin_type: '',
+          product_benefits: '',
+          spf_level: '',
+          volume_size: '',
+          dermatologist_tested: false,
+          cruelty_free: false,
+          organic_natural: false,
         // Hair extension fields
         hair_type: product.hair_type || '',
         hair_texture: product.hair_texture || '',
@@ -247,30 +255,22 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
         hair_weight: product.hair_weight || '',
         hair_color_shade: product.hair_color_shade || '',
         installation_method: product.installation_method || '',
-        hair_grade: product.hair_grade || '',
-        hair_origin: product.hair_origin || '',
         care_instructions: product.care_instructions || '',
         quantity_in_set: product.quantity_in_set || '',
-        attachment_type: product.attachment_type || '',
-        
-        usage_instructions: product.usage_instructions || '',
-        seo_title: product.seo_title || '',
-        seo_description: product.seo_description || '',
-        seo_keywords: product.seo_keywords?.join(', ') || '',
-      });
+        });
+      }
       
-      setMainImagePreview(product.main_image_url || '');
-      setExistingGalleryImages(product.gallery_images || []);
-      setGalleryPreviews([]);
-      setGalleryFiles([]);
+      setMainImageUrl(product.main_image_url || '');
+      setExistingGalleryUrls(product.gallery_urls || []);
+      setGalleryUrls([]);
       setImagesToDelete([]);
     } else {
       form.reset({
         name: '',
         description: '',
         detailed_description: '',
-        price: '',
         original_price: '',
+        price: '',
         category: (selectedCategory as 'cosmetics' | 'hair-extension') || 'cosmetics',
         status: 'draft',
         featured: false,
@@ -284,9 +284,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
         ingredients: '',
         skin_type: '',
         product_benefits: '',
-        application_instructions: '',
         spf_level: '',
-        fragrance_notes: '',
         volume_size: '',
         dermatologist_tested: false,
         cruelty_free: false,
@@ -299,119 +297,170 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
         hair_weight: '',
         hair_color_shade: '',
         installation_method: '',
-        hair_grade: '',
-        hair_origin: '',
         care_instructions: '',
         quantity_in_set: '',
-        attachment_type: '',
         
-        usage_instructions: '',
         seo_title: '',
         seo_description: '',
         seo_keywords: '',
       });
-      setMainImagePreview('');
-      setExistingGalleryImages([]);
-      setGalleryPreviews([]);
-      setGalleryFiles([]);
+      setMainImageUrl('');
+      setExistingGalleryUrls([]);
+      setGalleryUrls([]);
       setImagesToDelete([]);
     }
-    setMainImageFile(null);
   }, [product, selectedCategory, form]);
 
-  const handleMainImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMainImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setMainImageFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setMainImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const url = await uploadProductImage(file, form.getValues('category'));
+        setMainImageUrl(url);
+      } catch (error) {
+        console.error('Error uploading main image:', error);
+        toast.error('Failed to upload main image');
+      }
     }
   };
 
-  const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGallerySelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setGalleryFiles(prev => [...prev, ...files]);
-    
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setGalleryPreviews(prev => [...prev, e.target?.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+    if (files.length > 0) {
+      try {
+        const urls = await uploadMultipleImages(files, form.getValues('category'));
+        setGalleryUrls(prev => [...prev, ...urls]);
+      } catch (error) {
+        console.error('Error uploading gallery images:', error);
+        toast.error('Failed to upload gallery images');
+      }
+    }
   };
 
-  const removeGalleryImage = (index: number, isExisting: boolean) => {
+  const removeGalleryImage = async (index: number, isExisting: boolean) => {
     if (isExisting) {
-      const imageUrl = existingGalleryImages[index];
+      const imageUrl = existingGalleryUrls[index];
       setImagesToDelete(prev => [...prev, imageUrl]);
-      setExistingGalleryImages(prev => prev.filter((_, i) => i !== index));
+      setExistingGalleryUrls(prev => prev.filter((_, i) => i !== index));
     } else {
-      setGalleryFiles(prev => prev.filter((_, i) => i !== index));
-      setGalleryPreviews(prev => prev.filter((_, i) => i !== index));
+      const imageUrl = galleryUrls[index];
+      try {
+        await deleteProductImage(imageUrl, form.getValues('category'));
+        setGalleryUrls(prev => prev.filter((_, i) => i !== index));
+      } catch (error) {
+        console.error('Error deleting gallery image:', error);
+        toast.error('Failed to delete gallery image');
+      }
     }
   };
 
   const onSubmit = async (data: ProductFormData) => {
+    console.log('Starting form submission:', data);
     setIsSubmitting(true);
     try {
+      const category = data.category as 'cosmetics' | 'hair-extension';
+      console.log('Processing category:', category);
+      
+      // Base product data (common to both categories)
       let productData: any = {
-        ...data,
+        name: data.name,
+        description: data.description,
+        detailed_description: data.detailed_description,
+        original_price: data.original_price ? parseFloat(data.original_price) : undefined, // Original price is now the main price
+        price: data.price ? parseFloat(data.price) : null, // Discounted price (optional)
+        category: data.category,
+        status: data.status,
+        featured: data.featured,
+        in_stock: data.in_stock,
+        stock_quantity: data.stock_quantity ? parseInt(data.stock_quantity) : 0,
+        sku: data.sku,
+        weight: data.weight ? parseFloat(data.weight) : undefined,
+        dimensions: data.dimensions,
+        seo_title: data.seo_title,
+        seo_description: data.seo_description,
         seo_keywords: data.seo_keywords ? data.seo_keywords.split(',').map(k => k.trim()).filter(k => k) : [],
       };
 
-      let savedProduct: Product;
+      console.log('Base product data:', productData);
 
-      if (product) {
-        // Update existing product
-        savedProduct = await updateProduct(product.id, productData);
-      } else {
-        // Create new product
-        savedProduct = await createProduct(productData);
+      // Add category-specific fields
+      if (category === 'cosmetics') {
+        console.log('Adding cosmetics-specific fields');
+        productData = {
+          ...productData,
+          // Cosmetics-specific fields
+          ingredients: data.ingredients,
+          skin_type: data.skin_type,
+          product_benefits: data.product_benefits,
+          spf_level: data.spf_level,
+          volume_size: data.volume_size,
+          dermatologist_tested: data.dermatologist_tested,
+          cruelty_free: data.cruelty_free,
+          organic_natural: data.organic_natural,
+        };
+      } else if (category === 'hair-extension') {
+        console.log('Adding hair extension-specific fields');
+        productData = {
+          ...productData,
+          // Hair extension-specific fields
+          hair_type: data.hair_type,
+          hair_texture: data.hair_texture,
+          hair_length: data.hair_length,
+          hair_weight: data.hair_weight,
+          hair_color_shade: data.hair_color_shade,
+          installation_method: data.installation_method,
+          care_instructions: data.care_instructions,
+          quantity_in_set: data.quantity_in_set,
+        };
       }
 
-      // Handle main image upload
-      if (mainImageFile) {
-        const mainImageUrl = await uploadProductImage(mainImageFile, savedProduct.id, 'main');
-        await updateProduct(savedProduct.id, { main_image_url: mainImageUrl });
-        
-        // Delete old main image if it exists and is different
-        if (product?.main_image_url && product.main_image_url !== mainImageUrl) {
+      // Include image URLs in product data
+      if (mainImageUrl) {
+        console.log('Adding main image URL:', mainImageUrl);
+        productData.main_image_url = mainImageUrl;
+      }
+
+      // Combine existing and new gallery URLs
+      const allGalleryUrls = [...existingGalleryUrls, ...galleryUrls];
+      console.log('All gallery URLs:', allGalleryUrls);
+      
+      // Remove deleted images
+      const finalGalleryUrls = allGalleryUrls.filter(url => !imagesToDelete.includes(url));
+      console.log('Final gallery URLs:', finalGalleryUrls);
+      
+      if (finalGalleryUrls.length > 0) {
+        productData.gallery_urls = finalGalleryUrls;
+      }
+
+      // Delete images marked for deletion
+      if (imagesToDelete.length > 0) {
+        console.log('Deleting images:', imagesToDelete);
+        for (const imageUrl of imagesToDelete) {
           try {
-            await deleteProductImage(product.main_image_url);
+            await deleteProductImage(imageUrl, category);
+            console.log('Successfully deleted image:', imageUrl);
           } catch (error) {
-            console.warn('Could not delete old main image:', error);
+            console.error('Error deleting image:', imageUrl, error);
+            // Continue with other deletions even if one fails
           }
         }
       }
 
-      // Handle gallery images
-      let newGalleryUrls: string[] = [...existingGalleryImages];
+      let savedProduct: Product;
 
-      // Upload new gallery images
-      if (galleryFiles.length > 0) {
-        const uploadPromises = galleryFiles.map(file => 
-          uploadProductImage(file, savedProduct.id, 'gallery')
-        );
-        const uploadedUrls = await Promise.all(uploadPromises);
-        newGalleryUrls = [...newGalleryUrls, ...uploadedUrls];
+      if (product) {
+        console.log('Updating existing product:', product.id);
+        // Update existing product
+        savedProduct = await updateProduct(product.id, productData, category);
+        console.log('Product updated successfully:', savedProduct);
+      } else {
+        console.log('Creating new product');
+        // Create new product
+        savedProduct = await createProduct(productData);
+        console.log('Product created successfully:', savedProduct);
       }
 
-      // Delete marked images
-      if (imagesToDelete.length > 0) {
-        const deletePromises = imagesToDelete.map(url => deleteProductImage(url));
-        await Promise.all(deletePromises);
-      }
-
-      // Update product with new gallery images
-      if (galleryFiles.length > 0 || imagesToDelete.length > 0) {
-        await updateProduct(savedProduct.id, { gallery_images: newGalleryUrls });
-      }
-
-      toast.success(product ? 'Product updated successfully' : 'Product created successfully');
+      // toast.success(product ? 'Product updated successfully' : 'Product created successfully');
       onSuccess();
     } catch (error) {
       console.error('Error saving product:', error);
@@ -425,32 +474,42 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
+        <DialogHeader className="pb-6 border-b">
+          <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Package className="h-6 w-6 text-blue-600" />
+            </div>
             {product ? 'Edit Product' : 'Add New Product'}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Package className="h-4 w-4" />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            
+            {/* Basic Information Section */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <Package className="h-5 w-5 text-gray-600" />
+                </div>
                 Basic Information
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Product Name *</FormLabel>
+                        <FormLabel className="text-base font-medium">Product Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter product name" {...field} />
+                          <Input 
+                            placeholder="Enter product name" 
+                            className="h-11"
+                            {...field} 
+                          />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -462,9 +521,13 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                   name="sku"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>SKU</FormLabel>
+                        <FormLabel className="text-base font-medium">SKU</FormLabel>
                       <FormControl>
-                        <Input placeholder="Product SKU" {...field} />
+                          <Input 
+                            placeholder="Product SKU" 
+                            className="h-11"
+                            {...field} 
+                          />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -477,11 +540,11 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Short Description</FormLabel>
+                      <FormLabel className="text-base font-medium">Short Description</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Brief product description" 
-                        rows={3}
+                          className="min-h-[80px] resize-none"
                         {...field} 
                       />
                     </FormControl>
@@ -495,11 +558,11 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                 name="detailed_description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Detailed Description</FormLabel>
+                      <FormLabel className="text-base font-medium">Detailed Description</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Detailed product description" 
-                        rows={5}
+                          className="min-h-[120px] resize-none"
                         {...field} 
                       />
                     </FormControl>
@@ -507,33 +570,34 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                   </FormItem>
                 )}
               />
+              </div>
             </div>
 
-            {/* Category and Status */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Category & Status</h3>
+            {/* Category and Status Section */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Sparkles className="h-5 w-5 text-purple-600" />
+                </div>
+                Category & Status
+              </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {categoryOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormLabel className="text-base font-medium">Category *</FormLabel>
+                      <FormControl>
+                        <BootstrapDropdown
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={categoryOptions}
+                          placeholder="Select category"
+                          className="h-11"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -544,104 +608,109 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {statusOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormLabel className="text-base font-medium">Status *</FormLabel>
+                      <FormControl>
+                        <BootstrapDropdown
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={statusOptions}
+                          placeholder="Select status"
+                          className="h-11"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="space-y-4">
                   <FormField
                     control={form.control}
                     name="featured"
                     render={({ field }) => (
-                      <FormItem className={`flex items-center justify-between rounded-lg border-2 p-4 transition-all duration-200 ${
-                        field.value ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                    <FormItem className={`flex items-center justify-between rounded-xl border-2 p-4 transition-all duration-200 ${
+                      field.value ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                       }`}>
                         <div className="space-y-0.5">
                           <FormLabel className="text-base font-semibold cursor-pointer flex items-center gap-2">
-                            <Star className={`h-4 w-4 ${field.value ? 'text-yellow-500' : 'text-gray-400'}`} />
+                          <Star className={`h-5 w-5 ${field.value ? 'text-yellow-500' : 'text-gray-400'}`} />
                             Featured Product
                           </FormLabel>
-                          <FormDescription className="text-xs">
+                        <FormDescription className="text-sm text-gray-500">
                             Show in featured section
                           </FormDescription>
                         </div>
                         <FormControl>
-                          <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3">
                             <span className={`text-sm font-medium ${field.value ? 'text-yellow-600' : 'text-gray-500'}`}>
                               {field.value ? 'Featured' : 'Regular'}
                             </span>
                             <Switch
                               checked={field.value}
                               onCheckedChange={field.onChange}
-                              className="data-[state=checked]:bg-yellow-600"
+                            className="data-[state=checked]:bg-yellow-500"
                             />
                           </div>
                         </FormControl>
                       </FormItem>
                     )}
                   />
-                </div>
               </div>
             </div>
 
-            {/* Pricing */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
+            {/* Pricing & Inventory Section */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                </div>
                 Pricing & Inventory
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Price ($)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+              <div className="space-y-6">
+                {/* Original Price - Full Width */}
                 <FormField
                   control={form.control}
                   name="original_price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Original Price ($)</FormLabel>
+                      <FormLabel className="text-base font-medium">Original Price ($) *</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
                           step="0.01" 
                           placeholder="0.00" 
+                          className="h-11"
                           {...field} 
                         />
                       </FormControl>
-                      <FormDescription>For sale pricing</FormDescription>
+                      <FormDescription className="text-sm text-gray-500">
+                        The regular price of the product
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Discounted Price and Stock Quantity - Two Columns */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                    name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                        <FormLabel className="text-base font-medium">Discounted Price ($)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="0.00" 
+                            className="h-11"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription className="text-sm text-gray-500">
+                        Sale price (leave empty if no discount)
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -652,11 +721,12 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                   name="stock_quantity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Stock Quantity</FormLabel>
+                        <FormLabel className="text-base font-medium">Stock Quantity</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
                           placeholder="0" 
+                            className="h-11"
                           {...field} 
                         />
                       </FormControl>
@@ -664,32 +734,33 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                     </FormItem>
                   )}
                 />
+                </div>
 
                 <FormField
                   control={form.control}
                   name="in_stock"
                   render={({ field }) => (
-                    <FormItem className={`flex items-center justify-between rounded-lg border-2 p-4 transition-all duration-200 ${
-                      field.value ? 'border-emerald-500 bg-emerald-50' : 'border-red-200 bg-red-50 hover:border-red-300'
+                    <FormItem className={`flex items-center justify-between rounded-xl border-2 p-4 transition-all duration-200 ${
+                      field.value ? 'border-emerald-400 bg-emerald-50' : 'border-red-200 bg-red-50 hover:border-red-300'
                     }`}>
                       <div className="space-y-0.5">
                         <FormLabel className="text-base font-semibold cursor-pointer flex items-center gap-2">
-                          <div className={`h-3 w-3 rounded-full ${field.value ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                          <div className={`h-4 w-4 rounded-full ${field.value ? 'bg-emerald-500' : 'bg-red-500'}`} />
                           Inventory Status
                         </FormLabel>
-                        <FormDescription className="text-xs">
+                        <FormDescription className="text-sm text-gray-500">
                           Product availability for customers
                         </FormDescription>
                       </div>
                       <FormControl>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3">
                           <span className={`text-sm font-medium ${field.value ? 'text-emerald-600' : 'text-red-600'}`}>
                             {field.value ? 'In Stock' : 'Out of Stock'}
                           </span>
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className={field.value ? "data-[state=checked]:bg-emerald-600" : "data-[state=unchecked]:bg-red-500"}
+                            className={field.value ? "data-[state=checked]:bg-emerald-500" : "data-[state=unchecked]:bg-red-500"}
                           />
                         </div>
                       </FormControl>
@@ -699,22 +770,28 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
               </div>
             </div>
 
-            {/* Product Details */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Product Details</h3>
+            {/* Product Details Section */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Package className="h-5 w-5 text-blue-600" />
+                </div>
+                Product Details
+              </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="weight"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Weight (oz)</FormLabel>
+                      <FormLabel className="text-base font-medium">Weight (oz)</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
                           step="0.01" 
                           placeholder="0.00" 
+                          className="h-11"
                           {...field} 
                         />
                       </FormControl>
@@ -728,46 +805,47 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                   name="dimensions"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Dimensions</FormLabel>
+                      <FormLabel className="text-base font-medium">Dimensions</FormLabel>
                       <FormControl>
-                        <Input placeholder="L × W × H" {...field} />
+                        <Input 
+                          placeholder="L × W × H" 
+                          className="h-11"
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+              </div>
 
                           {/* Category-Specific Fields */}
             {watchedCategory === 'cosmetics' && (
-                <div className="space-y-6">
-                  <div className="border-t pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-pink-500" />
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+                  <div className="p-2 bg-pink-100 rounded-lg">
+                    <Sparkles className="h-5 w-5 text-pink-600" />
+                  </div>
                       Cosmetics Information
                     </h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
                         name="skin_type"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Skin Type</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select skin type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {skinTypeOptions.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                        <FormLabel className="text-base font-medium">Skin Type</FormLabel>
+                                                  <FormControl>
+                        <BootstrapDropdown
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={skinTypeOptions}
+                          placeholder="Select skin type"
+                          className="h-11"
+                        />
+                      </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -778,9 +856,9 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         name="volume_size"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Volume/Size</FormLabel>
+                        <FormLabel className="text-base font-medium">Volume/Size</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 50ml, 1.7 fl oz" {...field} />
+                          <Input placeholder="e.g., 50ml, 1.7 fl oz" className="h-11" {...field} />
                             </FormControl>
                             <FormDescription>
                               Product volume or size
@@ -795,9 +873,9 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         name="spf_level"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>SPF Level</FormLabel>
+                        <FormLabel className="text-base font-medium">SPF Level</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., SPF 30, SPF 50+" {...field} />
+                          <Input placeholder="e.g., SPF 30, SPF 50+" className="h-11" {...field} />
                             </FormControl>
                             <FormDescription>
                               Sun protection factor (if applicable)
@@ -806,36 +884,19 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                           </FormItem>
                         )}
                       />
-
-                      <FormField
-                        control={form.control}
-                        name="fragrance_notes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Fragrance Notes</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., Floral, Citrus, Unscented" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Scent profile or fragrance-free
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
 
-                    <div className="mt-4">
+                <div className="mt-6">
                       <FormField
                         control={form.control}
                         name="ingredients"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Ingredients (INCI Names)</FormLabel>
+                        <FormLabel className="text-base font-medium">Ingredients (INCI Names)</FormLabel>
                             <FormControl>
                               <Textarea 
                                 placeholder="List ingredients using INCI names, separated by commas"
-                                className="min-h-[100px]"
+                            className="min-h-[100px] resize-none"
                                 {...field} 
                               />
                             </FormControl>
@@ -848,16 +909,17 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                       />
                     </div>
 
-                    <div className="mt-4">
+                <div className="mt-6">
                       <FormField
                         control={form.control}
                         name="product_benefits"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Product Benefits</FormLabel>
+                        <FormLabel className="text-base font-medium">Product Benefits</FormLabel>
                             <FormControl>
                               <Textarea 
                                 placeholder="e.g., Anti-aging, Moisturizing, Brightening, Acne-fighting"
+                            className="min-h-[100px] resize-none"
                                 {...field} 
                               />
                             </FormControl>
@@ -870,50 +932,31 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                       />
                     </div>
 
-                    <div className="mt-4">
-                      <FormField
-                        control={form.control}
-                        name="application_instructions"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Application Instructions</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="How to apply the product for best results"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
                       <FormField
                         control={form.control}
                         name="dermatologist_tested"
                         render={({ field }) => (
-                          <FormItem className={`flex flex-row items-center justify-between rounded-lg border-2 p-4 transition-all duration-200 ${
-                            field.value ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                      <FormItem className={`flex flex-row items-center justify-between rounded-xl border-2 p-4 transition-all duration-200 ${
+                        field.value ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                           }`}>
                             <div className="space-y-0.5">
                               <FormLabel className="text-base font-semibold cursor-pointer">
                                 Dermatologist Tested
                               </FormLabel>
-                              <FormDescription className="text-xs">
+                          <FormDescription className="text-sm text-gray-500">
                                 Tested by dermatologists
                               </FormDescription>
                             </div>
                             <FormControl>
-                              <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-3">
                                 <span className={`text-sm font-medium ${field.value ? 'text-green-600' : 'text-gray-500'}`}>
                                   {field.value ? 'Yes' : 'No'}
                                 </span>
                                 <Switch
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
-                                  className="data-[state=checked]:bg-green-600"
+                              className="data-[state=checked]:bg-green-500"
                                 />
                               </div>
                             </FormControl>
@@ -925,26 +968,26 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         control={form.control}
                         name="cruelty_free"
                         render={({ field }) => (
-                          <FormItem className={`flex flex-row items-center justify-between rounded-lg border-2 p-4 transition-all duration-200 ${
-                            field.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                      <FormItem className={`flex flex-row items-center justify-between rounded-xl border-2 p-4 transition-all duration-200 ${
+                        field.value ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                           }`}>
                             <div className="space-y-0.5">
                               <FormLabel className="text-base font-semibold cursor-pointer">
                                 Cruelty Free
                               </FormLabel>
-                              <FormDescription className="text-xs">
+                          <FormDescription className="text-sm text-gray-500">
                                 Not tested on animals
                               </FormDescription>
                             </div>
                             <FormControl>
-                              <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-3">
                                 <span className={`text-sm font-medium ${field.value ? 'text-blue-600' : 'text-gray-500'}`}>
                                   {field.value ? 'Yes' : 'No'}
                                 </span>
                                 <Switch
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
-                                  className="data-[state=checked]:bg-blue-600"
+                              className="data-[state=checked]:bg-blue-500"
                                 />
                               </div>
                             </FormControl>
@@ -956,66 +999,61 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         control={form.control}
                         name="organic_natural"
                         render={({ field }) => (
-                          <FormItem className={`flex flex-row items-center justify-between rounded-lg border-2 p-4 transition-all duration-200 ${
-                            field.value ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                      <FormItem className={`flex flex-row items-center justify-between rounded-xl border-2 p-4 transition-all duration-200 ${
+                        field.value ? 'border-purple-400 bg-purple-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                           }`}>
                             <div className="space-y-0.5">
                               <FormLabel className="text-base font-semibold cursor-pointer">
                                 Organic/Natural
                               </FormLabel>
-                              <FormDescription className="text-xs">
+                          <FormDescription className="text-sm text-gray-500">
                                 Made with organic/natural ingredients
                               </FormDescription>
                             </div>
                             <FormControl>
-                              <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-3">
                                 <span className={`text-sm font-medium ${field.value ? 'text-purple-600' : 'text-gray-500'}`}>
                                   {field.value ? 'Yes' : 'No'}
                                 </span>
                                 <Switch
                                   checked={field.value}
                                   onCheckedChange={field.onChange}
-                                  className="data-[state=checked]:bg-purple-600"
+                              className="data-[state=checked]:bg-purple-500"
                                 />
                               </div>
                             </FormControl>
                           </FormItem>
                         )}
                       />
-                    </div>
                   </div>
                 </div>
               )}
 
               {watchedCategory === 'hair-extension' && (
-                <div className="space-y-6">
-                  <div className="border-t pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                      <Package className="h-5 w-5 text-amber-500" />
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+                  <div className="p-2 bg-amber-100 rounded-lg">
+                    <Package className="h-5 w-5 text-amber-600" />
+                  </div>
                       Hair Extension Information
                     </h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
                         name="hair_type"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Hair Type</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select hair type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {hairTypeOptions.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                        <FormLabel className="text-base font-medium">Hair Type</FormLabel>
+                                                  <FormControl>
+                        <BootstrapDropdown
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={hairTypeOptions}
+                          placeholder="Select hair type"
+                          className="h-11"
+                        />
+                      </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -1026,21 +1064,16 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         name="hair_texture"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Hair Texture</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select hair texture" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {hairTextureOptions.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                        <FormLabel className="text-base font-medium">Hair Texture</FormLabel>
+                                                  <FormControl>
+                        <BootstrapDropdown
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={hairTextureOptions}
+                          placeholder="Select hair texture"
+                          className="h-11"
+                        />
+                      </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -1051,9 +1084,9 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         name="hair_length"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Hair Length</FormLabel>
+                        <FormLabel className="text-base font-medium">Hair Length</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 18 inches, 45cm" {...field} />
+                          <Input placeholder="e.g., 18 inches, 45cm" className="h-11" {...field} />
                             </FormControl>
                             <FormDescription>
                               Length in inches or centimeters
@@ -1068,9 +1101,9 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         name="hair_weight"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Hair Weight</FormLabel>
+                        <FormLabel className="text-base font-medium">Hair Weight</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 100g, 120g per set" {...field} />
+                          <Input placeholder="e.g., 100g, 120g per set" className="h-11" {...field} />
                             </FormControl>
                             <FormDescription>
                               Weight in grams
@@ -1085,9 +1118,9 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         name="hair_color_shade"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Hair Color/Shade</FormLabel>
+                        <FormLabel className="text-base font-medium">Hair Color/Shade</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., #2 Dark Brown, #613 Blonde" {...field} />
+                          <Input placeholder="e.g., #2 Dark Brown, #613 Blonde" className="h-11" {...field} />
                             </FormControl>
                             <FormDescription>
                               Color number or shade name
@@ -1102,55 +1135,16 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         name="installation_method"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Installation Method</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select installation method" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {installationMethodOptions.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="hair_grade"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Hair Grade</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., 6A, 8A, Remy Grade" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Quality grade or classification
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="hair_origin"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Hair Origin</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., Brazilian, Indian, European" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Geographic origin of the hair
-                            </FormDescription>
+                        <FormLabel className="text-base font-medium">Installation Method</FormLabel>
+                                                  <FormControl>
+                        <BootstrapDropdown
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={installationMethodOptions}
+                          placeholder="Select installation method"
+                          className="h-11"
+                        />
+                      </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -1161,9 +1155,9 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         name="quantity_in_set"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Quantity in Set</FormLabel>
+                        <FormLabel className="text-base font-medium">Quantity in Set</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 7 pieces, 20 strands" {...field} />
+                          <Input placeholder="e.g., 7 pieces, 20 strands" className="h-11" {...field} />
                             </FormControl>
                             <FormDescription>
                               Number of pieces or strands
@@ -1172,36 +1166,19 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                           </FormItem>
                         )}
                       />
-
-                      <FormField
-                        control={form.control}
-                        name="attachment_type"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Attachment Type</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., Clips, Tape, Micro-rings" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              How the extensions attach
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
 
-                    <div className="mt-4">
+                <div className="mt-6">
                       <FormField
                         control={form.control}
                         name="care_instructions"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Care Instructions</FormLabel>
+                        <FormLabel className="text-base font-medium">Care Instructions</FormLabel>
                             <FormControl>
                               <Textarea 
                                 placeholder="Washing, styling, and maintenance instructions"
-                                className="min-h-[100px]"
+                            className="min-h-[100px] resize-none"
                                 {...field} 
                               />
                             </FormControl>
@@ -1212,70 +1189,55 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                           </FormItem>
                         )}
                       />
-                    </div>
                   </div>
                 </div>
               )}
 
-            {/* Common Fields - Usage Instructions */}
-            <div className="border-t pt-6">
-              <FormField
-                control={form.control}
-                name="usage_instructions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Usage Instructions</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="General usage and safety instructions" 
-                        rows={3}
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Images Section */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+                <div className="p-2 bg-indigo-100 rounded-lg">
+                  <ImageIcon className="h-5 w-5 text-indigo-600" />
             </div>
-            </div>
-
-            {/* Images */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <ImageIcon className="h-4 w-4" />
                 Product Images
               </h3>
               
+              <div className="space-y-8">
               {/* Main Image */}
               <div>
-                <FormLabel>Main Product Image</FormLabel>
-                <div className="mt-2">
-                  {mainImagePreview ? (
-                    <div className="relative w-32 h-32">
-                      <img
-                        src={mainImagePreview}
-                        alt="Main product"
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        className="absolute -top-2 -right-2 h-6 w-6 p-0"
-                        onClick={() => {
-                          setMainImagePreview('');
-                          setMainImageFile(null);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                      <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
-                      <div className="mt-4">
+                  <FormLabel className="text-base font-medium">Main Product Image</FormLabel>
+                  <div className="mt-4">
+                                        {mainImageUrl ? (
+                      <div className="relative w-40 h-40 rounded-lg overflow-hidden border-2 border-gray-200">
+                        <img
+                          src={mainImageUrl}
+                          alt="Main product"
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute -top-2 -right-2 h-8 w-8 p-0 rounded-full shadow-lg"
+                          onClick={async () => {
+                            try {
+                              await deleteProductImage(mainImageUrl, form.getValues('category'));
+                              setMainImageUrl('');
+                            } catch (error) {
+                              console.error('Error deleting main image:', error);
+                              toast.error('Failed to delete main image');
+                            }
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-gray-400 transition-colors">
+                        <ImageIcon className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                        <div className="space-y-2">
                         <label htmlFor="main-image" className="cursor-pointer">
-                          <span className="text-sm text-blue-600 hover:text-blue-500">
+                            <span className="text-base font-medium text-blue-600 hover:text-blue-500">
                             Upload main image
                           </span>
                           <input
@@ -1286,6 +1248,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                             onChange={handleMainImageSelect}
                           />
                         </label>
+                          <p className="text-sm text-gray-500">PNG, JPG, GIF up to 10MB</p>
                       </div>
                     </div>
                   )}
@@ -1294,22 +1257,22 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
 
               {/* Gallery Images */}
               <div>
-                <FormLabel>Gallery Images</FormLabel>
-                <div className="mt-2 space-y-4">
+                  <FormLabel className="text-base font-medium">Gallery Images</FormLabel>
+                  <div className="mt-4">
                   <div className="flex flex-wrap gap-4">
                     {/* Existing images */}
-                    {existingGalleryImages.map((imageUrl, index) => (
-                      <div key={`existing-${index}`} className="relative w-24 h-24">
+                                          {existingGalleryUrls.map((imageUrl, index) => (
+                      <div key={`existing-${index}`} className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-200">
                         <img
                           src={imageUrl}
                           alt={`Gallery ${index + 1}`}
-                          className="w-full h-full object-cover rounded-lg"
+                          className="w-full h-full object-cover"
                         />
                         <Button
                           type="button"
                           variant="destructive"
                           size="sm"
-                          className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                          className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full shadow-lg"
                           onClick={() => removeGalleryImage(index, true)}
                         >
                           <X className="h-3 w-3" />
@@ -1318,18 +1281,18 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                     ))}
                     
                     {/* New images */}
-                    {galleryPreviews.map((preview, index) => (
-                      <div key={`new-${index}`} className="relative w-24 h-24">
+                    {galleryUrls.map((imageUrl, index) => (
+                      <div key={`new-${index}`} className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-200">
                         <img
-                          src={preview}
+                          src={imageUrl}
                           alt={`New gallery ${index + 1}`}
-                          className="w-full h-full object-cover rounded-lg"
+                          className="w-full h-full object-cover"
                         />
                         <Button
                           type="button"
                           variant="destructive"
                           size="sm"
-                          className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                          className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full shadow-lg"
                           onClick={() => removeGalleryImage(index, false)}
                         >
                           <X className="h-3 w-3" />
@@ -1338,9 +1301,10 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                     ))}
                     
                     {/* Add new images */}
-                    <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                      <label htmlFor="gallery-images" className="cursor-pointer">
-                        <Upload className="h-6 w-6 text-gray-400" />
+                      <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 transition-colors">
+                        <label htmlFor="gallery-images" className="cursor-pointer flex flex-col items-center">
+                          <Upload className="h-8 w-8 text-gray-400 mb-2" />
+                          <span className="text-xs text-gray-500">Add More</span>
                         <input
                           id="gallery-images"
                           type="file"
@@ -1350,24 +1314,31 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                           onChange={handleGallerySelect}
                         />
                       </label>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* SEO */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">SEO Options</h3>
+            {/* SEO Section */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Sparkles className="h-5 w-5 text-orange-600" />
+                </div>
+                SEO Options
+              </h3>
               
+              <div className="space-y-6">
               <FormField
                 control={form.control}
                 name="seo_title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>SEO Title</FormLabel>
+                      <FormLabel className="text-base font-medium">SEO Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="SEO optimized title" {...field} />
+                        <Input placeholder="SEO optimized title" className="h-11" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1379,11 +1350,11 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                 name="seo_description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>SEO Description</FormLabel>
+                      <FormLabel className="text-base font-medium">SEO Description</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="SEO meta description" 
-                        rows={3}
+                          className="min-h-[100px] resize-none"
                         {...field} 
                       />
                     </FormControl>
@@ -1397,37 +1368,56 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                 name="seo_keywords"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>SEO Keywords</FormLabel>
+                      <FormLabel className="text-base font-medium">SEO Keywords</FormLabel>
                     <FormControl>
-                      <Input placeholder="keyword1, keyword2, keyword3" {...field} />
+                        <Input placeholder="keyword1, keyword2, keyword3" className="h-11" {...field} />
                     </FormControl>
-                    <FormDescription>Separate keywords with commas</FormDescription>
+                      <FormDescription className="text-sm text-gray-500">
+                        Separate keywords with commas
+                      </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              </div>
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center justify-end space-x-4 pt-6 border-t">
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  <p className="font-medium">Ready to {product ? 'update' : 'create'} this product?</p>
+                  <p className="text-xs">Make sure all information is accurate before saving.</p>
+                </div>
+                <div className="flex items-center space-x-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 disabled={isSubmitting}
+                    className="min-w-[100px]"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="min-w-[120px] bg-blue-600 hover:bg-blue-700"
+                  >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {product ? 'Updating...' : 'Creating...'}
                   </>
                 ) : (
-                  product ? 'Update Product' : 'Create Product'
+                      <>
+                        <Package className="mr-2 h-4 w-4" />
+                        {product ? 'Update Product' : 'Create Product'}
+                      </>
                 )}
               </Button>
+                </div>
+              </div>
             </div>
           </form>
         </Form>

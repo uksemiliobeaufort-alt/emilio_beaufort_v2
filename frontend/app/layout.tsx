@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import PageTransitionProgressBar from "@/components/PageTransitionProgressBar";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import FloatingFeedbackButton from "@/components/FloatingFeedbackButton";
 import { Suspense } from "react";
 import { BagProvider } from '@/components/BagContext';
 import CookieConsent from '@/components/CookieConsent';
@@ -56,6 +57,7 @@ export default function RootLayout({
           }}
         />
         <CookieConsent />
+        {!isAdminPage && <FloatingFeedbackButton />}
       </body>
     </html>
   );

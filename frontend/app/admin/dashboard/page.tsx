@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { getProducts } from '@/lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
@@ -81,7 +82,7 @@ export default function AdminDashboard() {
     let subscription: RealtimeChannel;
     
     const setupSubscription = async () => {
-      // Subscribe to both partnership_inquiries and blog_posts tables
+      // Subscribe to partnership_inquiries, blog_posts, and product tables
       subscription = supabase
         .channel('dashboard_updates')
         .on(
@@ -112,14 +113,39 @@ export default function AdminDashboard() {
             // Refresh stats and recent posts when blog posts change
             await fetchDashboardStats();
             await fetchRecentPosts();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'cosmetics'
+          },
+          async (payload) => {
+            console.log('Cosmetics products update received:', payload);
             
-            // Show a single notification for blog post changes
-            toast.success('Dashboard updated - blog posts changed');
+            // Refresh stats when cosmetics products change
+            await fetchDashboardStats();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'hair_extensions'
+          },
+          async (payload) => {
+            console.log('Hair extensions products update received:', payload);
+            
+            // Refresh stats when hair extensions products change
+            await fetchDashboardStats();
           }
         )
         .subscribe();
 
-      console.log('Real-time subscriptions established for partnership inquiries and blog posts');
+      console.log('Real-time subscriptions established for all dashboard data');
     };
 
     setupSubscription();
@@ -196,9 +222,34 @@ export default function AdminDashboard() {
         throw postsError;
       }
 
+      // Fetch actual products count from both tables
+      let totalProductsCount = 0;
+      try {
+        const products = await getProducts();
+        totalProductsCount = products.length;
+        console.log('Fetched products count:', totalProductsCount);
+      } catch (error) {
+        console.error('Error fetching products count:', error);
+        // Fallback to direct table queries if getProducts fails
+        try {
+          const [cosmeticsResult, hairExtensionsResult] = await Promise.all([
+            supabase.from('cosmetics').select('*', { count: 'exact', head: true }),
+            supabase.from('hair_extensions').select('*', { count: 'exact', head: true })
+          ]);
+          
+          const cosmeticsCount = cosmeticsResult.count || 0;
+          const hairExtensionsCount = hairExtensionsResult.count || 0;
+          totalProductsCount = cosmeticsCount + hairExtensionsCount;
+          
+          console.log('Fetched products count (fallback):', totalProductsCount);
+        } catch (fallbackError) {
+          console.error('Error in fallback product count:', fallbackError);
+        }
+      }
+
       setStats({
-        totalProducts: 5, // Replace with actual count when products table is ready
-        totalPosts: postsCount || 0, // Now using real-time data from blog_posts table
+        totalProducts: totalProductsCount,
+        totalPosts: postsCount || 0,
         totalPartnershipInquiries: inquiriesCount || 0
       });
     } catch (error) {
@@ -230,8 +281,15 @@ export default function AdminDashboard() {
         .update({ status: 'completed' })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error approving inquiry:', error);
+        throw error;
+      }
+      
       toast.success('Inquiry approved successfully');
+      // Refresh the inquiries list to reflect changes
+      await fetchPartnershipInquiries();
+      
     } catch (error) {
       console.error('Error approving inquiry:', error);
       toast.error('Failed to approve inquiry');
@@ -241,21 +299,27 @@ export default function AdminDashboard() {
   const deleteInquiry = async (id: string) => {
     try {
       const inquiry = inquiries.find(i => i.id === id);
-      if (!inquiry) return;
+      if (!inquiry) {
+        toast.error('Inquiry not found in current list');
+        return;
+      }
 
-      // First verify the inquiry still exists
+      // First verify the inquiry still exists in database
       const { data: checkData, error: checkError } = await supabase
         .from('partnership_inquiries')
         .select('*')
-        .eq('id', id)
-        .single();
+        .eq('id', id);
 
       if (checkError) {
-        throw new Error('Could not verify inquiry status');
+        console.error('Error checking inquiry:', checkError);
+        throw new Error('Failed to verify inquiry exists in database');
       }
 
-      if (!checkData) {
-        console.log('Inquiry already deleted');
+      if (!checkData || checkData.length === 0) {
+        console.log('Inquiry already deleted from database');
+        toast.info('Inquiry was already deleted');
+        // Refresh the list to update UI
+        await fetchPartnershipInquiries();
         return;
       }
 
@@ -266,10 +330,11 @@ export default function AdminDashboard() {
         .eq('id', id);
 
       if (deleteError) {
+        console.error('Delete error:', deleteError);
         throw new Error(`Failed to delete inquiry: ${deleteError.message}`);
       }
 
-      // Insert into temporary_data
+      // Insert into temporary_data for archival
       const tempData = {
         full_name: inquiry.full_name,
         email: inquiry.email,
@@ -282,14 +347,15 @@ export default function AdminDashboard() {
         .insert([tempData]);
 
       if (insertError) {
-        // Restore the inquiry if temp data insertion fails
-        await supabase
-          .from('partnership_inquiries')
-          .insert([inquiry]);
-        throw new Error(`Failed to archive inquiry: ${insertError.message}`);
+        console.error('Archive error:', insertError);
+        // Don't restore if archival fails, just log it
+        console.warn('Failed to archive inquiry data, but deletion was successful');
       }
 
       toast.success('Inquiry deleted successfully');
+      // Refresh the inquiries list
+      await fetchPartnershipInquiries();
+      
     } catch (error) {
       console.error('Error in deleteInquiry:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to delete inquiry');

@@ -49,13 +49,44 @@ export default function AdminBlogsPage() {
 
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase.from('blog_posts').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      console.log("Fetched posts:", data); // Debug log
+      console.log('Starting to fetch posts...');
+      
+      // Check if supabase client is properly initialized
+      if (!supabase) {
+        throw new Error('Supabase client is not initialized');
+      }
+      
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log("Fetched posts:", data);
       setPosts(data || []);
     } catch (error) {
       console.error("Failed to fetch posts:", error);
-      toast.error("Failed to fetch posts");
+      
+      // Check if it's a table not found error
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMessage = (error as any).message;
+        if (errorMessage.includes('relation "blog_posts" does not exist')) {
+          toast.error("Blog posts table does not exist. Please check your database setup.");
+        } else if (errorMessage.includes('permission denied')) {
+          toast.error("Permission denied. Please check your database policies.");
+        } else {
+          toast.error(`Failed to fetch posts: ${errorMessage}`);
+        }
+      } else {
+        toast.error("Failed to fetch posts. Please check your connection.");
+      }
+      
+      // Set empty array to prevent further errors
+      setPosts([]);
     } finally {
       setLoading(false);
     }

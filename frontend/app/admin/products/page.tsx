@@ -1,21 +1,14 @@
-"use client";
+  "use client";
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   Search, 
   Plus, 
-  Edit, 
-  Trash2, 
-  Eye, 
   Package,
-  DollarSign,
-  Star,
-  ImageIcon,
   Filter
 } from 'lucide-react';
 import { 
@@ -33,15 +26,10 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import BootstrapDropdown from '@/components/ui/BootstrapDropdown';
 import ProductFormDialog from './ProductFormDialog';
 import CategorySelectionDialog from './CategorySelectionDialog';
+import ProductCard from './components/ProductCard';
 
 const categoryLabels = {
   'cosmetics': 'Cosmetics',
@@ -52,12 +40,6 @@ const statusLabels = {
   'draft': 'Draft',
   'published': 'Published',
   'archived': 'Archived'
-};
-
-const statusColors = {
-  'draft': 'bg-gray-100 text-gray-800',
-  'published': 'bg-green-100 text-green-800',
-  'archived': 'bg-red-100 text-red-800'
 };
 
 export default function ProductsAdmin() {
@@ -89,10 +71,12 @@ export default function ProductsAdmin() {
   }, [router]);
 
   const fetchProducts = async () => {
+    console.log('Fetching products...');
+    setLoading(true);
     try {
-      setLoading(true);
-      const data = await getProducts();
-      setProducts(data);
+      const products = await getProducts();
+      console.log('Products fetched successfully:', products);
+      setProducts(products);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to fetch products');
@@ -128,16 +112,16 @@ export default function ProductsAdmin() {
       // Delete associated images first
       if (product.main_image_url) {
         try {
-          await deleteProductImage(product.main_image_url);
+          await deleteProductImage(product.main_image_url, product.category);
         } catch (error) {
           console.warn('Could not delete main image:', error);
         }
       }
 
-      if (product.gallery_images && product.gallery_images.length > 0) {
-        for (const imageUrl of product.gallery_images) {
+      if (product.gallery_urls && product.gallery_urls.length > 0) {
+        for (const imageUrl of product.gallery_urls) {
           try {
-            await deleteProductImage(imageUrl);
+            await deleteProductImage(imageUrl, product.category);
           } catch (error) {
             console.warn('Could not delete gallery image:', error);
           }
@@ -145,7 +129,7 @@ export default function ProductsAdmin() {
       }
 
       // Delete the product
-      await deleteProduct(product.id);
+      await deleteProduct(product.id, product.category);
       
       await fetchProducts();
       setDeleteDialog({ open: false, product: null });
@@ -158,17 +142,10 @@ export default function ProductsAdmin() {
     }
   };
 
-  const formatPrice = (price?: number) => {
-    if (!price) return 'N/A';
-    return `$${price.toFixed(2)}`;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+  const handleProductFormSuccess = () => {
+    console.log('Product form success, refreshing products...');
+    setProductFormDialog({ open: false, product: null });
+    fetchProducts();
   };
 
   const filteredProducts = products.filter(product => {
@@ -183,265 +160,144 @@ export default function ProductsAdmin() {
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
+  // Add loading state UI
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="text-gray-600">Loading products...</p>
+      <div className="min-h-screen bg-gray-50/50">
+        <div className="p-6 md:p-8">
+          <div className="flex flex-col items-center justify-center min-h-[400px] rounded-xl border border-gray-200 bg-white p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4" />
+            <p className="text-gray-600 text-lg">Loading products...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Add empty state UI
+  if (!loading && (!products || products.length === 0)) {
+    return (
+      <div className="min-h-screen bg-gray-50/50">
+        <div className="p-6 md:p-8">
+          <div className="flex flex-col items-center justify-center min-h-[400px] rounded-xl border border-gray-200 bg-white p-8">
+            <Package className="h-16 w-16 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+            <p className="text-gray-600 mb-6">Get started by creating your first product.</p>
+            <Button onClick={handleAddClick} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-5 w-5 mr-2" />
+              Add Product
+            </Button>
+          </div>
+          
+          {/* Category Selection Dialog */}
+          <CategorySelectionDialog
+            open={categorySelectionDialog}
+            onClose={() => setCategorySelectionDialog(false)}
+            onCategorySelect={handleCategorySelect}
+          />
+          
+          {/* Product Form Dialog */}
+          <ProductFormDialog
+            open={productFormDialog.open}
+            product={productFormDialog.product}
+            selectedCategory={productFormDialog.selectedCategory}
+            onClose={() => setProductFormDialog({ open: false, product: null })}
+            onSuccess={handleProductFormSuccess}
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="text-gray-600">Manage your product catalog</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-xl border border-gray-200">
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Package className="h-6 w-6 text-blue-600" />
+            </div>
+            Products
+          </h1>
+          <p className="mt-1 text-gray-500">Manage your product catalog</p>
         </div>
-        <Button onClick={handleAddClick} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
+        <Button onClick={handleAddClick} size="lg" className="bg-blue-600 hover:bg-blue-700">
+          <Plus className="mr-2 h-5 w-5" />
           Add Product
         </Button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 p-4 bg-white rounded-lg border">
-        <div className="flex-1">
+      <div className="bg-white p-6 rounded-xl border border-gray-200 space-y-4">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Filter className="h-4 w-4" />
+          Filters
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           </div>
-        </div>
-        
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {Object.entries(categoryLabels).map(([value, label]) => (
-              <SelectItem key={value} value={value}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            {Object.entries(statusLabels).map(([value, label]) => (
-              <SelectItem key={value} value={value}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Products Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="flex items-center gap-3">
-            <Package className="h-8 w-8 text-blue-600" />
-            <div>
-              <p className="text-2xl font-bold">{products.length}</p>
-              <p className="text-sm text-gray-600">Total Products</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="flex items-center gap-3">
-            <Star className="h-8 w-8 text-yellow-600" />
-            <div>
-              <p className="text-2xl font-bold">{products.filter(p => p.featured).length}</p>
-              <p className="text-sm text-gray-600">Featured</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-              <div className="h-3 w-3 bg-green-600 rounded-full"></div>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{products.filter(p => p.status === 'published').length}</p>
-              <p className="text-sm text-gray-600">Published</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-              <div className="h-3 w-3 bg-red-600 rounded-full"></div>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{products.filter(p => !p.in_stock).length}</p>
-              <p className="text-sm text-gray-600">Out of Stock</p>
-            </div>
-          </div>
+                      <BootstrapDropdown
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              options={[
+                { value: 'all', label: 'All Categories' },
+                { value: 'cosmetics', label: 'Cosmetics' },
+                { value: 'hair-extension', label: 'Hair Extensions' }
+              ]}
+              placeholder="Category"
+            />
+            <BootstrapDropdown
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'draft', label: 'Draft' },
+                { value: 'published', label: 'Published' },
+                { value: 'archived', label: 'Archived' }
+              ]}
+              placeholder="Status"
+            />
         </div>
       </div>
 
-      {/* Products Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
-        {filteredProducts.length === 0 ? (
-          <div className="p-8 text-center">
-            <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-600 mb-4">
+      {/* Product Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {filteredProducts.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteClick}
+          />
+        ))}
+        {filteredProducts.length === 0 && (
+          <div className="col-span-full flex flex-col items-center justify-center py-12 bg-white rounded-xl border border-gray-200">
+            <Package className="h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900">No products found</h3>
+            <p className="text-gray-500 text-center mt-2">
               {searchTerm || categoryFilter !== 'all' || statusFilter !== 'all'
                 ? 'Try adjusting your filters'
-                : 'Get started by adding your first product'
-              }
+                : 'Start by adding your first product'}
             </p>
-            {!searchTerm && categoryFilter === 'all' && statusFilter === 'all' && (
-              <Button onClick={handleAddClick} className="flex items-center gap-2 mx-auto">
-                <Plus className="h-4 w-4" />
-                Add Your First Product
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Product
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Stock
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-12 w-12">
-                          {product.main_image_url ? (
-                            <img
-                              className="h-12 w-12 rounded-lg object-cover"
-                              src={product.main_image_url}
-                              alt={product.name}
-                            />
-                          ) : (
-                            <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
-                              <ImageIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {product.name}
-                            {product.featured && (
-                              <Star className="inline h-4 w-4 text-yellow-500 ml-1" />
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {product.description || 'No description'}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant="secondary">
-                        {categoryLabels[product.category as keyof typeof categoryLabels]}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{formatPrice(product.price)}</span>
-                        {product.original_price && product.original_price !== product.price && (
-                          <span className="text-xs text-gray-500 line-through">
-                            {formatPrice(product.original_price)}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge className={statusColors[product.status]}>
-                        {statusLabels[product.status]}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex items-center">
-                        <div className={`h-2 w-2 rounded-full mr-2 ${
-                          product.in_stock ? 'bg-green-500' : 'bg-red-500'
-                        }`} />
-                        {product.in_stock ? 'In Stock' : 'Out of Stock'}
-                        {product.stock_quantity > 0 && (
-                          <span className="ml-1 text-gray-500">({product.stock_quantity})</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(product.created_at)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditClick(product)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteClick(product)}
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         )}
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open, product: null })}>
+      <Dialog open={deleteDialog.open} onOpenChange={(open) => !isProcessing && setDeleteDialog({ open, product: null })}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Product</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{deleteDialog.product?.name}"? This action cannot be undone.
-              All associated images will also be deleted.
+              Are you sure you want to delete &quot;{deleteDialog.product?.name}&quot;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -457,18 +313,11 @@ export default function ProductsAdmin() {
               onClick={handleDeleteProduct}
               disabled={isProcessing}
             >
-              {isProcessing ? 'Deleting...' : 'Delete Product'}
+              {isProcessing ? 'Deleting...' : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Category Selection Dialog */}
-      <CategorySelectionDialog
-        open={categorySelectionDialog}
-        onClose={() => setCategorySelectionDialog(false)}
-        onCategorySelect={handleCategorySelect}
-      />
 
       {/* Product Form Dialog */}
       <ProductFormDialog
@@ -476,10 +325,14 @@ export default function ProductsAdmin() {
         product={productFormDialog.product}
         selectedCategory={productFormDialog.selectedCategory}
         onClose={() => setProductFormDialog({ open: false, product: null })}
-        onSuccess={() => {
-          setProductFormDialog({ open: false, product: null });
-          fetchProducts();
-        }}
+        onSuccess={handleProductFormSuccess}
+      />
+
+      {/* Category Selection Dialog */}
+      <CategorySelectionDialog
+        open={categorySelectionDialog}
+        onClose={() => setCategorySelectionDialog(false)}
+                 onCategorySelect={handleCategorySelect}
       />
     </div>
   );
