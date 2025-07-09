@@ -11,11 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { submitPartnershipInquiry } from "@/lib/api";
+import { submitPartnershipInquiry, CreatePartnershipInquiryDto } from "@/lib/api";
 
 const partnershipFormSchema = z.object({
-  fullName: z.string().min(2, "Full name must be at least 2 characters"),
-  companyName: z.string().min(2, "Company name must be at least 2 characters"),
+  name: z.string().min(2, "Full name must be at least 2 characters"),
+  company: z.string().min(2, "Company name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   inquiryType: z.string().min(1, "Please select an inquiry type"),
   message: z.string().min(10, "Message must be at least 10 characters"),
@@ -98,36 +98,36 @@ export default function PartnerPage() {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {/* Full Name */}
                 <div>
-                  <Label htmlFor="fullName" className="text-sm font-medium">
+                  <Label htmlFor="name" className="text-sm font-medium">
                     Full Name *
                   </Label>
                   <Input
-                    id="fullName"
-                    {...register("fullName")}
+                    id="name"
+                    {...register("name")}
                     className="mt-1"
                     placeholder="Enter your full name"
                   />
-                  {errors.fullName && (
+                  {errors.name && (
                     <p className="mt-1 text-sm text-destructive">
-                      {errors.fullName.message}
+                      {errors.name.message}
                     </p>
                   )}
                 </div>
 
                 {/* Company Name */}
                 <div>
-                  <Label htmlFor="companyName" className="text-sm font-medium">
+                  <Label htmlFor="company" className="text-sm font-medium">
                     Company Name *
                   </Label>
                   <Input
-                    id="companyName"
-                    {...register("companyName")}
+                    id="company"
+                    {...register("company")}
                     className="mt-1"
                     placeholder="Enter your company name"
                   />
-                  {errors.companyName && (
+                  {errors.company && (
                     <p className="mt-1 text-sm text-destructive">
-                      {errors.companyName.message}
+                      {errors.company.message}
                     </p>
                   )}
                 </div>
@@ -156,7 +156,7 @@ export default function PartnerPage() {
                   <Label htmlFor="inquiryType" className="text-sm font-medium">
                     Inquiry Type *
                   </Label>
-                  <Select onValueChange={(value) => setValue("inquiryType", value)}>
+                  <Select onValueChange={(value: string) => setValue("inquiryType", value)}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select an inquiry type" />
                     </SelectTrigger>

@@ -3,13 +3,16 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { api } from '@/lib/api';
-import { Navbar } from '@/components/Navbar';
+// import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Journal from './journal/page';
 import CardGrid from '@/components/CardGrid';
 import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
+import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
+import { getImageUrl } from '@/lib/supabase';
+
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
@@ -29,6 +32,18 @@ export default function Home() {
     fetchData();
   }, []);
 
+  // Handle initial hash navigation
+  useEffect(() => {
+    if (window.location.hash) {
+      const element = document.querySelector(window.location.hash);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 500); // Wait for page load
+      }
+    }
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -39,13 +54,24 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-premium">
-      <Navbar />
+      {/* <Navbar /> */}
       
       {/* Hero Section */}
-      <section id="hero" className="min-h-[80vh] sm:min-h-screen flex items-center justify-center relative overflow-hidden bg-premium">
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100"></div>
+      <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-premium">
+        {/* Video background */}
+        <video
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          src={getImageUrl("product-images", "heroVideo.mp4")}
+          autoPlay
+          muted
+          loop
+          playsInline
+        />
+        {/* Optional overlay for readability */}
+        <div className="absolute inset-0 bg-black/30 z-10" />
+        {/* Content */}
         <motion.div 
-          className="relative z-10 text-center px-6 max-w-5xl mx-auto"
+          className="relative z-20 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
@@ -54,14 +80,14 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.3 }}
-            className="mb-6 sm:mb-8"
+            className="mb-6 w-full"
           >
-            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-serif font-bold text-premium mb-6 sm:mb-8 leading-tight tracking-tight">
+            <h1 className="text-7xl md:text-9xl font-serif font-bold text-white mb-2 leading-tight tracking-tight text-center w-full">
               Emilio Beaufort
             </h1>
           </motion.div>
           <motion.p 
-            className="text-lg sm:text-xl md:text-2xl body-premium mb-10 sm:mb-16 max-w-3xl mx-auto leading-relaxed"
+            className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-center mx-auto text-white"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6 }}
@@ -72,10 +98,11 @@ export default function Home() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.9 }}
+            className="w-full flex justify-center"
           >
-            <Button 
-              size="lg" 
-              className="btn-primary-premium text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 font-sans-medium"
+            <Button
+              size="lg"
+              className="text-lg px-12 py-6 text-base font-sans-medium transition-colors duration-200 bg-black text-white hover:bg-white hover:text-black border border-white"
               onClick={() => document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Discover Our Philosophy
@@ -85,8 +112,10 @@ export default function Home() {
       </section>
 
       {/* Philosophy Section */}
-      <section id="philosophy" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-premium">
-        <div className="container-premium">
+      <section id="philosophy" className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-hidden section-premium">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#f8f8f8]"></div>
+        <div className="absolute inset-0 bg-pattern-dots opacity-[0.1]"></div>
+        <div className="container-premium relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -94,7 +123,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-12 sm:mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
               Philosophy
             </h2>
             <p className="body-premium text-lg sm:text-xl max-w-4xl mx-auto leading-relaxed">
@@ -142,9 +171,14 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Exclusive Products Marquee Section */}
+      <ExclusiveProductsMarquee />
+
       {/* The House Section */}
-      <section id="house" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-white">
-        <div className="container-premium">
+      <section id="house" className="py-8 sm:py-10 md:py-12 lg:py-16 relative overflow-hidden section-premium">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#f8f8f8] via-white to-[#f5f5f5]"></div>
+        <div className="absolute inset-0 bg-pattern-grid opacity-[0.07]"></div>
+        <div className="container-premium relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -152,7 +186,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-12 sm:mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
               The House
             </h2>
             <p className="body-premium text-lg sm:text-xl max-w-4xl mx-auto leading-relaxed">
@@ -165,8 +199,10 @@ export default function Home() {
       </section>
 
       {/* Journal Section */}
-      <section id="journal" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-premium">
-        <div className="container-premium">
+      <section id="journal" className="py-8 sm:py-10 md:py-16 lg:py-20 relative overflow-hidden section-premium">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#fafafa]"></div>
+        <div className="absolute inset-0 bg-pattern-diagonal opacity-[0.1] rotate-180"></div>
+        <div className="container-premium relative z-10">
           {/* <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -187,8 +223,10 @@ export default function Home() {
       </section>
 
       {/* Alliances Section */}
-      <section id="alliances" className="py-8 sm:py-12 md:py-16 lg:py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <section id="alliances" className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-hidden section-premium">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#fafafa] via-white to-[#f8f8f8]"></div>
+        <div className="absolute inset-0 bg-pattern-dots opacity-[0.08]"></div>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -196,7 +234,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-12 sm:mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
               Emilio Beaufort Global
             </h2>
             <p className="body-premium text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-8">
@@ -227,6 +265,7 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+      
 
       <Footer />
 
