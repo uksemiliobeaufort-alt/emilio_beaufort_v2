@@ -137,13 +137,13 @@ export function Navbar() {
             transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
             className="hidden md:block"
           >
-            <Button
+{/*             <Button
               onClick={handlePartnerClick}
               className="btn-primary-premium"
               size="sm"
             >
               Partner With Us
-            </Button>
+            </Button> */}
           </motion.div>
 
           {/* Mobile Navigation */}
