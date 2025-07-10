@@ -106,3 +106,11 @@
 //     />
 //   );
 // } 
+
+
+
+"use client"
+
+export default function AutoFeedbackTrigger({ footerSelector = 'footer' }: AutoFeedbackTriggerProps) {
+  
+}
