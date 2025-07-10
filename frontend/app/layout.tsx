@@ -1,6 +1,6 @@
 import "./globals.css";
 import { Inter, Playfair_Display } from "next/font/google";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "sonner";
 import PageTransitionProgressBar from "@/components/PageTransitionProgressBar";
 import ConditionalNavbar from "@/components/ConditionalNavbar";
 // import { Footer } from "@/components/Footer";
