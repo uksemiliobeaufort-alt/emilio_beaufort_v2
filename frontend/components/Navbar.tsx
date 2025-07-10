@@ -1,18 +1,18 @@
-"use client";
+// "use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetTrigger, 
-  SheetClose,
-  SheetHeader,
-  SheetTitle
-} from '@/components/ui/sheet';
-import { Menu, X } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+// import { useState, useEffect } from 'react';
+// import { motion } from 'framer-motion';
+// import { Button } from '@/components/ui/button';
+// import { 
+//   Sheet, 
+//   SheetContent, 
+//   SheetTrigger, 
+//   SheetClose,
+//   SheetHeader,
+//   SheetTitle
+// } from '@/components/ui/sheet';
+// import { Menu, X } from 'lucide-react';
+// import { usePathname, useRouter } from 'next/navigation';
 
 // const navItems = [
 //   { name: 'Philosophy', href: '#philosophy' },
@@ -21,7 +21,7 @@ import { usePathname, useRouter } from 'next/navigation';
 //   // { name: 'Alliances', href: '#alliances' },
 // ];
 
-export function Navbar() {
+// export function Navbar() {
 //   const [isScrolled, setIsScrolled] = useState(false);
 //   const [isOpen, setIsOpen] = useState(false);
 //   const pathname = usePathname();
@@ -193,5 +193,12 @@ export function Navbar() {
 //         </div>
 //       </div>
 //     </motion.nav>
-  );
-} 
+//   );
+// } 
+
+"use client" 
+
+export function Navbar()
+{
+  
+}
