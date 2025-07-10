@@ -13,7 +13,7 @@ export default function FloatingFeedbackButton() {
       {/* Floating Feedback Button */}
       <Button
         onClick={() => setIsFeedbackFormOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+        className="fixed top-6 right-6 z-50 h-14 w-14 rounded-full bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
         size="icon"
         title="Give Feedback"
       >
