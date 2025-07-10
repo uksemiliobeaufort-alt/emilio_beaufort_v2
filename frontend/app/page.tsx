@@ -271,12 +271,60 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
+
 export default function Home() {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const target = getNextSaturday1PM();
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const distance = target.getTime() - now;
+
+      if (distance <= 0) {
+        setTimeLeft("Launching Now");
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      setTimeLeft(
+        `${String(days).padStart(2, "0")}d : ${String(hours).padStart(2, "0")}h : ${String(minutes).padStart(2, "0")}m : ${String(seconds).padStart(2, "0")}s`
+      );
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getNextSaturday1PM = () => {
+    const now = new Date();
+    const next = new Date();
+    next.setDate(now.getDate() + ((6 - now.getDay() + 7) % 7));
+    next.setHours(13, 0, 0, 0);
+    if (now > next) next.setDate(next.getDate() + 7);
+    return next;
+  };
+
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold text-gray-900 text-center animate-pulse">
-        Site Under Maintenance
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white flex flex-col items-center justify-center px-6">
+      <div className="bg-white/5 border border-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-10 max-w-xl w-full text-center animate-fade-in">
+        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
+          🚀 Launching Soon
+        </h1>
+        <p className="text-lg sm:text-xl text-gray-300 mb-8">
+          We're getting ready to launch something amazing. Stay tuned!
+        </p>
+        <div className="text-2xl sm:text-3xl font-mono font-semibold tracking-wide bg-white/10 rounded-xl py-4 px-8 inline-block">
+          {timeLeft}
+        </div>
+      </div>
     </div>
   );
 }
