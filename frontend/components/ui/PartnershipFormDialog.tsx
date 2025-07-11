@@ -966,12 +966,7 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
             <div className="flex gap-2 text-2xl mb-6">
               🌟 🎯 💫
             </div>
-            <Button 
-              onClick={handleClose}
-              className="bg-accent hover:bg-accent/90 transition-colors"
-            >
-              Close
-            </Button>
+            
           </div>
         )}
       </DialogContent>
