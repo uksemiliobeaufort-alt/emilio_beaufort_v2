@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, Suspense } from "react";
 
 // Sample team members data (replace with API call in the future)
 const ALL_TEAM_MEMBERS = [
@@ -20,7 +20,7 @@ const ALL_TEAM_MEMBERS = [
 
 const PAGE_SIZE = 6;
 
-export default function TeamMembersPage() {
+function TeamMembersContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const page = parseInt(searchParams?.get("page") || "1", 10);
@@ -102,5 +102,17 @@ export default function TeamMembersPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function TeamMembersPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-2xl font-serif text-gray-900">Loading team members...</div>
+      </div>
+    }>
+      <TeamMembersContent />
+    </Suspense>
   );
 } 
