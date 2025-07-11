@@ -29,7 +29,7 @@ const cardData: CardData[] = [
     image: getImageUrl('the-house', 'Cosmetics Banner.jpeg')
   },
   {
-    title: "ORMÉE Hair", 
+    title: "ORMÉE Hair",
     subtitle: "Coming Soon",
     description:
       "Experience the future of personal care. Join the waitlist for our revolutionary new product line.",

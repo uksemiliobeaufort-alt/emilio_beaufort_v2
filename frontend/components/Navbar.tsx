@@ -18,6 +18,7 @@ const navItems = [
   { name: 'Philosophy', href: '#philosophy' },
   { name: 'The House', href: '#house' },
   { name: 'Journal', href: '#journal' },
+  { name: 'Meet The Brains', href: '#team' },
   // { name: 'Alliances', href: '#alliances' },
 ];
 
@@ -104,7 +105,7 @@ export function Navbar() {
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <motion.div
-            className="heading-premium text-2xl text-premium cursor-pointer"
+            className={`heading-premium text-2xl cursor-pointer transition-colors duration-300 ${isHomePage && !isScrolled ? 'text-white' : 'text-premium'}`}
             onClick={handleLogoClick}
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
@@ -117,7 +118,7 @@ export function Navbar() {
             {navItems.map((item, index) => (
               <motion.button
                 key={item.name}
-                className="font-sans-medium text-premium hover:text-gold transition-premium relative group"
+                className={`font-sans-medium transition-premium relative group ${isHomePage && !isScrolled ? 'text-white hover:text-gold' : 'text-premium hover:text-gold'}`}
                 onClick={() => handleNavigation(item.href)}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -150,7 +151,7 @@ export function Navbar() {
           <div className="md:hidden">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <button className="text-premium hover:text-gold transition-premium">
+                <button className={`transition-premium ${isHomePage && !isScrolled ? 'text-white hover:text-gold' : 'text-premium hover:text-gold'}`}>
                   <Menu className="w-6 h-6" />
                 </button>
               </SheetTrigger>

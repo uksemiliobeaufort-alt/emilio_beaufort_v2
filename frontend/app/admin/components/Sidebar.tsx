@@ -9,6 +9,7 @@ import {
   FileText,
   Settings,
   LogOut,
+  BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -36,14 +37,14 @@ const sidebarItems = [
   },
   {
     name: 'Blog Posts',
-    href: '/admin/journal',
-    icon: <FileText className="h-4 w-4" />
+    href: '/admin/blogs',
+    icon: <BookOpen className="h-4 w-4" />
   },
   {
-    name: 'Settings',
-    href: '/admin/settings',
+    name: 'Admin Users',
+    href: '/admin/users',
     icon: <Settings className="h-4 w-4" />
-  }
+  },
 ];
 
 export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarProps) {
@@ -58,6 +59,7 @@ export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarPro
   // Handle navigation
   const handleNavigation = (href: string) => {
     router.push(href);
+    // Always close sidebar on navigation for mobile/tablet
     if (isMobile) {
       onClose();
     }
@@ -65,62 +67,84 @@ export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarPro
 
   return (
     <>
-      {/* Backdrop for mobile */}
-      {isMobile && isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-20"
-          onClick={onClose}
-        />
-      )}
-
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 z-20
-          h-full w-64 bg-white border-r
-          transition-transform duration-200 ease-in-out
+          fixed top-0 left-0 z-40
+          h-full w-80 sm:w-72 lg:w-64 bg-white border-r border-gray-200
+          transition-all duration-300 ease-in-out
+          transform
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          md:translate-x-0
+          ${isMobile ? 'top-14' : 'top-0'}
+          lg:translate-x-0
+          shadow-xl lg:shadow-none
+          flex flex-col
         `}
       >
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="h-16 flex items-center px-4 border-b">
-            <span className="text-lg font-semibold">Admin Panel</span>
-          </div>
+        {/* Logo - Hidden on Mobile since it's in the header */}
+        <div className="h-16 hidden lg:flex items-center px-6 border-b border-gray-200 bg-white">
+          <span className="text-lg font-semibold text-gray-900">Admin Panel</span>
+        </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 p-3 space-y-1">
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 bg-white">
+          <div className="space-y-1">
             {sidebarItems.map((item) => (
               <button
                 key={item.href}
                 onClick={() => handleNavigation(item.href)}
                 className={`
-                  w-full flex items-center gap-3 px-3 py-2 text-sm
-                  rounded-md transition-colors
+                  w-full flex items-center gap-3 px-4 py-3 text-sm
+                  rounded-lg transition-all duration-200
+                  hover:bg-gray-100 active:bg-gray-200
+                  touch-manipulation
                   ${pathname === item.href
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-500 shadow-sm'
+                    : 'text-gray-700 hover:text-gray-900'
                   }
                 `}
               >
-                {item.icon}
-                <span>{item.name}</span>
+                <span className={`flex items-center justify-center w-5 ${
+                  pathname === item.href ? 'text-blue-600' : 'text-gray-500'
+                }`}>
+                  {item.icon}
+                </span>
+                <span className="font-medium">{item.name}</span>
               </button>
             ))}
-          </nav>
-
-          {/* Logout Button */}
-          <div className="p-3 border-t">
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
           </div>
+        </nav>
+
+        {/* User Info Section (Mobile) */}
+        {isMobile && (
+          <div className="p-4 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-medium">A</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
+                <p className="text-xs text-gray-500 truncate">admin@example.com</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Logout Button */}
+        <div className="p-4 border-t border-gray-200 bg-white">
+          <Button
+            variant="ghost"
+            className={`
+              w-full justify-start gap-3 px-4 py-3 text-red-600 
+              hover:text-red-700 hover:bg-red-50 rounded-lg
+              touch-manipulation
+              ${isMobile ? 'text-base' : 'text-sm'}
+            `}
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="font-medium">Logout</span>
+          </Button>
         </div>
       </aside>
     </>

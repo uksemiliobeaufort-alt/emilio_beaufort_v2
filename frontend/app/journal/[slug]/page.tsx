@@ -1,72 +1,90 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { api, Post } from "@/lib/api";
 import Image from "next/image";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
-import { getImageUrl } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
+import HtmlContent from "@/components/ui/HtmlContent";
 
-export default function BlogPostPage() {
+interface BlogPost {
+  id: number;
+  title: string;
+  slug: string;
+  content: string;
+  featured_image_base64?: string;
+  gallery_base64?: string[];
+  created_at: string;
+}
+
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export default function BlogPostPage({ params }: Props) {
   const router = useRouter();
-  const params = useParams();
-  const [post, setPost] = useState<Post | null>(null);
+  const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [slug, setSlug] = useState<string>('');
 
-  // Get the default image URL from Supabase storage - using existing image
-  const defaultImageUrl = getImageUrl('the-house', 'Cosmetics Banner.jpeg');
+  // Default placeholder image
+  const defaultImageUrl = "/default-image.jpg";
 
   useEffect(() => {
-    const fetchPost = async () => {
-      if (!params?.slug) {
-        setPost(null);
-        setLoading(false);
-        return;
-      }
-
+    const initializeParams = async () => {
       try {
-        const data = await api.getPost(params.slug as string);
+        const resolvedParams = await params;
+        setSlug(resolvedParams.slug);
+      } catch (error) {
+        console.error("Failed to resolve params:", error);
+      }
+    };
+
+    initializeParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (!slug) return;
+
+    const fetchPost = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('blog_posts')
+          .select('*')
+          .eq('slug', slug)
+          .single();
+
+        if (error) {
+          console.error("Error fetching post:", error);
+          throw error;
+        }
+
+        console.log("Fetched blog post:", data);
         setPost(data);
       } catch (error) {
         console.error("Failed to fetch post:", error);
-        setPost(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPost();
-  }, [params?.slug]);
+  }, [slug]);
 
   const handleImageError = () => {
     console.error('Failed to load post image');
     setImageError(true);
   };
 
-  const getPostImage = (featuredImageUrl: string | null): string => {
-    // If there's an error or no URL, return default
-    if (imageError || !featuredImageUrl) {
-      return defaultImageUrl || '';
+  const getPostImage = (post: BlogPost) => {
+    if (imageError) {
+      return defaultImageUrl;
     }
     
-    try {
-      // If it's a Supabase URL
-      if (featuredImageUrl.includes('storage/v1/object')) {
-        const url = new URL(featuredImageUrl);
-        const path = url.pathname.split('/public/')[1];
-        if (!path) return defaultImageUrl || '';
-        
-        const supabaseUrl = getImageUrl('the-house', decodeURIComponent(path));
-        return supabaseUrl || defaultImageUrl || '';
-      }
-      
-      // If it's an external URL
-      return featuredImageUrl;
-    } catch (error) {
-      console.error('Error processing image URL:', error);
-      return defaultImageUrl || '';
-    }
+    // Use featured_image_base64 as the primary image source
+    return post.featured_image_base64 || defaultImageUrl;
   };
 
   const handleBack = () => {
@@ -89,8 +107,6 @@ export default function BlogPostPage() {
     );
   }
 
-  const imageUrl = getPostImage(post.featuredImageUrl);
-
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
@@ -100,7 +116,7 @@ export default function BlogPostPage() {
             <div className="mb-8">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-4">{post.title}</h1>
               <p className="text-sm text-gray-500">
-                {new Date(post.createdAt).toLocaleDateString("en-US", {
+                {new Date(post.created_at).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "long",
                   day: "numeric",
@@ -108,23 +124,23 @@ export default function BlogPostPage() {
               </p>
             </div>
 
-            {imageUrl && (
-              <div className="relative w-full aspect-video rounded-md overflow-hidden mb-10">
-                <Image
-                  src={imageUrl}
-                  alt={post.title}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  onError={handleImageError}
-                  unoptimized={!imageUrl.includes('supabase')}
-                />
-              </div>
-            )}
+            <div className="relative w-full aspect-video rounded-md overflow-hidden mb-10">
+              <Image
+                src={getPostImage(post)}
+                alt={post.title}
+                fill
+                className="object-cover"
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                onError={handleImageError}
+              />
+            </div>
 
-            <div className="prose prose-lg max-w-none mb-12">
-              {post.content}
+            <div className="mb-12">
+              <HtmlContent 
+                content={post.content} 
+                className="prose prose-lg max-w-none text-gray-800 leading-relaxed" 
+              />
             </div>
 
             <button 
