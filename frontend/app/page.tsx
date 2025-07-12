@@ -329,7 +329,7 @@ export default function Home() {
                 icon: '⚡',
                 delay: 0.6
               }
-            ]).map((item, index) => (
+            ], (item, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 50 }}
@@ -524,7 +524,7 @@ export default function Home() {
             <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
               {/* First row: 2 cards, centered */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 justify-center mb-8">
-                {safeMap(firstRow).map((founder: Founder, index: number) => (
+                {safeMap(firstRow as Founder[], (founder: Founder, index: number) => (
                   <motion.div
                     key={index}
                     className={`founder-card group relative w-full transition-all duration-700 ease-out cursor-pointer`}
@@ -607,7 +607,7 @@ export default function Home() {
               </div>
               {/* Second row: 3 cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
-                {safeMap(secondRow).map((founder: Founder, index: number) => (
+                {safeMap(secondRow as Founder[], (founder: Founder, index: number) => (
                   <motion.div
                     key={index + 2}
                     className={`founder-card group relative w-full transition-all duration-700 ease-out cursor-pointer`}
