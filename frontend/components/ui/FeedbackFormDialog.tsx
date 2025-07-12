@@ -149,12 +149,15 @@ export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = 
                       <FormItem>
                         <FormLabel>Type</FormLabel>
                         <FormControl>
-                          <BootstrapDropdown
-                            trigger={selectedType === "bug" ? "Bug" : selectedType === "suggestion" ? "Suggestion" : selectedType === "compliment" ? "Compliment" : "Select feedback type"}
-                            items={feedbackTypeItems}
-                            variant="secondary"
-                            className="w-full"
-                          />
+                          <select
+                            className="border rounded px-3 py-2 w-full"
+                            value={field.value}
+                            onChange={field.onChange}
+                          >
+                            <option value="bug">Bug</option>
+                            <option value="suggestion">Suggestion</option>
+                            <option value="compliment">Compliment</option>
+                          </select>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
