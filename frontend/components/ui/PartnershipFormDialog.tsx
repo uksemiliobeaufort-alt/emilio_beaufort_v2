@@ -966,6 +966,15 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
             <div className="flex gap-2 text-2xl mb-6">
               🌟 🎯 💫
             </div>
+
+            <Button onClick={() => window.open("https://cal.com/kunal-bisht-fwhv8b/15min?overlayCalendar=true", "_blank")}
+            className="bg-accent hover:bg-accent/90 transition-colors">
+               Book a Meet
+            </Button>
+
+             <Button onClick={handleClose} className="bg-accent hover:bg-accent/90 transition-colors">
+              Close
+            </Button>
             
           </div>
         )}
