@@ -28,6 +28,8 @@ export default function JournalPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedPostId, setCopiedPostId] = useState<number | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0); // For mobile carousel
+  const [navigating, setNavigating] = useState(false); // For loading animation
   const router = useRouter();
 
   // Default placeholder image
@@ -78,7 +80,7 @@ export default function JournalPage() {
   const getPostUrl = (post: BlogPost): string => {
     // Always use production domain for sharing (even in development)
     // This ensures shared links always point to the live site
-    const baseUrl = 'https://emilio-beaufort.vercel.app';
+    const baseUrl = 'https://emiliobeaufort.com';
     return `${baseUrl}/journal/${post.slug}`;
   };
 
@@ -191,169 +193,198 @@ export default function JournalPage() {
           </p>
         </motion.div>
 
-                {/* Blog Posts Marquee */}
+        {/* Responsive Journal Cards */}
         <div className="mt-8">
           {posts.length > 0 ? (
-            <div className="flex items-center gap-6">
-              {/* Marquee Container */}
-              <div className="flex-1 overflow-hidden">
-                <div 
-                  className="flex gap-6 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden" 
-                  style={{ 
-                    scrollbarWidth: 'none', 
-                    msOverflowStyle: 'none'
-                  }}
-                >
-                  {posts.map((post, index) => (
-                    <motion.div
-                      key={post.id}
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="flex-shrink-0 w-80"
-                    >
-                      <Link href={`/journal/${post.slug}`}>
-                        <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer group h-full">
-                          <div className="relative aspect-[4/3] bg-gray-100">
-                            {post.featured_image_base64 ? (
-                              <img
-                                src={post.featured_image_base64}
-                                alt={post.title || 'Blog post image'}
-                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                loading="lazy"
-                                decoding="async"
-                                onError={(e) => {
-                                  console.error(`Image failed to load for post: ${post.title}`);
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                            ) : (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <p className="text-gray-500">No image available</p>
-                              </div>
-                            )}
-                          </div>
-                          <CardContent className="p-5">
-                            <h3 className="font-semibold text-xl mb-1 group-hover:text-gray-900 transition-colors line-clamp-2">
-                              {post.title}
-                            </h3>
-                            <p className="text-gray-600 text-sm line-clamp-3 mb-3">
-                              Click to read this fascinating article and discover more insights.
-                            </p>
-                            <p className="text-xs text-gray-500 mb-4">
-                              {new Date(post.created_at).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })}
-                            </p>
-                            <div className="space-y-3">
-                              <Button 
-                                className="w-full bg-gray-900 text-white hover:bg-gray-800 transition-colors"
-                                variant="default"
-                              >
-                                Read in Detail
-                              </Button>
-                              
-                              {/* Share Section */}
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500 font-medium">Share:</span>
-                                <div className="flex items-center gap-1">
-                                  {/* Copy Link Button */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      copyToClipboard(post);
-                                    }}
-                                    className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                                    title="Copy link"
-                                  >
-                                    {copiedPostId === post.id ? (
-                                      <Check className="h-3.5 w-3.5 text-green-600" />
-                                    ) : (
-                                      <Copy className="h-3.5 w-3.5 text-gray-600" />
-                                    )}
-                                  </button>
-
-                                  {/* WhatsApp */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      shareOnWhatsApp(post);
-                                    }}
-                                    className="p-1.5 rounded-full hover:bg-green-50 transition-colors"
-                                    title="Share on WhatsApp"
-                                  >
-                                    <MessageCircle className="h-3.5 w-3.5 text-green-600" />
-                                  </button>
-
-                                  {/* LinkedIn */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      shareOnLinkedIn(post);
-                                    }}
-                                    className="p-1.5 rounded-full hover:bg-blue-50 transition-colors"
-                                    title="Share on LinkedIn"
-                                  >
-                                    <Linkedin className="h-3.5 w-3.5 text-blue-600" />
-                                  </button>
-
-                                  {/* Twitter */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      shareOnTwitter(post);
-                                    }}
-                                    className="p-1.5 rounded-full hover:bg-blue-50 transition-colors"
-                                    title="Share on Twitter"
-                                  >
-                                    <Twitter className="h-3.5 w-3.5 text-blue-400" />
-                                  </button>
-
-                                  {/* Facebook */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      shareOnFacebook(post);
-                                    }}
-                                    className="p-1.5 rounded-full hover:bg-blue-50 transition-colors"
-                                    title="Share on Facebook"
-                                  >
-                                    <Facebook className="h-3.5 w-3.5 text-blue-700" />
-                                  </button>
-                                </div>
-                              </div>
+            <>
+              {/* Mobile Carousel */}
+              <div className="block sm:hidden w-full flex flex-col items-center">
+                <div className="w-full flex justify-center">
+                  <motion.div
+                    key={posts[currentIndex]?.id}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="w-80"
+                  >
+                    <Link href={`/journal/${posts[currentIndex].slug}`}>
+                      <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer group h-full">
+                        <div className="relative aspect-[4/3] bg-gray-100">
+                          {posts[currentIndex].featured_image_base64 ? (
+                            <img
+                              src={posts[currentIndex].featured_image_base64}
+                              alt={posts[currentIndex].title || 'Blog post image'}
+                              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                              decoding="async"
+                              onError={e => { e.currentTarget.style.display = 'none'; }}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <p className="text-gray-500">No image available</p>
                             </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    </motion.div>
-                  ))}
+                          )}
+                        </div>
+                        <CardContent className="p-5">
+                          <h3 className="font-semibold text-xl mb-1 group-hover:text-gray-900 transition-colors line-clamp-2">
+                            {posts[currentIndex].title}
+                          </h3>
+                          <p className="text-gray-600 text-sm line-clamp-3 mb-3">
+                            Click to read this fascinating article and discover more insights.
+                          </p>
+                          <p className="text-xs text-gray-500 mb-4">
+                            {new Date(posts[currentIndex].created_at).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </p>
+                          <div className="space-y-3">
+                            <Button 
+                              className="w-full bg-gray-900 text-white hover:bg-gray-800 transition-colors flex items-center justify-center"
+                              variant="default"
+                              disabled={navigating}
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                setNavigating(true);
+                                // Add a slight delay to show the spinner if navigation is fast
+                                setTimeout(() => {
+                                  router.push(`/journal/${posts[currentIndex].slug}`);
+                                }, 200);
+                              }}
+                            >
+                              {navigating ? (
+                                <span className="flex items-center gap-2">
+                                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                                  Loading...
+                                </span>
+                              ) : (
+                                'Read in Detail'
+                              )}
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </motion.div>
                 </div>
+                <div className="flex justify-center mt-4">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="h-14 w-14 rounded-full border-2 border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 group"
+                    onClick={() => router.push('/journal/gallery')}
+                  >
+                    <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform duration-300" />
+                  </Button>
+                </div>
+                <p className="text-center text-sm text-gray-600 mt-2 font-medium">Show More</p>
               </div>
 
-              {/* Show More Button with Big Arrow */}
-              <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="flex-shrink-0"
-              >
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="h-20 w-20 rounded-full border-2 border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 group"
-                  onClick={() => {
-                    // Navigate to the blog gallery page
-                    router.push('/journal/gallery');
-                  }}
+              {/* Desktop/Tablet Marquee (unchanged) */}
+              <div className="hidden sm:flex items-center gap-6">
+                {/* Marquee Container */}
+                <div className="flex-1 overflow-hidden">
+                  <div 
+                    className="flex gap-6 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden" 
+                    style={{ 
+                      scrollbarWidth: 'none', 
+                      msOverflowStyle: 'none'
+                    }}
+                  >
+                    {posts.map((post, index) => (
+                      <motion.div
+                        key={post.id}
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        className="flex-shrink-0 w-80"
+                      >
+                        <Link href={`/journal/${post.slug}`}>
+                          <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer group h-full">
+                            <div className="relative aspect-[4/3] bg-gray-100">
+                              {post.featured_image_base64 ? (
+                                <img
+                                  src={post.featured_image_base64}
+                                  alt={post.title || 'Blog post image'}
+                                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  loading="lazy"
+                                  decoding="async"
+                                  onError={e => { e.currentTarget.style.display = 'none'; }}
+                                />
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <p className="text-gray-500">No image available</p>
+                                </div>
+                              )}
+                            </div>
+                            <CardContent className="p-5">
+                              <h3 className="font-semibold text-xl mb-1 group-hover:text-gray-900 transition-colors line-clamp-2">
+                                {post.title}
+                              </h3>
+                              <p className="text-gray-600 text-sm line-clamp-3 mb-3">
+                                Click to read this fascinating article and discover more insights.
+                              </p>
+                              <p className="text-xs text-gray-500 mb-4">
+                                {new Date(post.created_at).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })}
+                              </p>
+                              <div className="space-y-3">
+                                <Button 
+                                  className="w-full bg-gray-900 text-white hover:bg-gray-800 transition-colors flex items-center justify-center"
+                                  variant="default"
+                                  disabled={navigating}
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    setNavigating(true);
+                                    // Add a slight delay to show the spinner if navigation is fast
+                                    setTimeout(() => {
+                                      router.push(`/journal/${post.slug}`);
+                                    }, 200);
+                                  }}
+                                >
+                                  {navigating ? (
+                                    <span className="flex items-center gap-2">
+                                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                                      Loading...
+                                    </span>
+                                  ) : (
+                                    'Read in Detail'
+                                  )}
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+                {/* Show More Button with Big Arrow */}
+                <motion.div
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="flex-shrink-0"
                 >
-                  <ArrowRight className="h-8 w-8 group-hover:translate-x-1 transition-transform duration-300" />
-                </Button>
-                <p className="text-center text-sm text-gray-600 mt-2 font-medium">Show More</p>
-              </motion.div>
-            </div>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="h-20 w-20 rounded-full border-2 border-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 group"
+                    onClick={() => {
+                      // Navigate to the blog gallery page
+                      router.push('/journal/gallery');
+                    }}
+                  >
+                    <ArrowRight className="h-8 w-8 group-hover:translate-x-1 transition-transform duration-300" />
+                  </Button>
+                  <p className="text-center text-sm text-gray-600 mt-2 font-medium">Show More</p>
+                </motion.div>
+              </div>
+            </>
           ) : (
             <div className="text-center text-gray-600 mt-10">
               No blog posts yet.

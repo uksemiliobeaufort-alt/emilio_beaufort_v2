@@ -13,6 +13,7 @@ import { useBag } from '@/components/BagContext';
 import { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { productCardUtils } from '@/lib/utils';
 
 interface ProductDetailDialogProps {
   product: Product | null;
@@ -58,6 +59,12 @@ export function ProductDetailDialog({
   const [quantity, setQuantity] = useState(1);
   // State for About This Product see more/less
   const [showFullDescription, setShowFullDescription] = useState(false);
+  // State for Care Instructions see more/less
+  const [showFullCare, setShowFullCare] = useState(false);
+  // State for Beauty Details ingredients see more/less
+  const [showFullIngredients, setShowFullIngredients] = useState(false);
+  // State for Beauty Details product benefits see more/less
+  const [showFullBenefits, setShowFullBenefits] = useState(false);
   // State for showing add-to-bag alert
   const [addedCount, setAddedCount] = useState(0);
   const [showAddedAlert, setShowAddedAlert] = useState(false);
@@ -109,12 +116,13 @@ export function ProductDetailDialog({
       origin: { y: 0.6 },
       colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'],
     });
+    const priceInfo = productCardUtils.getDisplayPrice(product, detailedProduct);
     for (let i = 0; i < quantity; i++) {
       bagContext.addToBag({
         id: product.id,
         name: product.name,
         imageUrl: product.imageUrl,
-        price: product.price,
+        price: priceInfo.displayPrice,
       });
     }
     setAddedCount(quantity);
@@ -141,7 +149,7 @@ export function ProductDetailDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[98vw] max-w-7xl max-h-[98vh] p-0 overflow-hidden rounded-3xl shadow-2xl bg-white/95 backdrop-blur-sm border border-gray-100 md:w-full"
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl md:max-w-6xl lg:max-w-[1100px] max-h-screen p-0 overflow-y-auto rounded-3xl shadow-2xl bg-white/95 backdrop-blur-sm border border-gray-100"
         showCloseButton={false}
       >
         {/* Hidden accessibility elements */}
@@ -208,12 +216,18 @@ export function ProductDetailDialog({
 
               {/* Enhanced Product Badges */}
               <div className="absolute top-6 left-6 flex flex-col gap-3">
-                {detailedProduct?.original_price && detailedProduct.original_price > product.price && (
-                  <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 text-sm font-bold shadow-lg animate-pulse">
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    SALE
-                  </Badge>
-                )}
+                {(() => {
+                  const hasDiscount = detailedProduct?.original_price && 
+                                    detailedProduct.original_price > 0 && 
+                                    product.price > 0 && 
+                                    product.price < detailedProduct.original_price;
+                  return hasDiscount && (
+                    <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 text-sm font-bold shadow-lg animate-pulse">
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      SALE
+                    </Badge>
+                  );
+                })()}
                 {detailedProduct?.featured && (
                   <Badge className="bg-gradient-to-r from-black to-gray-800 text-white px-4 py-2 text-sm font-bold shadow-lg">
                     <Award className="w-3 h-3 mr-1" />
@@ -319,19 +333,33 @@ export function ProductDetailDialog({
                       {/* Enhanced Price Display */}
                       <div className="flex items-baseline gap-4">
                         <span className="text-lg text-gray-600 font-medium">₹</span>
-                        <span className="text-5xl lg:text-6xl font-light text-black">
-                          {product.price.toLocaleString('en-IN')}
-                        </span>
-                        {detailedProduct?.original_price && detailedProduct.original_price > product.price && (
-                          <div className="flex flex-col items-start">
-                            <span className="text-xl text-gray-400 line-through">
-                              ₹{detailedProduct.original_price.toLocaleString('en-IN')}
-                            </span>
-                            <span className="text-sm text-red-600 font-semibold">
-                              Save ₹{(detailedProduct.original_price - product.price).toLocaleString('en-IN')}
-                            </span>
-                          </div>
-                        )}
+                        {(() => {
+                          // Determine which price to show as main price
+                          const hasDiscount = detailedProduct?.original_price && 
+                                            detailedProduct.original_price > 0 && 
+                                            product.price > 0 && 
+                                            product.price < detailedProduct.original_price;
+                          
+                          const displayPrice = hasDiscount ? product.price : (detailedProduct?.original_price || product.price);
+                          
+                          return (
+                            <>
+                              <span className="text-5xl lg:text-6xl font-light text-black">
+                                {displayPrice.toLocaleString('en-IN')}
+                              </span>
+                              {hasDiscount && (
+                                <div className="flex flex-col items-start">
+                                  <span className="text-xl text-gray-400 line-through">
+                                    ₹{detailedProduct.original_price.toLocaleString('en-IN')}
+                                  </span>
+                                  <span className="text-sm text-red-600 font-semibold">
+                                    Save ₹{(detailedProduct.original_price - product.price).toLocaleString('en-IN')}
+                                  </span>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
 
                       {/* Enhanced Value Propositions */}
@@ -340,7 +368,7 @@ export function ProductDetailDialog({
                           <CheckCircle className="w-5 h-5 text-green-600" />
                           <span className="text-sm font-medium">All taxes included</span>
                         </div>
-                        {product.price > 500 && (
+                        {(detailedProduct?.original_price || product.price) > 500 && (
                           <div className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm">
                             <Truck className="w-5 h-5 text-green-600" />
                             <span className="text-sm font-medium">Free delivery</span>
@@ -360,22 +388,24 @@ export function ProductDetailDialog({
                       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                         {(() => {
                           const desc = detailedProduct?.detailed_description || product.description || '';
-                          const lines = desc.split(/\r?\n/).filter(Boolean);
-                          const preview = lines.slice(0, 2).join(' ');
+                          const words = desc.split(' ');
+                          const shouldTruncate = words.length > 40; // Roughly 3-4 lines worth of text
+                          const truncatedText = words.slice(0, 40).join(' ');
+                          
                           return (
-                            <>
-                              <p className="text-gray-700 leading-relaxed text-lg">
-                                {showFullDescription ? desc : preview}
+                            <div className="space-y-2">
+                              <p className="text-gray-700 leading-relaxed text-base break-words overflow-wrap-anywhere">
+                                {showFullDescription || !shouldTruncate ? desc : `${truncatedText}...`}
                               </p>
-                              {lines.length > 2 && (
+                              {shouldTruncate && (
                                 <button
-                                  className="mt-2 text-blue-600 hover:underline font-semibold text-base focus:outline-none"
-                                  onClick={() => setShowFullDescription(v => !v)}
+                                  className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-sm focus:outline-none transition-colors duration-200"
+                                  onClick={() => setShowFullDescription(prev => !prev)}
                                 >
-                                  {showFullDescription ? 'See Less' : 'See More'}
+                                  {showFullDescription ? 'Show Less' : 'Read More'}
                                 </button>
                               )}
-                            </>
+                            </div>
                           );
                         })()}
                       </div>
@@ -418,22 +448,90 @@ export function ProductDetailDialog({
                       </h3>
                       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {detailedProduct.ingredients && (
-                            <div className="md:col-span-2">
-                              <span className="text-sm font-bold text-gray-600 block mb-2">Ingredients</span>
-                              <p className="text-sm text-gray-700 leading-relaxed">{detailedProduct.ingredients}</p>
-                            </div>
-                          )}
+                          {/* Basic Information Fields */}
                           {detailedProduct.skin_type && (
                             <div className="flex justify-between py-3 border-b border-gray-100">
-                              <span className="text-sm text-gray-600 font-medium">Suitable for</span>
-                              <span className="text-sm font-bold">{detailedProduct.skin_type}</span>
+                              <span className="text-sm text-gray-600 font-medium">Skin Type</span>
+                              <span className="text-sm font-bold break-words overflow-wrap-break-word">{detailedProduct.skin_type}</span>
                             </div>
                           )}
                           {detailedProduct.volume_size && (
                             <div className="flex justify-between py-3 border-b border-gray-100">
                               <span className="text-sm text-gray-600 font-medium">Volume</span>
-                              <span className="text-sm font-bold">{detailedProduct.volume_size}</span>
+                              <span className="text-sm font-bold break-words overflow-wrap-break-word">{detailedProduct.volume_size}</span>
+                            </div>
+                          )}
+                          {detailedProduct.spf_level && (
+                            <div className="flex justify-between py-3 border-b border-gray-100">
+                              <span className="text-sm text-gray-600 font-medium">SPF Level</span>
+                              <span className="text-sm font-bold break-words overflow-wrap-break-word">{detailedProduct.spf_level}</span>
+                            </div>
+                          )}
+                          {detailedProduct.weight && (
+                            <div className="flex justify-between py-3 border-b border-gray-100">
+                              <span className="text-sm text-gray-600 font-medium">Weight</span>
+                              <span className="text-sm font-bold break-words overflow-wrap-break-word">{detailedProduct.weight}g</span>
+                            </div>
+                          )}
+                          {detailedProduct.dimensions && (
+                            <div className="flex justify-between py-3 border-b border-gray-100">
+                              <span className="text-sm text-gray-600 font-medium">Dimensions</span>
+                              <span className="text-sm font-bold break-words overflow-wrap-break-word">{detailedProduct.dimensions}</span>
+                            </div>
+                          )}
+                          
+                          {/* Product Benefits - Long text with read more */}
+                          {detailedProduct.product_benefits && (
+                            <div className="md:col-span-2 py-3 border-b border-gray-100">
+                              <span className="text-sm font-bold text-gray-600 block mb-2">Product Benefits</span>
+                              {(() => {
+                                const benefits = detailedProduct.product_benefits || '';
+                                const words = benefits.split(' ');
+                                const shouldTruncate = words.length > 25;
+                                const truncatedText = words.slice(0, 25).join(' ');
+                                
+                                return (
+                                  <div className="space-y-2">
+                                    <p className="text-sm text-gray-700 leading-relaxed break-words overflow-wrap-break-word">
+                                      {showFullBenefits || !shouldTruncate ? benefits : `${truncatedText}...`}
+                                    </p>
+                                    {shouldTruncate && (
+                                      <button
+                                        className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-sm focus:outline-none transition-colors duration-200"
+                                        onClick={() => setShowFullBenefits(prev => !prev)}
+                                      >
+                                        {showFullBenefits ? 'Show Less' : 'Read More'}
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
+                          
+                          {/* Ingredients - Long text with read more */}
+                          {detailedProduct.ingredients && (
+                            <div className="md:col-span-2 py-3 border-b border-gray-100">
+                              <span className="text-sm font-bold text-gray-600 block mb-2">Ingredients</span>
+                              <div className="space-y-2">
+                                <p className="text-sm text-gray-700 leading-relaxed break-words overflow-wrap-break-word">
+                                  {(() => {
+                                    const ingredients = detailedProduct.ingredients || '';
+                                    const words = ingredients.split(' ');
+                                    const shouldTruncate = words.length > 30;
+                                    const truncatedText = words.slice(0, 30).join(' ');
+                                    return showFullIngredients || !shouldTruncate ? ingredients : `${truncatedText}...`;
+                                  })()}
+                                </p>
+                                {detailedProduct.ingredients.split(' ').length > 30 && (
+                                  <button
+                                    className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-sm focus:outline-none transition-colors duration-200"
+                                    onClick={() => setShowFullIngredients(prev => !prev)}
+                                  >
+                                    {showFullIngredients ? 'Show Less' : 'Read More'}
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -442,34 +540,93 @@ export function ProductDetailDialog({
                   )}
 
                   {detailedProduct && isHairExtensionsProduct(detailedProduct) && (
-                    <div className="space-y-4">
-                      <h3 className="text-xl font-bold text-black flex items-center gap-3">
-                        <Award className="w-5 h-5 text-gray-600" />
-                        Hair Details
-                      </h3>
-                      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {detailedProduct.hair_type && (
-                            <div className="flex justify-between py-3 border-b border-gray-100">
-                              <span className="text-sm text-gray-600 font-medium">Hair Type</span>
-                              <span className="text-sm font-bold">{detailedProduct.hair_type}</span>
-                            </div>
-                          )}
-                          {detailedProduct.hair_length && (
-                            <div className="flex justify-between py-3 border-b border-gray-100">
-                              <span className="text-sm text-gray-600 font-medium">Length</span>
-                              <span className="text-sm font-bold">{detailedProduct.hair_length}</span>
-                            </div>
-                          )}
-                          {detailedProduct.hair_color_shade && (
-                            <div className="flex justify-between py-3 border-b border-gray-100">
-                              <span className="text-sm text-gray-600 font-medium">Color</span>
-                              <span className="text-sm font-bold">{detailedProduct.hair_color_shade}</span>
-                            </div>
-                          )}
+                    <>
+                      <div className="space-y-4">
+                        <h3 className="text-xl font-bold text-black flex items-center gap-3">
+                          <Award className="w-5 h-5 text-gray-600" />
+                          Hair Details
+                        </h3>
+                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {detailedProduct.hair_type && (
+                              <div className="flex justify-between py-3 border-b border-gray-100">
+                                <span className="text-sm text-gray-600 font-medium">Hair Type</span>
+                                <span className="text-sm font-bold">{detailedProduct.hair_type}</span>
+                              </div>
+                            )}
+                            {detailedProduct.hair_texture && (
+                              <div className="flex justify-between py-3 border-b border-gray-100">
+                                <span className="text-sm text-gray-600 font-medium">Hair Texture</span>
+                                <span className="text-sm font-bold">{detailedProduct.hair_texture}</span>
+                              </div>
+                            )}
+                            {detailedProduct.hair_length && (
+                              <div className="flex justify-between py-3 border-b border-gray-100">
+                                <span className="text-sm text-gray-600 font-medium">Hair Length</span>
+                                <span className="text-sm font-bold">{detailedProduct.hair_length}</span>
+                              </div>
+                            )}
+                            {detailedProduct.weight && (
+                              <div className="flex justify-between py-3 border-b border-gray-100">
+                                <span className="text-sm text-gray-600 font-medium">Weight</span>
+                                <span className="text-sm font-bold">{detailedProduct.weight}g</span>
+                              </div>
+                            )}
+                            {detailedProduct.hair_color_shade && (
+                              <div className="flex justify-between py-3 border-b border-gray-100">
+                                <span className="text-sm text-gray-600 font-medium">Color</span>
+                                <span className="text-sm font-bold">{detailedProduct.hair_color_shade}</span>
+                              </div>
+                            )}
+                            {detailedProduct.stock_quantity && (
+                              <div className="flex justify-between py-3 border-b border-gray-100">
+                                <span className="text-sm text-gray-600 font-medium">Quantity</span>
+                                <span className="text-sm font-bold">{detailedProduct.stock_quantity}</span>
+                              </div>
+                            )}
+                            {detailedProduct.installation_method && (
+                              <div className="flex justify-between py-3 border-b border-gray-100">
+                                <span className="text-sm text-gray-600 font-medium">Installation Method</span>
+                                <span className="text-sm font-bold">{detailedProduct.installation_method}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                      {/* Care Instructions Section */}
+                      {detailedProduct.care_instructions && (
+                        <div className="space-y-4 mt-6">
+                          <h3 className="text-xl font-bold text-black flex items-center gap-3">
+                            <Info className="w-5 h-5 text-gray-600" />
+                            Care Instructions
+                          </h3>
+                          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                            {(() => {
+                              const care = detailedProduct.care_instructions || '';
+                              const words = care.split(' ');
+                              const shouldTruncate = words.length > 40; // Roughly 3-4 lines worth of text
+                              const truncatedText = words.slice(0, 40).join(' ');
+                              
+                              return (
+                                <div className="space-y-2">
+                                  <p className="text-gray-700 leading-relaxed text-base break-words overflow-wrap-anywhere">
+                                    {showFullCare || !shouldTruncate ? care : `${truncatedText}...`}
+                                  </p>
+                                  {shouldTruncate && (
+                                    <button
+                                      className="text-blue-600 hover:text-blue-800 hover:underline font-semibold text-sm focus:outline-none transition-colors duration-200"
+                                      onClick={() => setShowFullCare(prev => !prev)}
+                                    >
+                                      {showFullCare ? 'Show Less' : 'Read More'}
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
 
                   {/* Enhanced Purchase Actions */}

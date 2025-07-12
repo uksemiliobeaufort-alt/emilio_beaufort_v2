@@ -4,6 +4,20 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
+/**
+ * Cookie Consent Component
+ * 
+ * Behavior:
+ * - Shows only ONCE per user (persistent across browser sessions)
+ * - Uses localStorage to remember user's choice
+ * - On localhost: Can be reset using window.resetCookieConsent()
+ * - On production: Only shows if user hasn't made a choice before
+ * 
+ * Testing:
+ * - In browser console on localhost: window.resetCookieConsent()
+ * - Or set window.__FORCE_COOKIE_CONSENT__ = true before page load
+ */
+
 interface CookieConsentProps {
   className?: string;
 }
@@ -19,15 +33,42 @@ export default function CookieConsent({ className }: CookieConsentProps) {
        window.location.hostname === '127.0.0.1' ||
        window.location.hostname === '0.0.0.0');
 
+    // Check if user has already made a choice (persistent across sessions)
+    const hasConsented = localStorage.getItem("emilio-beaufort-cookies-consent");
+    const consentDate = localStorage.getItem("emilio-beaufort-consent-date");
+    
+    // Debug logging
     if (isLocalhost) {
-      // Always show on localhost for testing
-      setTimeout(() => {
+      console.log('Cookie Consent Debug:', {
+        hasConsented,
+        consentDate,
+        isLocalhost,
+        willShow: !hasConsented
+      });
+    }
+    
+    // For development/testing: Add a way to reset consent
+    if (isLocalhost && typeof window !== 'undefined') {
+      // Add a global function to reset consent for testing
+      (window as any).resetCookieConsent = () => {
+        localStorage.removeItem("emilio-beaufort-cookies-consent");
+        localStorage.removeItem("emilio-beaufort-consent-date");
+        console.log('Cookie consent reset for testing');
         setShowConsent(true);
+      };
+      
+      // Check if we should show consent (either no consent or forced reset)
+      const shouldShow = !hasConsented || (window as any).__FORCE_COOKIE_CONSENT__;
+      if (shouldShow) {
+        setTimeout(() => {
+          setShowConsent(true);
+          setIsLoaded(true);
+        }, 1000);
+      } else {
         setIsLoaded(true);
-      }, 1000);
+      }
     } else {
-      // Normal behavior for production - check localStorage
-      const hasConsented = localStorage.getItem("emilio-beaufort-cookies-consent");
+      // Production behavior - only show if no consent has been given
       if (!hasConsented) {
         setTimeout(() => {
           setShowConsent(true);

@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useMemo, Suspense } from "react";
+import { getFounderImageUrl } from "@/lib/supabase";
 
 // Sample team members data (replace with API call in the future)
 const ALL_TEAM_MEMBERS = [
@@ -53,11 +54,24 @@ function TeamMembersContent() {
                 {/* Avatar with Animated Ring */}
                 <div className="relative mb-6">
                   <div className={`w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br ${member.gradient} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-500 shadow-lg group-hover:shadow-xl overflow-hidden`}>
-                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                      <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-600">
-                        {member.name.split(' ').map(n => n[0]).join('')}
-                      </span>
-                    </div>
+                    {/* Team Member Image from Supabase */}
+                    <img
+                      src={getFounderImageUrl(member.name)}
+                      alt={`${member.name} - ${member.role}`}
+                      className="w-full h-full object-cover rounded-full"
+                      onError={(e) => {
+                        // Fallback to initials if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          const fallback = document.createElement('div');
+                          fallback.className = 'w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center';
+                          fallback.innerHTML = `<span class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-600">${member.name.split(' ').map(n => n[0]).join('')}</span>`;
+                          parent.appendChild(fallback);
+                        }
+                      }}
+                    />
                   </div>
                   {/* Animated Ring */}
                   <div className={`absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br ${member.gradient} rounded-full opacity-0 group-hover:opacity-30 group-hover:scale-150 transition-all duration-700`}></div>

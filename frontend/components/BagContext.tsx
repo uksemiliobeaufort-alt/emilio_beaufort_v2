@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getProducts } from '@/lib/supabase';
+import { productCardUtils } from '@/lib/utils';
 
 export interface BagItem {
   id: string;
@@ -12,9 +14,18 @@ export interface BagItem {
 
 interface BagContextType {
   bagItems: BagItem[];
-  addToBag: (item: Omit<BagItem, 'quantity'>, onLimitHit?: (msg?: string) => void) => void;
+  addToBag: (
+    item: Omit<BagItem, 'quantity'>,
+    onLimitHit?: (msg?: string, context?: { item: Omit<BagItem, 'quantity'> }) => void,
+    forceAdd?: boolean
+  ) => void;
   removeFromBag: (id: string) => void;
   clearBag: () => void;
+}
+
+interface AddToBagOptions {
+  forceAdd?: boolean;
+  onLimitHit?: (msg?: string, context?: { item: Omit<BagItem, 'quantity'> }) => void;
 }
 
 const BagContext = createContext<BagContextType | undefined>(undefined);
@@ -35,21 +46,40 @@ export const BagProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [bagItems]);
 
-  const addToBag = (item: Omit<BagItem, 'quantity'>, onLimitHit?: (msg?: string) => void) => {
+  // Enhanced addToBag with price logic
+  const addToBag = async (
+    item: Omit<BagItem, 'quantity'>,
+    onLimitHit?: (msg?: string, context?: { item: Omit<BagItem, 'quantity'> }) => void,
+    forceAdd?: boolean
+  ) => {
+    // Fetch product details for price logic
+    const products = await getProducts();
+    const detailedProduct = products.find((p: any) => p.id === item.id);
+    const priceInfo = productCardUtils.getDisplayPrice(item, detailedProduct);
+    const itemWithPrice = { ...item, price: priceInfo.displayPrice };
+
     setBagItems(prev => {
+      const totalUnique = prev.length;
       const totalQuantity = prev.reduce((sum, i) => sum + i.quantity, 0);
       const existing = prev.find(i => i.id === item.id);
-      if (totalQuantity + 1 > 10) {
-        if (onLimitHit) onLimitHit("You've reached the bag limit. Please purchase the items in your bag before adding more.");
+      // Hard cap: 10 total items
+      if (!forceAdd && totalQuantity + 1 > 10) {
+        if (onLimitHit) setTimeout(() => onLimitHit("You've reached the bag limit. Please purchase the items in your bag before adding more.", { item }), 0);
+        return prev;
+      }
+      // Soft cap: 5 unique items
+      if (!forceAdd && !existing && totalUnique >= 5) {
+        if (onLimitHit) setTimeout(() => onLimitHit("You have 5 different products in your bag. Please purchase or remove some before adding more.", { item }), 0);
         return prev;
       }
       if (existing) {
-        if (existing.quantity >= 5) {
+        if (!forceAdd && existing.quantity >= 5) {
+          if (onLimitHit) setTimeout(() => onLimitHit("You can't add more than 5 of the same product.", { item }), 0);
           return prev;
         }
         return prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      return [...prev, { ...item, quantity: 1 }];
+      return [...prev, { ...itemWithPrice, quantity: 1 }];
     });
   };
 

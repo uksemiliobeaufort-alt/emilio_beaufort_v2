@@ -84,7 +84,7 @@ export default function BlogGalleryPage() {
   const getPostUrl = (post: BlogPost): string => {
     // Always use production domain for sharing (even in development)
     // This ensures shared links always point to the live site
-    const baseUrl = 'https://emilio-beaufort.vercel.app';
+    const baseUrl = 'https://emiliobeaufort.com';
     return `${baseUrl}/journal/${post.slug}`;
   };
 
@@ -211,7 +211,7 @@ export default function BlogGalleryPage() {
           className="text-center mb-12"
         >
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 mb-8">
-            Blog Gallery
+            Gallery
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Explore our complete collection of stories, insights, and perspectives. Dive deep into the world of style, culture, and the pursuit of excellence.

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Trash2, X } from 'lucide-react';
+import { CheckCircle, Trash2, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ interface InquiryDetailsDialogProps {
   inquiry: PartnershipInquiry | null;
   isOpen: boolean;
   onClose: () => void;
-  onApprove: (id: string) => void;
+  onAccept: (inquiry: PartnershipInquiry) => void;
   onDelete: (inquiry: PartnershipInquiry) => void;
   isProcessing?: boolean;
 }
@@ -32,7 +32,7 @@ export default function InquiryDetailsDialog({
   inquiry,
   isOpen,
   onClose,
-  onApprove,
+  onAccept,
   onDelete,
   isProcessing = false
 }: InquiryDetailsDialogProps) {
@@ -97,17 +97,15 @@ export default function InquiryDetailsDialog({
             Close
           </Button>
           
-          {inquiry.status !== 'completed' && (
-            <Button
-              variant="outline"
-              onClick={() => onApprove(inquiry.id)}
-              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-              disabled={isProcessing}
-            >
-              <Check className="h-4 w-4 mr-2" />
-              Approve
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            onClick={() => onAccept(inquiry)}
+            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+            disabled={isProcessing}
+          >
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Accept
+          </Button>
           
           <Button
             variant="outline"

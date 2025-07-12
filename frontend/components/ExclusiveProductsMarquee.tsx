@@ -6,6 +6,8 @@ import { useRef, useState, useEffect } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { getImageUrl, getProducts, Product as SupabaseProduct } from "@/lib/supabase";
 import Link from "next/link";
+import { ProductCard } from '@/components/ui/ProductCard';
+import { useRouter } from 'next/navigation';
 
 interface DisplayProduct {
   title: string;
@@ -13,49 +15,33 @@ interface DisplayProduct {
   image: string;
   price?: number;
   id: string;
+  category: 'COSMETICS' | 'HAIR';
 }
 
 export default function ExclusiveProductsMarquee() {
   const [exclusiveProducts, setExclusiveProducts] = useState<DisplayProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // Fetch real products from Supabase
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const products = await getProducts();
-        // Filter for featured products or take the first few
+        // Only show products that are featured
         const featuredProducts = products
-          .filter(product => product.featured || product.in_stock)
-          .slice(0, 6)
+          .filter(product => product.featured === true)
           .map(product => ({
             id: product.id,
             title: product.name,
             description: product.description || '',
             image: product.main_image_url || getImageUrl("product-images", "cosmetics1.jpg"),
-            price: product.price
+            price: product.price,
+            category: (product.category === 'cosmetics' ? 'COSMETICS' : 'HAIR') as 'COSMETICS' | 'HAIR'
           }));
-
-        // If we don't have enough featured products, use any available products
-        if (featuredProducts.length < 4) {
-          const additionalProducts = products
-            .filter(product => !featuredProducts.find(fp => fp.id === product.id))
-            .slice(0, 4 - featuredProducts.length)
-            .map(product => ({
-              id: product.id,
-              title: product.name,
-              description: product.description || '',
-              image: product.main_image_url || getImageUrl("product-images", "cosmetics1.jpg"),
-              price: product.price
-            }));
-          
-          setExclusiveProducts([...featuredProducts, ...additionalProducts]);
-        } else {
-          setExclusiveProducts(featuredProducts);
-        }
+        setExclusiveProducts(featuredProducts);
       } catch (error) {
         console.error('Failed to fetch products:', error);
-        // Fallback to empty array or show error message
         setExclusiveProducts([]);
       } finally {
         setLoading(false);
@@ -97,9 +83,18 @@ export default function ExclusiveProductsMarquee() {
     );
   }
 
-  // Don't render if no products
-  if (exclusiveProducts.length === 0) {
-    return null;
+  // If there are no featured products, show a message or nothing
+  if (!loading && exclusiveProducts.length === 0) {
+    return (
+      <div className="w-full py-16 bg-premium overflow-hidden relative">
+        <h2 className="text-4xl font-serif font-bold text-premium mb-10 text-center">
+          Most Exclusive Collection
+        </h2>
+        <div className="flex justify-center items-center h-32 text-premium text-lg font-medium">
+          No featured products available at the moment.
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -131,42 +126,24 @@ export default function ExclusiveProductsMarquee() {
         >
           <div className="flex gap-8 min-w-max">
             {marqueeProducts.map((product, idx) => (
-              <Link
-                key={idx}
-                href="/products"
-                className="min-w-[300px] max-w-xs bg-gray-100 rounded-xl shadow-lg overflow-hidden flex-shrink-0 border border-premium flex flex-col transition-transform duration-300 hover:scale-105 cursor-pointer focus:outline-none focus:ring-2 focus:ring-premium"
-                role="link"
-                tabIndex={0}
-                aria-label={`View all products, highlighted: ${product.title}`}
-                prefetch={false}
-              >
-                <div className="relative h-56 w-full bg-gray-100">
-                  {!imageErrors[idx] ? (
-                    <Image
-                      src={product.image || fallbackImage}
-                      alt={product.title}
-                      fill
-                      className="object-cover transition-opacity duration-300"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority={idx < 5}
-                      quality={85}
-                      onError={() => handleImageError(idx, product.title)}
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
-                      <p className="text-sm">Image not available</p>
-                    </div>
-                  )}
-                </div>
-                <div className="p-6 flex flex-col gap-3 flex-1 justify-between items-center">
-                  <h3 className="text-2xl font-serif font-bold text-premium mb-2 text-center">
-                    {product.title}
-                  </h3>
-                  {product.price && (
-                    <p className="text-xl font-semibold text-premium text-center">₹{product.price.toLocaleString('en-IN')}</p>
-                  )}
-                </div>
-              </Link>
+              <div key={product.id} className="min-w-[300px] max-w-xs flex-shrink-0">
+                <ProductCard 
+                  product={{
+                    id: product.id,
+                    name: product.title,
+                    description: product.description,
+                    price: product.price || 0,
+                    category: product.category,
+                    imageUrl: product.image,
+                    gallery: [],
+                    isSoldOut: false,
+                    tags: [],
+                    createdAt: '',
+                    updatedAt: ''
+                  }}
+                  onViewDetails={() => router.push(`/products?id=${product.id}`)}
+                />
+              </div>
             ))}
           </div>
         </div>

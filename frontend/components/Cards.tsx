@@ -12,28 +12,28 @@ const products = [
     id: 1,
     name: "Signature Beard Oil",
     description: "A luxurious blend of natural oils for beard nourishment",
-    price: "$45",
+    price: "₹45",
     image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`
   },
   {
     id: 2,
     name: "Premium Hair Pomade",
     description: "Strong hold with natural shine for classic styling",
-    price: "$35",
+    price: "₹35",
     image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`
   },
   {
     id: 3,
     name: "Facial Moisturizer",
     description: "Hydrating formula with anti-aging properties",
-    price: "$55",
+    price: "₹55",
     image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`
   },
   {
     id: 4,
     name: "Aftershave Balm",
     description: "Soothing post-shave care with natural ingredients",
-    price: "$40",
+    price: "₹40",
     image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`
   }
 ];
@@ -73,7 +73,7 @@ export function Cards() {
             <CardContent className="p-3">
               <div className="flex justify-between items-start mb-1">
                 <h3 className="text-base font-serif">{product.name}</h3>
-                <span className="text-sm font-medium text-[#B7A16C]">{product.price}</span>
+                <span className="text-sm font-medium text-[#B7A16C]">₹{product.price}</span>
               </div>
               <p className="text-gray-600 text-xs mb-2">{product.description}</p>
               <Button 

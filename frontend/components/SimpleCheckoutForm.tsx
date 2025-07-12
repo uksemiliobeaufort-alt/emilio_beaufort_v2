@@ -83,6 +83,12 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Only proceed if we're on the review step and user explicitly clicked Place Order
+    if (currentStep !== 'review') {
+      return;
+    }
+    
     setIsProcessingPayment(true);
     
     try {
@@ -117,7 +123,7 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
 
             // Save purchase to Supabase via API
             try {
-              await fetch('/api/purchase', {
+              const purchaseResponse = await fetch('/api/purchase', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -135,6 +141,13 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
                   total
                 })
               });
+
+              if (purchaseResponse.ok) {
+                const purchaseData = await purchaseResponse.json();
+                console.log('Purchase saved to database:', purchaseData);
+              } else {
+                console.error('Failed to save purchase to database:', await purchaseResponse.text());
+              }
             } catch (err) {
               console.error('Failed to save purchase to Supabase:', err);
             }
@@ -145,6 +158,11 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
             clearBag();
             onClose();
             setIsProcessingPayment(false);
+            
+            // Redirect to products page after success message is shown
+            setTimeout(() => {
+              window.location.href = '/products';
+            }, 2000); // 2 second delay to ensure user sees success message
           } else {
             toast.error('Payment verification failed. Please contact support.');
             setIsProcessingPayment(false);
@@ -475,8 +493,12 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
                 )}
                 {currentStep === 'review' ? (
                   <button
-                    type="submit"
-                    onClick={(e) => e.stopPropagation()}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSubmit(e as any);
+                    }}
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-3 sm:px-5 sm:py-3.5 md:px-6 md:py-4 bg-[#B7A16C] text-white rounded-lg hover:bg-[#9A8756] transition-colors duration-200 font-medium disabled:opacity-50 w-full sm:w-auto text-sm sm:text-base md:text-lg min-h-[44px] sm:min-h-[48px] md:min-h-[52px]"
                     disabled={isProcessingPayment}
                   >

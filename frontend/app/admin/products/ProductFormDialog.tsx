@@ -474,7 +474,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
         <DialogHeader className="pb-6 border-b">
           <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -627,7 +627,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                     control={form.control}
                     name="featured"
                     render={({ field }) => (
-                    <FormItem className={`flex items-center justify-between rounded-xl border-2 p-4 transition-all duration-200 ${
+                    <FormItem className={`flex flex-col justify-between h-full rounded-xl border-2 p-4 transition-all duration-200 ${
                       field.value ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                       }`}>
                         <div className="space-y-0.5">
@@ -640,7 +640,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                           </FormDescription>
                         </div>
                         <FormControl>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center justify-between w-full mt-4">
                             <span className={`text-sm font-medium ${field.value ? 'text-yellow-600' : 'text-gray-500'}`}>
                               {field.value ? 'Featured' : 'Regular'}
                             </span>
@@ -673,7 +673,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                   name="original_price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base font-medium">Original Price ($) *</FormLabel>
+                      <FormLabel className="text-base font-medium">Original Price (₹) *</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -684,7 +684,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         />
                       </FormControl>
                       <FormDescription className="text-sm text-gray-500">
-                        The regular price of the product
+                        The regular price of the product in INR (₹)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -698,7 +698,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                     name="price"
                   render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-base font-medium">Discounted Price ($)</FormLabel>
+                        <FormLabel className="text-base font-medium">Discounted Price (₹)</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -709,7 +709,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         />
                       </FormControl>
                       <FormDescription className="text-sm text-gray-500">
-                        Sale price (leave empty if no discount)
+                        Sale price in INR (₹) (leave empty if no discount)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
