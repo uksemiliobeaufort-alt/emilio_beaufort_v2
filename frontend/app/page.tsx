@@ -16,6 +16,7 @@ import { Leaf, Globe, Shield, BadgePercent } from 'lucide-react';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import CookieConsent from '@/components/CookieConsent';
 import FeedbackFormDialog from '@/components/ui/FeedbackFormDialog';
+import { safeMap } from "@/lib/utils";
 
 // Auto Feedback Trigger Component
 function AutoFeedbackTrigger() {
@@ -309,7 +310,7 @@ export default function Home() {
           </motion.div>
           
           <div className="grid md:grid-cols-3 gap-8 sm:gap-12 md:gap-16">
-            {[
+            {safeMap([
               {
                 title: 'Timeless Elegance',
                 description: 'Designs that transcend trends, creating pieces that remain relevant and beautiful for generations.',
@@ -328,7 +329,7 @@ export default function Home() {
                 icon: '⚡',
                 delay: 0.6
               }
-            ].map((item, index) => (
+            ]).map((item, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 50 }}
@@ -523,7 +524,7 @@ export default function Home() {
             <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
               {/* First row: 2 cards, centered */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 justify-center mb-8">
-                {firstRow.map((founder: Founder, index: number) => (
+                {safeMap(firstRow).map((founder: Founder, index: number) => (
                   <motion.div
                     key={index}
                     className={`founder-card group relative w-full transition-all duration-700 ease-out cursor-pointer`}
@@ -606,7 +607,7 @@ export default function Home() {
               </div>
               {/* Second row: 3 cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
-                {secondRow.map((founder: Founder, index: number) => (
+                {safeMap(secondRow).map((founder: Founder, index: number) => (
                   <motion.div
                     key={index + 2}
                     className={`founder-card group relative w-full transition-all duration-700 ease-out cursor-pointer`}

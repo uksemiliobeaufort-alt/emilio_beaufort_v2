@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useMemo, useState, Suspense } from "react";
 import { getFounderImageUrl } from "@/lib/supabase";
 import Script from "next/script";
+import { safeMap } from "@/lib/utils";
 
 const ALL_TEAM_MEMBERS = [
   { name: "Priya Sharma", role: "Lead Product Designer", category: "Design", description: "Expert in user experience and luxury product design, blending tradition with innovation.", location: "Mumbai, India", gradient: "from-yellow-500 via-orange-400 to-pink-500", imageUrl: "https://randomuser.me/api/portraits/women/65.jpg" },
@@ -45,7 +46,7 @@ function TeamMembersContent() {
       {/* Category Buttons  */}
       <div className="flex justify-center mb-10">
         <div className="flex flex-wrap gap-3">
-          {["All", "Developers", "Design", "Marketing", "Sales"].map((category) => (
+          {safeMap(["All", "Developers", "Design", "Marketing", "Sales"], (category) => (
             <button
               key={category}
               onClick={() => {
@@ -66,7 +67,7 @@ function TeamMembersContent() {
 
       {/* Member Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {paginatedMembers.map((member, idx) => (
+        {safeMap(paginatedMembers, (member, idx) => (
           <div
             key={member.name + idx}
             className="relative h-[460px] bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:scale-[1.015] transition-all duration-300"
