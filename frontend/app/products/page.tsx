@@ -58,10 +58,16 @@ function ProductsPageContent() {
     const fetchProducts = async () => {
       try {
         const supabaseProducts = await getProducts();
-        const mappedProducts = supabaseProducts.map(mapSupabaseProductToAPIProduct);
-        setProducts(mappedProducts);
-      } catch {
-        console.error('Failed to fetch products');
+        if (supabaseProducts && Array.isArray(supabaseProducts)) {
+          const mappedProducts = supabaseProducts.map(mapSupabaseProductToAPIProduct);
+          setProducts(mappedProducts);
+        } else {
+          console.error('getProducts returned invalid data:', supabaseProducts);
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
