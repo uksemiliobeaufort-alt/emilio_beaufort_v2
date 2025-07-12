@@ -143,11 +143,11 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
 
     try {
       const submissionData = {
-        name: data.fullName, // changed from full_name
+        name: data.fullName,
         email: data.email,
         company: data.company,
         message: data.message,
-        inquiryType: data.inquiryType === "other" ? data.otherInquiryType! : data.inquiryType, // changed from inquiry_type
+        inquiryType: data.inquiryType === "other" ? data.otherInquiryType! : data.inquiryType,
       };
 
       console.log('Preparing to submit data:', submissionData);
@@ -169,12 +169,24 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
       setSubmittedName(data.fullName);
       setIsSuccess(true);
       form.reset();
+      
+      // Show success toast
+      toast.success(
+        <div className="flex flex-col gap-1">
+          <p className="font-medium">Inquiry submitted successfully!</p>
+          <p className="text-sm text-gray-600">We'll get back to you soon.</p>
+        </div>
+      );
     } catch (error) {
       console.error("Detailed submission error:", error);
+      
+      // Show more specific error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast.error(
         <div className="flex flex-col gap-1">
           <p className="font-medium">Failed to submit inquiry</p>
-          <p className="text-sm text-gray-600">Please try again. If the problem persists, contact support.</p>
+          <p className="text-sm text-gray-600">{errorMessage}</p>
+          <p className="text-xs text-gray-500">Please try again or contact support if the problem persists.</p>
         </div>
       );
     } finally {
@@ -249,7 +261,7 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
                           </FormControl>
                           {containsInvalidChars && (
                             <p className="text-sm text-yellow-600">
-                              ⚠️ Special characters and numbers are not allowed.
+                              ⚠ Special characters and numbers are not allowed.
                             </p>
                           )}
                           <FormMessage />
@@ -291,7 +303,7 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
                           </FormControl>
                           {isNotGmail && (
                             <p className="text-sm text-yellow-600">
-                              ⚠️ Only Gmail addresses ending with @gmail.com are allowed.
+                              ⚠ Only Gmail addresses ending with @gmail.com are allowed.
                             </p>
                           )}
                           <FormMessage />
@@ -393,6 +405,12 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
             <div className="flex gap-2 text-2xl mb-6">
               🌟 🎯 💫
             </div>
+
+            <Button onClick={() => window.open("https://cal.com/emiliocosmetics/15min", "_blank")}
+            className="bg-accent hover:bg-accent/90 transition-colors m-1">
+                Book a Meet
+            </Button>
+            
             <Button 
               onClick={handleClose}
               className="bg-accent hover:bg-accent/90 transition-colors"
@@ -404,4 +422,4 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
       </DialogContent>
     </Dialog>
   );
-} 
+}

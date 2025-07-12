@@ -1,34 +1,34 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
-
-interface DropdownOption {
-  value: string;
-  label: string;
-}
+import React, { useState, useRef, useEffect } from 'react';
 
 interface BootstrapDropdownProps {
-  options: DropdownOption[];
-  value?: string;
-  placeholder?: string;
-  onChange: (value: string) => void;
+  trigger: React.ReactNode;
+  items: {
+    label: string;
+    onClick?: () => void;
+    href?: string;
+    disabled?: boolean;
+    divider?: boolean;
+  }[];
   className?: string;
-  disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'light' | 'dark';
+  size?: 'sm' | 'lg';
+  direction?: 'down' | 'up' | 'start' | 'end';
+  align?: 'start' | 'end' | 'center';
 }
 
 export default function BootstrapDropdown({
-  options,
-  value,
-  placeholder = "Select an option",
-  onChange,
-  className = "",
-  disabled = false
+  trigger,
+  items,
+  className = '',
+  variant = 'primary',
+  size,
+  direction = 'down',
+  align = 'start'
 }: BootstrapDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const selectedOption = options.find(option => option.value === value);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -38,56 +38,138 @@ export default function BootstrapDropdown({
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
-  const handleToggle = () => {
-    if (!disabled) {
-      setIsOpen(!isOpen);
+  const handleItemClick = (item: any) => {
+    if (item.onClick) {
+      item.onClick();
     }
-  };
-
-  const handleSelect = (optionValue: string) => {
-    onChange(optionValue);
     setIsOpen(false);
   };
 
+  const getDropdownClasses = () => {
+    const baseClasses = 'dropdown';
+    const directionClasses = {
+      down: '',
+      up: 'dropup',
+      start: 'dropstart',
+      end: 'dropend'
+    };
+    const alignClasses = {
+      start: '',
+      end: 'dropdown-menu-end',
+      center: 'dropdown-menu-center'
+    };
+
+    return `${baseClasses} ${directionClasses[direction]} ${className}`.trim();
+  };
+
+  const getMenuClasses = () => {
+    const baseClasses = 'dropdown-menu';
+    const alignClass = align !== 'start' ? alignClasses[align] : '';
+    const showClass = isOpen ? 'show' : '';
+    
+    return `${baseClasses} ${alignClass} ${showClass}`.trim();
+  };
+
+  const getButtonClasses = () => {
+    const baseClasses = `btn btn-${variant}`;
+    const sizeClass = size ? `btn-${size}` : '';
+    
+    return `${baseClasses} ${sizeClass} dropdown-toggle`.trim();
+  };
+
   return (
-    <div className={`dropdown relative ${className}`} ref={dropdownRef}>
+    <div className={getDropdownClasses()} ref={dropdownRef}>
       <button
-        className={`dropdown-toggle w-full flex items-center justify-between px-3 py-2 h-10 border border-gray-300 rounded-md bg-white text-left transition-all duration-200 text-gray-700 text-sm ${
-          disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300'
-        }`}
+        className={getButtonClasses()}
         type="button"
-        onClick={handleToggle}
-        disabled={disabled}
+        onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
+        aria-haspopup="true"
       >
-        <span className="text-sm flex-1">
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <ChevronDown 
-          className={`h-4 w-4 ml-2 transition-transform duration-200 text-gray-500 ${isOpen ? 'rotate-180' : ''}`}
-        />
+        {trigger}
       </button>
       
-      {isOpen && (
-        <ul className="dropdown-menu absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto z-50">
-          {options.map((option) => (
-            <li key={option.value}>
-              <button
-                type="button"
-                className={`dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-150 ${
-                  value === option.value ? 'bg-gray-100 text-gray-900 font-medium' : 'text-gray-700'
-                }`}
-                onClick={() => handleSelect(option.value)}
+      <ul className={getMenuClasses()}>
+        {items.map((item, index) => (
+          <li key={index}>
+            {item.divider ? (
+              <hr className="dropdown-divider" />
+            ) : item.href ? (
+              <a
+                className={`dropdown-item ${item.disabled ? 'disabled' : ''}`}
+                href={item.href}
+                onClick={() => handleItemClick(item)}
+                tabIndex={item.disabled ? -1 : 0}
               >
-                {option.label}
+                {item.label}
+              </a>
+            ) : (
+              <button
+                className={`dropdown-item ${item.disabled ? 'disabled' : ''}`}
+                onClick={() => handleItemClick(item)}
+                disabled={item.disabled}
+                type="button"
+              >
+                {item.label}
               </button>
-            </li>
-          ))}
-        </ul>
-      )}
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// Example usage component
+export function ExampleBootstrapDropdown() {
+  const dropdownItems = [
+    { label: 'Action', onClick: () => console.log('Action clicked') },
+    { label: 'Another action', onClick: () => console.log('Another action clicked') },
+    { label: 'Something else here', onClick: () => console.log('Something else clicked') },
+    { divider: true },
+    { label: 'Separated link', href: '#', onClick: () => console.log('Separated link clicked') }
+  ];
+
+  return (
+    <div className="p-4">
+      <h3 className="mb-3">Bootstrap Dropdown Examples</h3>
+      
+      <div className="d-flex gap-3 flex-wrap">
+        {/* Basic Dropdown */}
+        <BootstrapDropdown
+          trigger="Dropdown"
+          items={dropdownItems}
+          variant="primary"
+        />
+
+        {/* Secondary Dropdown */}
+        <BootstrapDropdown
+          trigger="Secondary"
+          items={dropdownItems}
+          variant="secondary"
+        />
+
+        {/* Large Dropdown */}
+        <BootstrapDropdown
+          trigger="Large Dropdown"
+          items={dropdownItems}
+          variant="success"
+          size="lg"
+        />
+
+        {/* Dropdown with different alignment */}
+        <BootstrapDropdown
+          trigger="Aligned Dropdown"
+          items={dropdownItems}
+          variant="info"
+          align="end"
+        />
+      </div>
     </div>
   );
 } 

@@ -22,10 +22,11 @@ import InquiryDetailsDialog from './InquiryDetailsDialog';
 
 interface PartnershipInquiry {
   id: string;
-  full_name: string;
+  name: string;
   email: string;
   company: string;
   message: string;
+  inquiry_type: string;
   created_at: string;
   status: string;
 }
@@ -174,7 +175,7 @@ export default function Partnerships() {
 
       // Insert into temporary_data
       const tempData = {
-        full_name: inquiry.full_name,
+        full_name: inquiry.name,
         email: inquiry.email,
         company: inquiry.company,
         message: inquiry.message
@@ -218,7 +219,7 @@ export default function Partnerships() {
 
   const filteredInquiries = inquiries.filter(inquiry => {
     const matchesSearch = 
-      inquiry.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inquiry.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inquiry.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inquiry.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inquiry.message.toLowerCase().includes(searchTerm.toLowerCase());
@@ -311,7 +312,7 @@ export default function Partnerships() {
                 <div className="lg:hidden space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">{inquiry.full_name}</h3>
+                      <h3 className="font-semibold text-gray-900 truncate">{inquiry.name}</h3>
                       <p className="text-sm text-gray-600 truncate">{inquiry.company}</p>
                       <p className="text-sm text-gray-500 truncate">{inquiry.email}</p>
                     </div>
@@ -362,7 +363,7 @@ export default function Partnerships() {
                 {/* Desktop View */}
                 <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6 lg:items-center">
                   <div className="col-span-3">
-                    <h3 className="font-semibold text-gray-900">{inquiry.full_name}</h3>
+                    <h3 className="font-semibold text-gray-900">{inquiry.name}</h3>
                     <p className="text-sm text-gray-600">{inquiry.company}</p>
                   </div>
                   <div className="col-span-3">

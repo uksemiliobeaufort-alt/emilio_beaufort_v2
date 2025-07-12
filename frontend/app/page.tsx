@@ -743,21 +743,20 @@ export default function Home() {
             </Button>
           </motion.div>
         </div>
-
-
       </section>
 
-      {/* Alliances Section */}
-      <section id="alliances" className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-hidden section-premium">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#fafafa] via-white to-[#f8f8f8]"></div>
-        <div className="absolute inset-0 bg-pattern-dots opacity-[0.08]"></div>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
+      {/* Partnership Section */}
+      <section id="partnership" className="py-16 sm:py-20 md:py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-white"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#B7A16C]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div 
+            className="text-center mb-8 sm:mb-12"
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
+            transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
           >
             <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
               Emilio Beaufort Global
@@ -790,7 +789,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-      
 
       <Footer />
 
