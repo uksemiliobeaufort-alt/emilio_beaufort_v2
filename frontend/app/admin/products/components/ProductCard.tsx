@@ -22,7 +22,7 @@ const categoryLabels = {
 
 const formatPrice = (price?: number) => {
   if (!price) return 'N/A';
-  return `$${price.toFixed(2)}`;
+  return `₹${price.toLocaleString('en-IN')}`;
 };
 
 export default function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {

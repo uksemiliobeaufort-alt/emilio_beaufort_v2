@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { Input } from '@/components/ui/input';
-import { Loader2, Search, Check, Trash2, Eye } from 'lucide-react';
+import { Loader2, Search, Check, Trash2, Eye, CheckCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
@@ -17,14 +17,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import InquiryDetailsDialog from './InquiryDetailsDialog';
 
 interface PartnershipInquiry {
   id: string;
-  full_name: string;
+  name: string;
   email: string;
   company: string;
   message: string;
+  inquiry_type: string;
   created_at: string;
   status: string;
 }
@@ -38,6 +40,11 @@ export default function Partnerships() {
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; inquiry: PartnershipInquiry | null }>({
     open: false,
     inquiry: null
+  });
+  const [acceptDialog, setAcceptDialog] = useState<{ open: boolean; inquiry: PartnershipInquiry | null; notes: string }>({
+    open: false,
+    inquiry: null,
+    notes: ''
   });
   const [detailsDialog, setDetailsDialog] = useState<{ open: boolean; inquiry: PartnershipInquiry | null }>({
     open: false,
@@ -93,23 +100,40 @@ export default function Partnerships() {
     }
   };
 
-  const approveInquiry = async (id: string) => {
+  const handleAcceptClick = (inquiry: PartnershipInquiry) => {
+    setAcceptDialog({ open: true, inquiry, notes: '' });
+  };
+
+  const acceptInquiry = async () => {
+    if (!acceptDialog.inquiry) return;
+    
+    setIsProcessing(true);
     try {
-      const { error } = await supabase
-        .from('partnership_inquiries')
-        .update({ status: 'completed' })
-        .eq('id', id);
+      // Get current user for tracking who accepted the inquiry
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Call the accept_partnership_inquiry function
+      const { data, error } = await supabase.rpc('accept_partnership_inquiry', {
+        inquiry_id: acceptDialog.inquiry.id,
+        admin_user_id: user?.id || null,
+        notes: acceptDialog.notes || null
+      });
 
       if (error) throw error;
-      await fetchPartnershipInquiries();
-      setDetailsDialog(prev => ({
-        ...prev,
-        inquiry: prev.inquiry ? { ...prev.inquiry, status: 'completed' } : null
-      }));
-      toast.success('Inquiry approved successfully');
+
+      if (data.success) {
+        toast.success('Inquiry accepted successfully!');
+        await fetchPartnershipInquiries();
+        setAcceptDialog({ open: false, inquiry: null, notes: '' });
+        setDetailsDialog({ open: false, inquiry: null });
+      } else {
+        throw new Error(data.error || 'Failed to accept inquiry');
+      }
     } catch (error) {
-      console.error('Error approving inquiry:', error);
-      toast.error('Failed to approve inquiry');
+      console.error('Error accepting inquiry:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to accept inquiry');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -151,7 +175,7 @@ export default function Partnerships() {
 
       // Insert into temporary_data
       const tempData = {
-        full_name: inquiry.full_name,
+        full_name: inquiry.name,
         email: inquiry.email,
         company: inquiry.company,
         message: inquiry.message
@@ -195,7 +219,7 @@ export default function Partnerships() {
 
   const filteredInquiries = inquiries.filter(inquiry => {
     const matchesSearch = 
-      inquiry.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      inquiry.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inquiry.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inquiry.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inquiry.message.toLowerCase().includes(searchTerm.toLowerCase());
@@ -288,7 +312,7 @@ export default function Partnerships() {
                 <div className="lg:hidden space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">{inquiry.full_name}</h3>
+                      <h3 className="font-semibold text-gray-900 truncate">{inquiry.name}</h3>
                       <p className="text-sm text-gray-600 truncate">{inquiry.company}</p>
                       <p className="text-sm text-gray-500 truncate">{inquiry.email}</p>
                     </div>
@@ -317,16 +341,14 @@ export default function Partnerships() {
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
                     </Button>
-                    {inquiry.status !== 'completed' && (
-                      <Button
+                                          <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => approveInquiry(inquiry.id)}
+                        onClick={() => handleAcceptClick(inquiry)}
                         className="text-green-600 hover:text-green-700 hover:bg-green-50"
                       >
-                        <Check className="h-4 w-4" />
+                        <CheckCircle className="h-4 w-4" />
                       </Button>
-                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -341,7 +363,7 @@ export default function Partnerships() {
                 {/* Desktop View */}
                 <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6 lg:items-center">
                   <div className="col-span-3">
-                    <h3 className="font-semibold text-gray-900">{inquiry.full_name}</h3>
+                    <h3 className="font-semibold text-gray-900">{inquiry.name}</h3>
                     <p className="text-sm text-gray-600">{inquiry.company}</p>
                   </div>
                   <div className="col-span-3">
@@ -372,16 +394,15 @@ export default function Partnerships() {
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    {inquiry.status !== 'completed' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => approveInquiry(inquiry.id)}
-                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAcceptClick(inquiry)}
+                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      title="Accept Inquiry"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -397,6 +418,56 @@ export default function Partnerships() {
           </div>
         )}
       </div>
+
+      {/* Accept Confirmation Dialog */}
+      <Dialog open={acceptDialog.open} onOpenChange={(open) => !isProcessing && setAcceptDialog({ open, inquiry: null, notes: '' })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Accept Partnership Inquiry</DialogTitle>
+            <DialogDescription>
+              This will move the inquiry to the accepted inquiries table and remove it from the pending list. You can add optional notes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Notes (Optional)</label>
+              <Textarea
+                placeholder="Add any notes about this acceptance..."
+                value={acceptDialog.notes}
+                onChange={(e) => setAcceptDialog(prev => ({ ...prev, notes: e.target.value }))}
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAcceptDialog({ open: false, inquiry: null, notes: '' })}
+              disabled={isProcessing}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={acceptInquiry}
+              disabled={isProcessing}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Accepting...
+                </>
+                              ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Accept Inquiry
+                  </>
+                )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialog.open} onOpenChange={(open) => !isProcessing && setDeleteDialog({ open, inquiry: null })}>
@@ -438,7 +509,7 @@ export default function Partnerships() {
         inquiry={detailsDialog.inquiry}
         isOpen={detailsDialog.open}
         onClose={() => setDetailsDialog({ open: false, inquiry: null })}
-        onApprove={approveInquiry}
+        onAccept={handleAcceptClick}
         onDelete={handleDeleteClick}
         isProcessing={isProcessing}
       />

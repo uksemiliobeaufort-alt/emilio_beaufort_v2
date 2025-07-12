@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap');
+@import '@fontsource/marcellus';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -80,7 +82,7 @@
   }
   
   body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'DM Serif Display', 'Marcellus', serif;
     color: #0A0A0A;
     background-color: #ffffff;
     line-height: 1.6;
@@ -755,4 +757,10 @@
 /* Conic gradient for rotating shine effect */
 .bg-gradient-conic {
   background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.4), transparent, transparent);
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }

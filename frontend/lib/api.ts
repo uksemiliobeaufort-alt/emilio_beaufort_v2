@@ -199,12 +199,78 @@ export async function deletePost(id: string): Promise<void> {
 }
 
 // Partnership Inquiries API
-export async function submitPartnershipInquiry(data: CreatePartnershipInquiryDto): Promise<void> {
-  const { error } = await supabase
-    .from('partnership_inquiries')
-    .insert([data]);
+export async function submitPartnershipInquiry(data: CreatePartnershipInquiryDto): Promise<PartnershipInquiry> {
+  // Transform the data to match the database schema
+  const inquiryData = {
+    name: data.name,
+    email: data.email,
+    company: data.company,
+    message: data.message,
+    inquiry_type: data.inquiryType,
+    status: 'pending'
+  };
 
-  if (error) throw error;
+  const { data: insertedData, error } = await supabase
+    .from('partnership_inquiries')
+    .insert([inquiryData])
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to submit partnership inquiry: ${error.message}`);
+  }
+
+  if (!insertedData) {
+    throw new Error('No data returned from Supabase insert operation');
+  }
+
+  return {
+    id: insertedData.id,
+    name: insertedData.name,
+    email: insertedData.email,
+    company: insertedData.company,
+    message: insertedData.message,
+    inquiryType: insertedData.inquiry_type,
+    createdAt: insertedData.created_at
+  };
+}
+
+// Check if partnership_inquiries table exists
+export async function checkPartnershipInquiriesTable(): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('partnership_inquiries')
+      .select('id')
+      .limit(1);
+
+    return !error;
+  } catch (error) {
+    console.error('Error checking table:', error);
+    return false;
+  }
+}
+
+// Get partnership inquiries for admin
+export async function getPartnershipInquiries(): Promise<PartnershipInquiry[]> {
+  const { data, error } = await supabase
+    .from('partnership_inquiries')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Supabase error:', error);
+    throw new Error(`Failed to fetch partnership inquiries: ${error.message}`);
+  }
+
+  return (data || []).map(inquiry => ({
+    id: inquiry.id,
+    name: inquiry.name,
+    email: inquiry.email,
+    company: inquiry.company,
+    message: inquiry.message,
+    inquiryType: inquiry.inquiry_type,
+    createdAt: inquiry.created_at
+  }));
 }
 
 export async function submitCareerApplication(data: CareerApplication): Promise<void> {

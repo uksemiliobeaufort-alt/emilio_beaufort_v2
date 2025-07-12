@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getProducts, Product as SupabaseProduct } from "@/lib/supabase";
 import { Product } from "@/lib/api";
-import { ProductCard } from "@/components/ui/ProductCard";
+import { ProductCard, ProductListItem } from "@/components/ui/ProductCard";
 import { Button } from "@/components/ui/button";
 import { ProductDetailDialog } from '@/components/ui/ProductDetailDialog';
 import { RippleButton } from '@/components/ui/RippleButton';
 import MyBagButton from '@/components/MyBagButton';
+import SimpleCheckoutForm from '@/components/SimpleCheckoutForm';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 // Mapping function to convert Supabase Product to API Product format
 const mapSupabaseProductToAPIProduct = (supabaseProduct: SupabaseProduct): Product => {
@@ -34,6 +36,23 @@ export default function ProductsPage() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // New: Bag and Checkout modal state
+  const [bagOpen, setBagOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  // Handler to open checkout and close bag
+  const handleBuyNow = () => {
+    setBagOpen(false);
+    setCheckoutOpen(true);
+  };
+
+  // Handler to close checkout
+  const handleCheckoutClose = () => {
+    setCheckoutOpen(false);
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -50,6 +69,22 @@ export default function ProductsPage() {
 
     fetchProducts();
   }, []);
+
+  // Handle URL query parameter for product detail
+  useEffect(() => {
+    const productId = searchParams?.get('id');
+    if (productId && products.length > 0) {
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        setSelectedProduct(product);
+        setDetailDialogOpen(true);
+        // Set the correct category filter
+        setSelectedCategory(product.category);
+        // Clear the URL parameter
+        router.replace('/products', { scroll: false });
+      }
+    }
+  }, [searchParams, products, router]);
 
   const filteredProducts = (selectedCategory === 'COSMETICS' 
     ? products.filter(product => product.category && product.category.toLowerCase() === 'cosmetics')
@@ -68,9 +103,32 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white py-24">
-      <MyBagButton />
-      <div className="max-w-7xl mx-auto px-6">
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      {/* Subtle, professional gradient bubbles */}
+      {/* Top right large gradient bubble */}
+      <div className="absolute top-0 right-0 w-[38rem] h-[38rem] rounded-full blur-3xl z-0 pointer-events-none opacity-30"
+        style={{
+          background: 'radial-gradient(circle at 70% 30%, #f5e9c6 0%, #bfa14a 60%, transparent 100%)',
+          transform: 'translate(30%,-30%)'
+        }}
+      />
+      {/* Top left large gradient bubble */}
+      <div className="absolute top-0 left-0 w-[32rem] h-[32rem] rounded-full blur-3xl z-0 pointer-events-none opacity-20"
+        style={{
+          background: 'radial-gradient(circle at 30% 30%, #e7dac7 0%, #bfa14a 50%, transparent 100%)',
+          transform: 'translate(-30%,-30%)'
+        }}
+      />
+      {/* Center faint gradient bubble */}
+      <div className="absolute top-1/2 left-1/2 w-[28rem] h-[28rem] rounded-full blur-3xl z-0 pointer-events-none opacity-10"
+        style={{
+          background: 'radial-gradient(circle, #bfa14a 0%, transparent 80%)',
+          transform: 'translate(-50%,-50%)'
+        }}
+      />
+      <MyBagButton open={bagOpen} setOpen={setBagOpen} onBuyNow={handleBuyNow} />
+      <SimpleCheckoutForm open={checkoutOpen} onClose={handleCheckoutClose} />
+      <div className="max-w-7xl mx-auto px-6 sm:px-4 pt-28 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -132,7 +190,8 @@ export default function ProductsPage() {
         </div>
 
         {/* Products Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {/* Mobile List View */}
+        <div className="block sm:hidden">
           {filteredProducts.map((product, index) => (
             <motion.div
               key={product.id}
@@ -140,10 +199,23 @@ export default function ProductsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: index * 0.1 }}
             >
-              <ProductCard product={product} onViewDetails={(p) => { setSelectedProduct(p); setDetailDialogOpen(true); }} />
+              <ProductListItem product={product} onViewDetails={(p) => { setSelectedProduct(p); setDetailDialogOpen(true); }} />
             </motion.div>
           ))}
         </div>
+         {/* Grid View for sm and up */}
+         <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 gap-y-8">
+           {filteredProducts.map((product, index) => (
+             <motion.div
+               key={product.id}
+               initial={{ opacity: 0, y: 50 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.8, delay: index * 0.1 }}
+             >
+               <ProductCard product={product} onViewDetails={(p) => { setSelectedProduct(p); setDetailDialogOpen(true); }} />
+             </motion.div>
+           ))}
+         </div>
         <ProductDetailDialog 
           product={selectedProduct} 
           open={detailDialogOpen} 

@@ -1,12 +1,15 @@
-import { useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import BagModal from './BagModal';
 import { useBag } from './BagContext';
 
-export default function MyBagButton() {
-  const [open, setOpen] = useState(false);
-  
+interface MyBagButtonProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  onBuyNow: () => void;
+}
+
+export default function MyBagButton({ open, setOpen, onBuyNow }: MyBagButtonProps) {
   // Get the real bag count from context
   let bagItems = [];
   let totalItems = 0;
@@ -34,13 +37,13 @@ export default function MyBagButton() {
         <ShoppingBag className="w-6 h-6" />
         <span>My Bag</span>
         {totalItems > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+          <span className="pointer-events-none absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
             {totalItems}
           </span>
         )}
       </button>
     )}
-    <BagModal open={open} onClose={() => setOpen(false)} />
+    <BagModal open={open} onClose={() => setOpen(false)} onBuyNow={onBuyNow} />
     </>
   );
 } 
