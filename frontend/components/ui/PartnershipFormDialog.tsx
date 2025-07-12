@@ -25,9 +25,10 @@ import {
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Toaster, toast } from "sonner";
+import BootstrapDropdown from "./BootstrapDropdown";
 
 const formSchema = z.object({
-  fullName: z
+  full_name: z
     .string()
     .min(2, "Full name must be at least 2 characters")
     .regex(/^[A-Za-z\s]+$/, "Special characters and numbers are not allowed"),
@@ -81,7 +82,7 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
     resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
-      fullName: "",
+      full_name: "",
       company: "",
       email: "",
       inquiryType: "supplier",
@@ -91,7 +92,7 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
   });
 
   // Watch specific form fields
-  const fullName = form.watch("fullName");
+  const full_name = form.watch("full_name");
   const company = form.watch("company");
   const email = form.watch("email");
   const inquiryType = form.watch("inquiryType");
@@ -107,7 +108,7 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
   useEffect(() => {
     const validateForm = () => {
       const hasRequiredFields = 
-        Boolean(fullName?.trim()) &&
+        Boolean(full_name?.trim()) &&
         Boolean(company?.trim()) &&
         Boolean(email?.trim()) &&
         Boolean(message?.trim()) &&
@@ -130,7 +131,7 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
     };
 
     validateForm();
-  }, [fullName, company, email, inquiryType, otherInquiryType, message]);
+  }, [full_name, company, email, inquiryType, otherInquiryType, message]);
 
   const onSubmit = async (data: FormData) => {
     if (!isFormValid || isSubmitting) {
@@ -143,11 +144,11 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
 
     try {
       const submissionData = {
-        name: data.fullName,
+        full_name: data.full_name,
         email: data.email,
         company: data.company,
         message: data.message,
-        inquiryType: data.inquiryType === "other" ? data.otherInquiryType! : data.inquiryType,
+        inquiry_type: data.inquiryType,
       };
 
       console.log('Preparing to submit data:', submissionData);
@@ -166,7 +167,7 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
       console.log('API Response:', response);
 
       // Show success message
-      setSubmittedName(data.fullName);
+      setSubmittedName(data.full_name);
       setIsSuccess(true);
       form.reset();
       
@@ -246,7 +247,7 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
                   {/* Full Name Field with live hint */}
                   <FormField
                     control={form.control}
-                    name="fullName"
+                    name="full_name"
                     render={({ field }) => {
                       const containsInvalidChars = /[^A-Za-z\s]/.test(field.value);
                       return (
@@ -319,18 +320,17 @@ export default function PartnershipFormDialog({ isOpen, onClose }: PartnershipFo
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Inquiry Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select inquiry type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="supplier">Supplier</SelectItem>
-                            <SelectItem value="distributor">Distributor</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <select
+                            className="border rounded px-3 py-2 w-full"
+                            value={field.value}
+                            onChange={field.onChange}
+                          >
+                            <option value="supplier">Supplier</option>
+                            <option value="distributor">Distributor</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

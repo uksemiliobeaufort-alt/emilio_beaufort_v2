@@ -61,7 +61,7 @@ function ProductsPageContent() {
         const supabaseProducts = await getProducts();
         if (supabaseProducts && Array.isArray(supabaseProducts)) {
           const mappedProducts = safeMap(supabaseProducts, mapSupabaseProductToAPIProduct);
-          setProducts(mappedProducts);
+        setProducts(mappedProducts);
         } else {
           console.error('getProducts returned invalid data:', supabaseProducts);
           setProducts([]);

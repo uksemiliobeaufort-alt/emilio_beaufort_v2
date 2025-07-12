@@ -33,12 +33,12 @@ export interface Post {
 
 export interface PartnershipInquiry {
   id: string;
-  name: string;
+  full_name: string;
   email: string;
   company: string;
   message: string;
-  inquiryType: string;
-  createdAt: string;
+  inquiry_type: string;
+  created_at: string;
 }
 
 export interface CareerApplication {
@@ -53,11 +53,11 @@ export interface WaitlistSignup {
 }
 
 export interface CreatePartnershipInquiryDto {
-  name: string;
+  full_name: string;
   email: string;
   company: string;
   message: string;
-  inquiryType: string;
+  inquiry_type: string;
 }
 
 export interface HomeData {
@@ -202,12 +202,11 @@ export async function deletePost(id: string): Promise<void> {
 export async function submitPartnershipInquiry(data: CreatePartnershipInquiryDto): Promise<PartnershipInquiry> {
   // Transform the data to match the database schema
   const inquiryData = {
-    name: data.name,
+    full_name: data.full_name,
     email: data.email,
     company: data.company,
     message: data.message,
-    inquiry_type: data.inquiryType,
-    status: 'pending'
+    inquiry_type: data.inquiry_type
   };
 
   const { data: insertedData, error } = await supabase
@@ -226,12 +225,12 @@ export async function submitPartnershipInquiry(data: CreatePartnershipInquiryDto
 
   return {
     id: insertedData.id,
-    name: insertedData.name,
+    full_name: insertedData.full_name,
     email: insertedData.email,
     company: insertedData.company,
     message: insertedData.message,
-    inquiryType: insertedData.inquiry_type,
-    createdAt: insertedData.created_at
+    inquiry_type: insertedData.inquiry_type,
+    created_at: insertedData.created_at
   };
 }
 
@@ -264,12 +263,12 @@ export async function getPartnershipInquiries(): Promise<PartnershipInquiry[]> {
 
   return (data || []).map(inquiry => ({
     id: inquiry.id,
-    name: inquiry.name,
+    full_name: inquiry.full_name,
     email: inquiry.email,
     company: inquiry.company,
     message: inquiry.message,
-    inquiryType: inquiry.inquiry_type,
-    createdAt: inquiry.created_at
+    inquiry_type: inquiry.inquiry_type,
+    created_at: inquiry.created_at
   }));
 }
 
@@ -326,11 +325,6 @@ export const api = {
   },
 
   async submitPartnershipInquiry(data: CreatePartnershipInquiryDto): Promise<PartnershipInquiry> {
-    await submitPartnershipInquiry(data);
-    return {
-      id: '1',
-      ...data,
-      createdAt: new Date().toISOString()
-    };
+    return await submitPartnershipInquiry(data);
   },
 }; 
