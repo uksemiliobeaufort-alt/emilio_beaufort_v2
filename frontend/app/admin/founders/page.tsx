@@ -179,13 +179,13 @@ export default function FoundersPage() {
                             target.style.display = 'none';
                             const parent = target.parentElement;
                             if (parent) {
-                              parent.innerHTML = `<span class="text-2xl font-bold text-gray-600">${founder.name.split(' ').map(n => n[0]).join('')}</span>`;
+                              parent.innerHTML = `<span class="text-2xl font-bold text-gray-600">${(founder.name || '').split(' ').map(n => n[0]).join('')}</span>`;
                             }
                           }}
                         />
                       ) : (
                         <span className="text-2xl font-bold text-gray-600">
-                          {founder.name.split(' ').map(n => n[0]).join('')}
+                          {(founder.name || '').split(' ').map(n => n[0]).join('')}
                         </span>
                       )}
                     </div>

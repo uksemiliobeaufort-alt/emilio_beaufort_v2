@@ -130,7 +130,7 @@ function FounderAvatar({ founder }: { founder: Founder }) {
             if (parent) {
               const fallback = document.createElement('div');
               fallback.className = 'w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center';
-              fallback.innerHTML = `<span class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-600">${founder.name.split(' ').map(n => n[0]).join('')}</span>`;
+              fallback.innerHTML = `<span class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-600">${(founder.name || '').split(' ').map(n => n[0]).join('')}</span>`;
               parent.appendChild(fallback);
             }
           }}
