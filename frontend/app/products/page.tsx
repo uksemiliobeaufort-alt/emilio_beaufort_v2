@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { getProducts, Product as SupabaseProduct } from "@/lib/supabase";
 import { Product } from "@/lib/api";
@@ -28,7 +28,7 @@ const mapSupabaseProductToAPIProduct = (supabaseProduct: SupabaseProduct): Produ
   };
 };
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<'COSMETICS' | 'HAIR'>('COSMETICS');
@@ -224,5 +224,17 @@ export default function ProductsPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-2xl font-serif text-gray-900">Loading products...</div>
+      </div>
+    }>
+      <ProductsPageContent />
+    </Suspense>
   );
 } 
