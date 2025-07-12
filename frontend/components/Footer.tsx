@@ -19,9 +19,17 @@ export function Footer() {
           {/* Brand Section */}
           <div className="text-center md:text-left">
             <h3 className="heading-premium text-2xl text-white mb-4">Emilio Beaufort</h3>
-            <p className="body-premium text-gray-300 leading-relaxed">
+            <p className="body-premium text-gray-300 leading-relaxed mb-6">
               Where luxury meets precision. Crafting exceptional grooming experiences for the discerning gentleman.
             </p>
+            
+            {/* Domestic Supply Section */}
+            <div className="border-t border-gray-700 pt-6">
+              <h4 className="font-sans-semibold text-white mb-4">Domestic Supply (India)</h4>
+              <p className="body-premium text-gray-300 leading-relaxed text-sm">
+                We supply raw human hair and wigs within India to Salons, Wig makers, Beauty retailers, Online store owners, and Cosmetic brands. Fast delivery across major Indian cities. Payment via UPI, NEFT or advance invoice.
+              </p>
+            </div>
           </div>
 
           {/* Quick Links */}
@@ -88,13 +96,40 @@ export function Footer() {
                 </a>
               ))}
             </div>
+            
+            {/* Contact Information */}
+            <div className="mt-6 space-y-2">
+              <h5 className="font-sans-semibold text-white text-sm mb-3">Contact</h5>
+              <div className="space-y-2 text-gray-300 text-sm">
+                <div className="flex items-center justify-center md:justify-start">
+                  <span className="font-sans-medium">WhatsApp:</span>
+                  <a 
+                    href="https://wa.me/918962648358" 
+                    className="ml-2 hover:text-gold transition-premium"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    +91-8962648358
+                  </a>
+                </div>
+                <div className="flex items-center justify-center md:justify-start">
+                  <span className="font-sans-medium">Email:</span>
+                  <a 
+                    href="mailto:hello@emiliobeaufort.com" 
+                    className="ml-2 hover:text-gold transition-premium"
+                  >
+                    hello@emiliobeaufort.com
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="flex flex-col md:flex-row justify-between items-center">
           <p className="body-premium text-gray-400 mb-4 md:mb-0">
-            © {currentYear} Emilio Beaufort. All rights reserved.
+            © 2023 Emilio Beaufort. All rights reserved.
           </p>
           <div className="flex space-x-6 text-sm">
             <Link href="/privacy-policy" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta">

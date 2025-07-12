@@ -15,7 +15,8 @@ export const supabase = createClient(
 // Storage bucket names
 export const STORAGE_BUCKETS = {
   COSMETICS: 'cosmetics-images',
-  HAIR_EXTENSIONS: 'hair-extensions-images'
+  HAIR_EXTENSIONS: 'hair-extensions-images',
+  FOUNDERS: 'founders'
 } as const;
 
 // Helper function to get bucket name based on product category
@@ -456,12 +457,40 @@ export const getImageUrl = (bucketName: string, path: string) => {
       return '';
     }
 
-    // Ensure the URL is properly encoded
+    // Ensure the URL is properly encoded and add cache-busting parameter
     const url = new URL(data.publicUrl);
+    url.searchParams.set('t', Date.now().toString());
     return url.toString();
   } catch (error) {
     return '';
   }
+};
+
+// Helper function to get founder image URL
+export const getFounderImageUrl = (founderName: string) => {
+  // Special case for Manish Jha
+  if (founderName.toLowerCase().includes('manish')) {
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'manish sir.jpg');
+  }
+  // Special case for Aly Sayyad
+  if (founderName.toLowerCase().includes('aly sayyad')) {
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Aly Sayyad Sir.jpg');
+  }
+  // Special case for Sreedeep Saha (or Shreedeep)
+  if (founderName.toLowerCase().includes('sreedeep') || founderName.toLowerCase().includes('shreedeep')) {
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Shreedeep Sir.jpg');
+  }
+  // Special case for Uttam Kumar Singh
+  if (founderName.toLowerCase().includes('uttam')) {
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Uttam.jpg');
+  }
+  // Special case for Rahul Pandey
+  if (founderName.toLowerCase().includes('rahul')) {
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Rahul Sir.jpg');
+  }
+  // Default: normalized name
+  const normalizedName = founderName.toLowerCase().replace(/\s+/g, '-');
+  return getImageUrl(STORAGE_BUCKETS.FOUNDERS, `${normalizedName}.jpg`);
 };
 
 // Helper function to upload an image to a bucket
