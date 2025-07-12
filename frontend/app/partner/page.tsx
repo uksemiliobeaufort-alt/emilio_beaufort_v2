@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import BootstrapDropdown from "@/components/ui/BootstrapDropdown";
 import { submitPartnershipInquiry, CreatePartnershipInquiryDto } from "@/lib/api";
 
 const partnershipFormSchema = z.object({
@@ -33,6 +33,7 @@ const inquiryTypes = [
 
 export default function PartnerPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedInquiryType, setSelectedInquiryType] = useState<string>("");
 
   const {
     register,
@@ -50,6 +51,7 @@ export default function PartnerPage() {
       await submitPartnershipInquiry(data);
       toast.success("Thank you for your inquiry. We'll be in touch soon.");
       reset();
+      setSelectedInquiryType("");
     } catch (error) {
       toast.error("Failed to submit inquiry. Please try again.");
       console.error("Submission error:", error);
@@ -57,6 +59,17 @@ export default function PartnerPage() {
       setIsSubmitting(false);
     }
   };
+
+  const handleInquiryTypeSelect = (value: string) => {
+    setSelectedInquiryType(value);
+    setValue("inquiryType", value);
+  };
+
+  // Convert inquiry types to dropdown items format
+  const dropdownItems = inquiryTypes.map(type => ({
+    label: type.label,
+    onClick: () => handleInquiryTypeSelect(type.value)
+  }));
 
   return (
     <div className="min-h-screen">
@@ -156,18 +169,14 @@ export default function PartnerPage() {
                   <Label htmlFor="inquiryType" className="text-sm font-medium">
                     Inquiry Type *
                   </Label>
-                  <Select onValueChange={(value: string) => setValue("inquiryType", value)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select an inquiry type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {inquiryTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="mt-1">
+                    <BootstrapDropdown
+                      trigger={selectedInquiryType || "Select an inquiry type"}
+                      items={dropdownItems}
+                      variant="secondary"
+                      className="w-full"
+                    />
+                  </div>
                   {errors.inquiryType && (
                     <p className="mt-1 text-sm text-destructive">
                       {errors.inquiryType.message}

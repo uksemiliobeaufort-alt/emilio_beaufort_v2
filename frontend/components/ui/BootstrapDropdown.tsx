@@ -50,12 +50,6 @@ export default function BootstrapDropdown({
     setIsOpen(false);
   };
 
-  const alignClasses = {
-    start: '',
-    end: 'dropdown-menu-end',
-    center: 'dropdown-menu-center'
-  };
-
   const getDropdownClasses = () => {
     const baseClasses = 'dropdown';
     const directionClasses = {
@@ -68,19 +62,19 @@ export default function BootstrapDropdown({
     return `${baseClasses} ${directionClasses[direction]} ${className}`.trim();
   };
 
-  const getMenuClasses = () => {
-    const baseClasses = 'dropdown-menu';
-    const alignClass = align !== 'start' ? alignClasses[align] : '';
-    const showClass = isOpen ? 'show' : '';
-    
-    return `${baseClasses} ${alignClass} ${showClass}`.trim();
-  };
-
   const getButtonClasses = () => {
     const baseClasses = `btn btn-${variant}`;
     const sizeClass = size ? `btn-${size}` : '';
     
     return `${baseClasses} ${sizeClass} dropdown-toggle`.trim();
+  };
+
+  const getMenuClasses = () => {
+    const baseClasses = 'dropdown-menu';
+    const alignClass = align !== 'start' ? `dropdown-menu-${align}` : '';
+    const showClass = isOpen ? 'show' : '';
+    
+    return `${baseClasses} ${alignClass} ${showClass}`.trim();
   };
 
   return (

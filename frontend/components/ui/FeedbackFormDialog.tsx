@@ -49,6 +49,7 @@ export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = 
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [selectedType, setSelectedType] = useState<string>("suggestion");
 
   const onSubmit = async (data: FeedbackFormData) => {
     setIsSubmitting(true);
@@ -63,6 +64,7 @@ export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = 
 
       setIsSuccess(true);
       form.reset();
+      setSelectedType("suggestion");
       toast.success("Thank you! Your feedback has been submitted successfully.");
     } catch (error) {
       console.error("Feedback submission error:", error);
@@ -76,6 +78,18 @@ export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = 
     setIsSuccess(false);
     onClose();
   };
+
+  const handleTypeSelect = (type: string) => {
+    setSelectedType(type);
+    form.setValue("type", type as "bug" | "suggestion" | "compliment");
+  };
+
+  // Convert feedback types to dropdown items format
+  const feedbackTypeItems = [
+    { label: "Bug", onClick: () => handleTypeSelect("bug") },
+    { label: "Suggestion", onClick: () => handleTypeSelect("suggestion") },
+    { label: "Compliment", onClick: () => handleTypeSelect("compliment") }
+  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -136,14 +150,10 @@ export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = 
                         <FormLabel>Type</FormLabel>
                         <FormControl>
                           <BootstrapDropdown
-                            options={[
-                              { value: "bug", label: "Bug" },
-                              { value: "suggestion", label: "Suggestion" },
-                              { value: "compliment", label: "Compliment" }
-                            ]}
-                            value={field.value}
-                            onChange={field.onChange}
-                            placeholder="Select feedback type"
+                            trigger={selectedType === "bug" ? "Bug" : selectedType === "suggestion" ? "Suggestion" : selectedType === "compliment" ? "Compliment" : "Select feedback type"}
+                            items={feedbackTypeItems}
+                            variant="secondary"
+                            className="w-full"
                           />
                         </FormControl>
                         <FormMessage />
