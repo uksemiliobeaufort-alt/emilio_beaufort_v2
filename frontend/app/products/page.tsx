@@ -10,6 +10,7 @@ import { RippleButton } from '@/components/ui/RippleButton';
 import MyBagButton from '@/components/MyBagButton';
 import SimpleCheckoutForm from '@/components/SimpleCheckoutForm';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { safeMap } from "@/lib/utils";
 
 // Mapping function to convert Supabase Product to API Product format
 const mapSupabaseProductToAPIProduct = (supabaseProduct: SupabaseProduct): Product => {
@@ -59,7 +60,7 @@ function ProductsPageContent() {
       try {
         const supabaseProducts = await getProducts();
         if (supabaseProducts && Array.isArray(supabaseProducts)) {
-          const mappedProducts = supabaseProducts.map(mapSupabaseProductToAPIProduct);
+          const mappedProducts = safeMap(supabaseProducts, mapSupabaseProductToAPIProduct);
           setProducts(mappedProducts);
         } else {
           console.error('getProducts returned invalid data:', supabaseProducts);

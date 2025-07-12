@@ -53,4 +53,8 @@ export const productCardUtils = {
       savings: hasDiscount ? detailedProduct.original_price - product.price : 0
     };
   }
-}; 
+};
+
+export function safeMap<T, U>(arr: T[] | undefined | null, fn: (item: T, idx: number) => U): U[] {
+  return Array.isArray(arr) ? arr.map(fn) : [];
+} 
