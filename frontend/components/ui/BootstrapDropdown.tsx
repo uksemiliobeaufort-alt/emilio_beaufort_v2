@@ -5,7 +5,7 @@ import React, { useState, useRef, useEffect } from 'react';
 interface BootstrapDropdownProps {
   trigger: React.ReactNode;
   items: {
-    label: string;
+    label?: string;
     onClick?: () => void;
     href?: string;
     disabled?: boolean;
@@ -50,6 +50,12 @@ export default function BootstrapDropdown({
     setIsOpen(false);
   };
 
+  const alignClasses = {
+    start: '',
+    end: 'dropdown-menu-end',
+    center: 'dropdown-menu-center'
+  };
+
   const getDropdownClasses = () => {
     const baseClasses = 'dropdown';
     const directionClasses = {
@@ -57,11 +63,6 @@ export default function BootstrapDropdown({
       up: 'dropup',
       start: 'dropstart',
       end: 'dropend'
-    };
-    const alignClasses = {
-      start: '',
-      end: 'dropdown-menu-end',
-      center: 'dropdown-menu-center'
     };
 
     return `${baseClasses} ${directionClasses[direction]} ${className}`.trim();
