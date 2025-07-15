@@ -467,7 +467,10 @@ export const getImageUrl = (bucketName: string, path: string) => {
 };
 
 // Helper function to get founder image URL
-export const getFounderImageUrl = (founderName: string) => {
+export const getFounderImageUrl = (founderName: string, imageName?: string) => {
+  if (imageName) {
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, `${imageName}.jpg`);
+  }
   // Special case for Manish Jha
   if (founderName.toLowerCase().includes('manish')) {
     return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'manish sir.jpg');

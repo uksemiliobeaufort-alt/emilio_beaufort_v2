@@ -50,35 +50,21 @@ export default function BootstrapDropdown({
     setIsOpen(false);
   };
 
-  const getDropdownClasses = () => {
-    const baseClasses = 'dropdown';
-    const directionClasses = {
-      down: '',
-      up: 'dropup',
-      start: 'dropstart',
-      end: 'dropend'
-    };
-
-    return `${baseClasses} ${directionClasses[direction]} ${className}`.trim();
-  };
-
+  // Tailwind-based dropdown classes
   const getButtonClasses = () => {
-    const baseClasses = `btn btn-${variant}`;
-    const sizeClass = size ? `btn-${size}` : '';
-    
-    return `${baseClasses} ${sizeClass} dropdown-toggle`.trim();
+    let base = 'px-4 py-2 rounded bg-white border shadow focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2';
+    if (size === 'sm') base += ' text-sm py-1 px-2';
+    if (size === 'lg') base += ' text-lg py-3 px-6';
+    return base + (className ? ` ${className}` : '');
   };
 
-  const getMenuClasses = () => {
-    const baseClasses = 'dropdown-menu';
-    const alignClass = align !== 'start' ? `dropdown-menu-${align}` : '';
-    const showClass = isOpen ? 'show' : '';
-    
-    return `${baseClasses} ${alignClass} ${showClass}`.trim();
-  };
+  // Dropdown alignment
+  let menuAlign = 'left-0';
+  if (align === 'end') menuAlign = 'right-0';
+  if (align === 'center') menuAlign = 'left-1/2 -translate-x-1/2';
 
   return (
-    <div className={getDropdownClasses()} ref={dropdownRef}>
+    <div className="relative inline-block" ref={dropdownRef}>
       <button
         className={getButtonClasses()}
         type="button"
@@ -87,35 +73,37 @@ export default function BootstrapDropdown({
         aria-haspopup="true"
       >
         {trigger}
+        <svg className={`ml-2 w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
       </button>
-      
-      <ul className={getMenuClasses()}>
-        {items.map((item, index) => (
-          <li key={index}>
-            {item.divider ? (
-              <hr className="dropdown-divider" />
-            ) : item.href ? (
-              <a
-                className={`dropdown-item ${item.disabled ? 'disabled' : ''}`}
-                href={item.href}
-                onClick={() => handleItemClick(item)}
-                tabIndex={item.disabled ? -1 : 0}
-              >
-                {item.label}
-              </a>
-            ) : (
-              <button
-                className={`dropdown-item ${item.disabled ? 'disabled' : ''}`}
-                onClick={() => handleItemClick(item)}
-                disabled={item.disabled}
-                type="button"
-              >
-                {item.label}
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+      {isOpen && (
+        <ul className={`absolute z-50 mt-2 min-w-[10rem] bg-white border rounded shadow-lg ${menuAlign} py-1`}>
+          {items.map((item, index) => (
+            <li key={index}>
+              {item.divider ? (
+                <hr className="my-1 border-gray-200" />
+              ) : item.href ? (
+                <a
+                  className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${item.disabled ? 'text-gray-400 cursor-not-allowed' : ''}`}
+                  href={item.href}
+                  onClick={() => handleItemClick(item)}
+                  tabIndex={item.disabled ? -1 : 0}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <button
+                  className={`block w-full text-left px-4 py-2 hover:bg-gray-100 ${item.disabled ? 'text-gray-400 cursor-not-allowed' : ''}`}
+                  onClick={() => handleItemClick(item)}
+                  disabled={item.disabled}
+                  type="button"
+                >
+                  {item.label}
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

@@ -244,27 +244,32 @@ export default function ProductsAdmin() {
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           </div>
-                      <BootstrapDropdown
-              value={categoryFilter}
-              onChange={setCategoryFilter}
-              options={[
-                { value: 'all', label: 'All Categories' },
-                { value: 'cosmetics', label: 'Cosmetics' },
-                { value: 'hair-extension', label: 'Hair Extensions' }
-              ]}
-              placeholder="Category"
-            />
-            <BootstrapDropdown
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { value: 'all', label: 'All Status' },
-                { value: 'draft', label: 'Draft' },
-                { value: 'published', label: 'Published' },
-                { value: 'archived', label: 'Archived' }
-              ]}
-              placeholder="Status"
-            />
+          <BootstrapDropdown
+            trigger={
+              categoryFilter === 'all' ? 'All Categories' :
+              categoryFilter === 'cosmetics' ? 'Cosmetics' :
+              categoryFilter === 'hair-extension' ? 'Hair Extensions' : 'Category'
+            }
+            items={[
+              { label: 'All Categories', onClick: () => setCategoryFilter('all') },
+              { label: 'Cosmetics', onClick: () => setCategoryFilter('cosmetics') },
+              { label: 'Hair Extensions', onClick: () => setCategoryFilter('hair-extension') }
+            ]}
+          />
+          <BootstrapDropdown
+            trigger={
+              statusFilter === 'all' ? 'All Status' :
+              statusFilter === 'draft' ? 'Draft' :
+              statusFilter === 'published' ? 'Published' :
+              statusFilter === 'archived' ? 'Archived' : 'Status'
+            }
+            items={[
+              { label: 'All Status', onClick: () => setStatusFilter('all') },
+              { label: 'Draft', onClick: () => setStatusFilter('draft') },
+              { label: 'Published', onClick: () => setStatusFilter('published') },
+              { label: 'Archived', onClick: () => setStatusFilter('archived') }
+            ]}
+          />
         </div>
       </div>
 

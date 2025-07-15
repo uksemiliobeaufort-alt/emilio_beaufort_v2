@@ -474,7 +474,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
+      <DialogContent className="w-full max-w-7xl max-h-[95vh] overflow-y-auto">
         <DialogHeader className="pb-6 border-b">
           <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -591,10 +591,13 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                       <FormLabel className="text-base font-medium">Category *</FormLabel>
                       <FormControl>
                         <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={categoryOptions}
-                          placeholder="Select category"
+                          trigger={
+                            categoryOptions.find(opt => opt.value === field.value)?.label || 'Select category'
+                          }
+                          items={categoryOptions.map(opt => ({
+                            label: opt.label,
+                            onClick: () => field.onChange(opt.value)
+                          }))}
                           className="h-11"
                         />
                       </FormControl>
@@ -611,10 +614,13 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                       <FormLabel className="text-base font-medium">Status *</FormLabel>
                       <FormControl>
                         <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={statusOptions}
-                          placeholder="Select status"
+                          trigger={
+                            statusOptions.find(opt => opt.value === field.value)?.label || 'Select status'
+                          }
+                          items={statusOptions.map(opt => ({
+                            label: opt.label,
+                            onClick: () => field.onChange(opt.value)
+                          }))}
                           className="h-11"
                         />
                       </FormControl>
@@ -839,10 +845,13 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         <FormLabel className="text-base font-medium">Skin Type</FormLabel>
                                                   <FormControl>
                         <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={skinTypeOptions}
-                          placeholder="Select skin type"
+                          trigger={
+                            skinTypeOptions.find(opt => opt.value === field.value)?.label || 'Select skin type'
+                          }
+                          items={skinTypeOptions.map(opt => ({
+                            label: opt.label,
+                            onClick: () => field.onChange(opt.value)
+                          }))}
                           className="h-11"
                         />
                       </FormControl>
@@ -1047,10 +1056,13 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         <FormLabel className="text-base font-medium">Hair Type</FormLabel>
                                                   <FormControl>
                         <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={hairTypeOptions}
-                          placeholder="Select hair type"
+                          trigger={
+                            hairTypeOptions.find(opt => opt.value === field.value)?.label || 'Select hair type'
+                          }
+                          items={hairTypeOptions.map(opt => ({
+                            label: opt.label,
+                            onClick: () => field.onChange(opt.value)
+                          }))}
                           className="h-11"
                         />
                       </FormControl>
@@ -1067,10 +1079,13 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         <FormLabel className="text-base font-medium">Hair Texture</FormLabel>
                                                   <FormControl>
                         <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={hairTextureOptions}
-                          placeholder="Select hair texture"
+                          trigger={
+                            hairTextureOptions.find(opt => opt.value === field.value)?.label || 'Select hair texture'
+                          }
+                          items={hairTextureOptions.map(opt => ({
+                            label: opt.label,
+                            onClick: () => field.onChange(opt.value)
+                          }))}
                           className="h-11"
                         />
                       </FormControl>
@@ -1138,10 +1153,13 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         <FormLabel className="text-base font-medium">Installation Method</FormLabel>
                                                   <FormControl>
                         <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={installationMethodOptions}
-                          placeholder="Select installation method"
+                          trigger={
+                            installationMethodOptions.find(opt => opt.value === field.value)?.label || 'Select installation method'
+                          }
+                          items={installationMethodOptions.map(opt => ({
+                            label: opt.label,
+                            onClick: () => field.onChange(opt.value)
+                          }))}
                           className="h-11"
                         />
                       </FormControl>

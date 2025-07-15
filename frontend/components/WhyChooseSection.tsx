@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Leaf, Globe, Shield, BadgePercent } from 'lucide-react';
 
-const initialCards = [
+const cards = [
   {
     title: 'Verified Temple Sourcing',
     icon: (
@@ -23,6 +21,7 @@ const initialCards = [
     title: 'Global and Domestic Shipping',
     icon: <Globe className="w-7 h-7 text-black" />,
     text: 'Delivered across India and 35+ countries',
+    badge: 'Trusted by 100+ Salons',
   },
   {
     title: 'Payment Security Options',
@@ -48,18 +47,6 @@ const initialCards = [
 ];
 
 export default function WhyChooseSection() {
-  const [cards, setCards] = useState(initialCards);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCards(prev => {
-        const [first, ...rest] = prev;
-        return [...rest, first];
-      });
-    }, 2500); // Every 2.5 seconds
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <section id="why-choose" className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-hidden section-premium">
       <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#f8f8f8]"></div>
@@ -70,30 +57,30 @@ export default function WhyChooseSection() {
             Why Choose Emilio Beaufort
           </h2>
           <p className="text-lg sm:text-xl text-gray-700 max-w-2xl mx-auto mb-2">
-            Discover what sets us apart as India’s most trusted source for premium raw human hair.
+            Discover what sets us apart as India's most trusted source for premium raw human hair.
           </p>
         </div>
 
-        <div className="relative h-[340px] sm:h-[400px] md:h-[450px] overflow-hidden flex items-center justify-center">
-          <AnimatePresence initial={false}>
-            {cards.map((card, index) => (
-              <motion.div
-                key={card.title}
-                initial={{ y: 200, opacity: 0 }}
-                animate={{ y: index * -20, opacity: 1 }}
-                exit={{ y: -100, opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="absolute w-[85vw] max-w-xs bg-gray-100 rounded-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] border-2 border-gray-100 p-6 flex flex-col items-center text-center"
-                style={{ zIndex: cards.length - index }}
-              >
-                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-r from-[#B7A16C] to-[#fffbe6] mb-4 transition-transform duration-300">
-                  {card.icon}
+        {/* 2-column grid, each card is a direct child */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {cards.map((card, idx) => (
+            <div
+              key={card.title}
+              className="relative bg-white rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col items-center text-center min-h-[180px]"
+            >
+              {/* Badge for the third card */}
+              {card.badge && (
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#B7A16C] text-xs font-semibold text-black px-4 py-1 rounded-full shadow z-10">
+                  {card.badge}
                 </div>
-                <span className="font-bold text-black text-lg mb-2">{card.title}</span>
-                <span className="text-gray-700">{card.text}</span>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+              )}
+              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-4 shadow">
+                {card.icon}
+              </div>
+              <span className="font-extrabold text-xl text-black mb-2">{card.title}</span>
+              <span className="text-gray-700">{card.text}</span>
+            </div>
+          ))}
         </div>
       </div>
     </section>
