@@ -28,6 +28,7 @@ yarn-error.log*
 # Local env files
 .env*.local
 .env
+ga-service-account.json
 
 # Vercel
 .vercel

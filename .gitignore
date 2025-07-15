@@ -102,3 +102,6 @@ prisma/migrations/
 
 # Generated files
 generated/ 
+
+# Google Cloud service account credentials
+frontend/ga-service-account.json 
