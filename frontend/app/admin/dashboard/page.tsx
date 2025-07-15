@@ -21,6 +21,17 @@ import { supabase } from '@/lib/supabase';
 import { getProducts } from '@/lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 interface DashboardStats {
   totalProducts: number;
@@ -46,6 +57,143 @@ interface BlogPost {
   featured_image_base64?: string;
   gallery_base64?: string[];
   created_at: string;
+}
+
+// --- Google Analytics Section ---
+interface AnalyticsRow {
+  pagePath: string;
+  sessions: number;
+  users: number;
+}
+
+function AnalyticsSection() {
+  const [data, setData] = useState<AnalyticsRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchAnalytics() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch('/api/admin/analytics');
+        if (!res.ok) throw new Error('Failed to fetch analytics');
+        const json = await res.json();
+        // Parse GA4 API response
+        if (json && json.rows) {
+          setData(
+            json.rows.map((row: any) => ({
+              pagePath: row.dimensionValues[0]?.value || '',
+              sessions: Number(row.metricValues[0]?.value || 0),
+              users: Number(row.metricValues[1]?.value || 0),
+            }))
+          );
+        } else {
+          setData([]);
+        }
+      } catch (e: any) {
+        setError(e.message || 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAnalytics();
+  }, []);
+
+  return (
+    <Card className="border-0 shadow-md mb-6">
+      <CardContent className="p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Google Analytics (Top Pages)</h2>
+        </div>
+        {loading ? (
+          <div className="text-center py-8 text-gray-500">Loading analytics...</div>
+        ) : error ? (
+          <div className="text-center py-8 text-red-500">{error}</div>
+        ) : data.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">No analytics data available.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-medium text-gray-700">Page Path</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700">Sessions</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700">Users</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((row, idx) => (
+                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-2 px-4 font-mono text-blue-700">{row.pagePath}</td>
+                    <td className="py-2 px-4">{row.sessions}</td>
+                    <td className="py-2 px-4">{row.users}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DailyActivityChart() {
+  const [data, setData] = useState<{ date: string; count: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch('/api/admin/activity/daily');
+        if (!res.ok) throw new Error('Failed to fetch activity data');
+        const json = await res.json();
+        setData(json.data || []);
+      } catch (e: any) {
+        setError(e.message || 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) return <div className="text-center py-8 text-gray-500">Loading activity chart...</div>;
+  if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
+  if (!data.length) return <div className="text-center py-8 text-gray-500">No activity data available.</div>;
+
+  const chartData = {
+    labels: data.map(d => d.date),
+    datasets: [
+      {
+        label: 'Daily Active Events',
+        data: data.map(d => d.count),
+        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+      },
+    ],
+  };
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      title: { display: true, text: 'Daily Activity Events' },
+    },
+    scales: {
+      x: { title: { display: true, text: 'Date' } },
+      y: { title: { display: true, text: 'Events' }, beginAtZero: true },
+    },
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <h2 className="text-xl font-semibold mb-4">Daily Activity (Custom Analytics)</h2>
+      <Bar data={chartData} options={options} height={120} />
+    </div>
+  );
 }
 
 export default function AdminDashboard() {
@@ -432,6 +580,9 @@ export default function AdminDashboard() {
           <span>Live updates</span>
         </div>
       </div>
+
+      {/* Daily Activity Chart */}
+      <DailyActivityChart />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">

@@ -9,6 +9,7 @@ import { BagProvider } from '@/components/BagContext';
 import { Toaster as ReactHotToastToaster } from 'react-hot-toast';
 import ConditionalAutoFeedback from '@/components/ConditionalAutoFeedback';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import PageViewTracker from "./PageViewTracker";
 
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -39,6 +40,7 @@ export default function RootLayout({
         <BagProvider>
           <ConditionalNavbar />
           <main>
+            <PageViewTracker />
             {children}
           </main>
         </BagProvider>
