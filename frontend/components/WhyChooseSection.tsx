@@ -66,7 +66,7 @@ export default function WhyChooseSection() {
           {cards.map((card, idx) => (
             <div
               key={card.title}
-              className="relative bg-white rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col items-center text-center min-h-[180px]"
+              className="relative bg-white rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:border-[#B7A16C]"
             >
               {/* Badge for the third card */}
               {card.badge && (
