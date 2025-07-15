@@ -11,10 +11,11 @@ import { Button } from '@/components/ui/button';
 
 interface PartnershipInquiry {
   id: string;
-  full_name: string;
+  name: string;
   email: string;
   company: string;
   message: string;
+  inquiry_type: string;
   created_at: string;
   status: string;
 }
@@ -58,7 +59,7 @@ export default function InquiryDetailsDialog({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-500">Full Name</h4>
-            <p>{inquiry.full_name}</p>
+            <p>{inquiry.name}</p>
           </div>
           
           <div className="space-y-2">

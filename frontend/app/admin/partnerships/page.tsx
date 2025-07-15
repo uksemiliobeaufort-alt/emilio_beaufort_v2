@@ -88,15 +88,22 @@ export default function Partnerships() {
 
   const fetchPartnershipInquiries = async () => {
     try {
+      console.log('Fetching partnership inquiries...');
       const { data, error } = await supabase
         .from('partnership_inquiries')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Fetched inquiries:', data);
       setInquiries(data || []);
     } catch (error) {
       console.error('Error fetching partnership inquiries:', error);
+      toast.error('Failed to fetch partnership inquiries');
     }
   };
 
@@ -218,11 +225,17 @@ export default function Partnerships() {
   };
 
   const filteredInquiries = inquiries.filter(inquiry => {
+    // Add null checks to prevent errors
+    if (!inquiry || typeof inquiry !== 'object') {
+      console.warn('Invalid inquiry object:', inquiry);
+      return false;
+    }
+
     const matchesSearch = 
-      inquiry.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inquiry.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inquiry.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inquiry.message.toLowerCase().includes(searchTerm.toLowerCase());
+      (inquiry.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (inquiry.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (inquiry.company?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (inquiry.message?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || inquiry.status === statusFilter;
     

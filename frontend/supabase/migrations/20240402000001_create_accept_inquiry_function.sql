@@ -34,7 +34,7 @@ BEGIN
     notes
   ) VALUES (
     inquiry_record.id,
-    inquiry_record.full_name,
+    inquiry_record.name,
     inquiry_record.email,
     inquiry_record.company,
     inquiry_record.message,
