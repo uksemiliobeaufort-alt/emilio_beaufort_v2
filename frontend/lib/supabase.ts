@@ -487,9 +487,9 @@ export const getFounderImageUrl = (founderName: string, imageName?: string) => {
   if (founderName.toLowerCase().includes('uttam')) {
     return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Uttam.jpg');
   }
-  // Special case for Rahul Pandey
-  if (founderName.toLowerCase().includes('rahul')) {
-    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Rahul Sir.jpg');
+  // Special case for Bani Sir
+  if (founderName.toLowerCase().includes('bani')) {
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Bani Sir.jpg');
   }
   // Default: normalized name
   const normalizedName = founderName.toLowerCase().replace(/\s+/g, '-');
