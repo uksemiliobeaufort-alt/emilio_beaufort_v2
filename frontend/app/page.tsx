@@ -232,7 +232,7 @@ export default function Home() {
     },
     {
       name: "Dr. Bani Prasad Bhattacharjee",
-      role: "Legal Compliances",
+      role: "Legal Advisor",
       description: "Oversees legal compliance and regulatory matters at Emilio Beaufort.",
       gradient: "from-gray-600 via-slate-600 to-zinc-600",
       linkedin: "/",
