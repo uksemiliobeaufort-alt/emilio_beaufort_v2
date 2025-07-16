@@ -654,7 +654,11 @@ export const subscribeToPageViews = (callback: (payload: any) => void) => {
 }; 
 
 export const getPartnerImageUrl = (partnerName: string, imageName?: string) => {
-  // Normalize partner name to create a file name if imageName is not provided
+  // Special case for Aurélina London
+  if (partnerName.trim().toLowerCase() === 'aurélina london') {
+    return getImageUrl('partners-image', 'aurelina-london.jpg');
+  }
+  // Default: normalize spaces and lowercase
   const fileName = imageName || `${partnerName.replace(/\s+/g, '-').toLowerCase()}.jpg`;
   return getImageUrl('partners-image', fileName);
 }; 
