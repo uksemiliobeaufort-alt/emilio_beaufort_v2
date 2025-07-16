@@ -7,47 +7,47 @@ import { getPartnerImageUrl } from "@/lib/supabase";
 
 const partners = [
   {
-    name: "meliora milan",
+    name: "Meliora Milan",
     description: "Better Hair Begins in Milan",
   },
   {
-    name: "pariluxe extensions",
+    name: "Pariluxe Extensions",
     description: "Luxury hair extensions for every occasion.",
   },
   {
-    name: "aurelina london",
+    name: "Aurélina London",
     description: "2025 - Timeless elegance from London.",
   },
   {
-    name: "caprissa paris",
+    name: "Caprissa Paris",
     description: "Crowning You in Parisian Radiance",
   },
   {
-    name: "londessa hair",
+    name: "Londessa Hair",
     description: "Premium hair solutions from Londessa.",
   },
   {
-    name: "elanora london",
+    name: "Elanora London",
     description: "Effortless élan for every London moment.",
   },
   {
-    name: "milanova luxe",
+    name: "Milanova Luxe",
     description: "Luxury redefined in Milan.",
   },
   {
-    name: "londonique melan",
+    name: "Londonique Melan",
     description: "Since 2024.",
   },
   {
-    name: "pariluxe extensions",
+    name: "Pariluxe Extensions",
     description: "Luxury hair extensions for every occasion.",
   },
   {
-    name: "parivelle extensions",
+    name: "Parivelle Extensions",
     description: "Parisian elegance in every strand.",
   },
   {
-    name: "bellore paris",
+    name: "Bellore Paris",
     description: "Unveil your French beauty.",
   },
 ];

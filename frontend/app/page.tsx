@@ -224,7 +224,7 @@ export default function Home() {
     {
       name: "Uttam Kumar Singh",
       role: "Junior Founder",
-      description: "Junior Founder @Emilio Beaufort | Co-Founder @Anteratic Solution | Aspiring Product Manager",
+      description: "Junior Founding Member | Multi Faceted Entrepreneur | Product Manager",
       gradient: "from-green-500 via-emerald-500 to-teal-500",
       linkedin: "https://www.linkedin.com/in/uttam-kumar-singh-uks/",
       twitter: "/",
