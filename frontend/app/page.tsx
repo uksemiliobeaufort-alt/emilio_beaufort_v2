@@ -623,7 +623,7 @@ export default function Home() {
           </motion.div>
 
 
-          <motion.div
+          {/* <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -646,7 +646,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Button>
-          </motion.div>
+          </motion.div> */}
         </div>
       </section>
 
