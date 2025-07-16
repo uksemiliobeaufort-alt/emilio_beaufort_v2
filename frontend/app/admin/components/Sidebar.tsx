@@ -94,10 +94,18 @@ const sidebarItems: SidebarItem[] = [
   },
 ];
 
+const founderEmail = 'founder.office@gmail.com';
+
 export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>(['Partnerships']);
+  const user = auth.user;
+
+  // Only show Products and Blog Posts for founder.office@gmail.com
+  const filteredSidebarItems = user && user.email === founderEmail
+    ? sidebarItems.filter(item => ['Products', 'Blog Posts'].includes(item.name))
+    : sidebarItems;
 
   const handleLogout = async () => {
     auth.logout();
@@ -173,7 +181,7 @@ export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarPro
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 bg-white">
           <div className="space-y-1">
-            {sidebarItems.map((item) => {
+            {filteredSidebarItems.map((item) => {
               const hasSubItems = item.subItems && item.subItems.length > 0;
               const isExpanded = expandedItems.includes(item.name);
               const isActive = hasSubItems ? isParentActive(item) : isItemActive(item.href);

@@ -61,9 +61,8 @@ interface BlogPost {
 
 // --- Google Analytics Section ---
 interface AnalyticsRow {
-  pagePath: string;
-  sessions: number;
-  users: number;
+  date: string;
+  pageViews: number;
 }
 
 function AnalyticsSection() {
@@ -79,18 +78,7 @@ function AnalyticsSection() {
         const res = await fetch('/api/admin/analytics');
         if (!res.ok) throw new Error('Failed to fetch analytics');
         const json = await res.json();
-        // Parse GA4 API response
-        if (json && json.rows) {
-          setData(
-            json.rows.map((row: any) => ({
-              pagePath: row.dimensionValues[0]?.value || '',
-              sessions: Number(row.metricValues[0]?.value || 0),
-              users: Number(row.metricValues[1]?.value || 0),
-            }))
-          );
-        } else {
-          setData([]);
-        }
+        setData(json.data || []);
       } catch (e: any) {
         setError(e.message || 'Unknown error');
       } finally {
@@ -104,7 +92,7 @@ function AnalyticsSection() {
     <Card className="border-0 shadow-md mb-6">
       <CardContent className="p-4 lg:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Google Analytics (Top Pages)</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Google Analytics (Daily Page Views)</h2>
         </div>
         {loading ? (
           <div className="text-center py-8 text-gray-500">Loading analytics...</div>
@@ -117,17 +105,15 @@ function AnalyticsSection() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Page Path</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Sessions</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">Users</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700">Date</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700">Page Views</th>
                 </tr>
               </thead>
               <tbody>
                 {data.map((row, idx) => (
                   <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-2 px-4 font-mono text-blue-700">{row.pagePath}</td>
-                    <td className="py-2 px-4">{row.sessions}</td>
-                    <td className="py-2 px-4">{row.users}</td>
+                    <td className="py-2 px-4 font-mono text-blue-700">{row.date}</td>
+                    <td className="py-2 px-4">{row.pageViews}</td>
                   </tr>
                 ))}
               </tbody>

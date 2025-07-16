@@ -590,42 +590,6 @@ export interface DailyStats {
   hour?: number;
 }
 
-// Track page view with debug logging
-export const trackPageView = async (pagePath: string) => {
-  console.log('Tracking page view for:', pagePath); // Debug log
-
-  // Don't track admin pages
-  if (pagePath.startsWith('/admin')) {
-    console.log('Skipping admin page tracking'); // Debug log
-    return;
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('page_views')
-      .insert([
-        {
-          page_path: pagePath,
-          user_agent: window.navigator.userAgent,
-          referrer: document.referrer || 'direct',
-        }
-      ])
-      .select();
-
-    if (error) {
-      console.error('Error tracking page view:', error); // Debug log
-      throw error;
-    }
-
-    console.log('Successfully tracked page view:', data); // Debug log
-    return data;
-  } catch (error) {
-    console.error('Failed to track page view:', error);
-    // Don't throw error to prevent breaking the app
-    return null;
-  }
-};
-
 // Get daily traffic data with debug logging
 export const getDailyTraffic = async (days: number = 7): Promise<DailyStats[]> => {
   console.log('Fetching daily traffic for last', days, 'days'); // Debug log

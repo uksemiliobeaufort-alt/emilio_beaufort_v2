@@ -18,7 +18,6 @@ import CookieConsent from '@/components/CookieConsent';
 import FeedbackFormDialog from '@/components/ui/FeedbackFormDialog';
 import { safeMap } from "@/lib/utils";
 import WhyChooseSection from '@/components/WhyChooseSection';
-import { useAnalytics } from '@/lib/useAnalytics';
 import TeamMemberSocialLinks from '@/components/TeamMemberSocialLinks';
 
 // Auto Feedback Trigger Component
@@ -153,7 +152,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
   const router = useRouter();
-  const analytics = useAnalytics();
 
   useEffect(() => {
     // No need to fetch home data as components handle their own data fetching
@@ -305,7 +303,6 @@ export default function Home() {
               className="text-lg px-12 py-6 text-base font-sans-medium transition-all duration-300 bg-black/80 text-white hover:bg-white hover:text-black border border-white backdrop-blur-sm hover:backdrop-blur-md hover:shadow-2xl hover:shadow-white/20 relative z-50"
               onClick={() => {
                 document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' });
-                analytics.trackButtonClick('Discover Our Philosophy', 'hero-section');
               }}
               style={{
                 textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
@@ -322,7 +319,6 @@ export default function Home() {
       <section 
         id="philosophy" 
         className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-hidden section-premium"
-        onMouseEnter={() => analytics.trackSectionView('philosophy')}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#f8f8f8]"></div>
         <div className="absolute inset-0 bg-pattern-dots opacity-[0.1]"></div>
@@ -393,7 +389,6 @@ export default function Home() {
       <section 
         id="house" 
         className="py-8 sm:py-10 md:py-12 lg:py-16 relative overflow-hidden section-premium"
-        onMouseEnter={() => analytics.trackSectionView('house')}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-[#f8f8f8] via-white to-[#f5f5f5]"></div>
         <div className="absolute inset-0 bg-pattern-grid opacity-[0.07]"></div>
@@ -445,7 +440,6 @@ export default function Home() {
       <section 
         id="team" 
         className="py-6 sm:py-8 md:py-12 relative overflow-hidden"
-        onMouseEnter={() => analytics.trackSectionView('team')}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-white"></div>
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#B7A16C]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
@@ -629,7 +623,7 @@ export default function Home() {
           </motion.div>
 
 
-          {/* <motion.div
+          <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -652,7 +646,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Button>
-          </motion.div> */}
+          </motion.div>
         </div>
       </section>
 
@@ -660,7 +654,6 @@ export default function Home() {
       <section 
         id="partnership" 
         className="py-16 sm:py-20 md:py-24 relative overflow-hidden"
-        onMouseEnter={() => analytics.trackSectionView('partnership')}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-white"></div>
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#B7A16C]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
@@ -699,7 +692,6 @@ export default function Home() {
               className="btn-primary-premium text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-6 font-sans-medium"
               onClick={() => {
                 setIsPartnershipFormOpen(true);
-                analytics.trackButtonClick('Fill Partnership Form', 'partnership-section');
               }}
             >
               Fill Partnership Form
