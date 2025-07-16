@@ -652,3 +652,9 @@ export const subscribeToPageViews = (callback: (payload: any) => void) => {
     )
     .subscribe();
 }; 
+
+export const getPartnerImageUrl = (partnerName: string, imageName?: string) => {
+  // Normalize partner name to create a file name if imageName is not provided
+  const fileName = imageName || `${partnerName.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+  return getImageUrl('partners-image', fileName);
+}; 

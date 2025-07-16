@@ -14,11 +14,13 @@ import {
 import { Menu, X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
+
 const navItems = [
   { name: 'Philosophy', href: '#philosophy' },
   { name: 'The House', href: '#house' },
   { name: 'Journal', href: '#journal' },
   { name: 'Meet The Brains', href: '#team' },
+  {name: 'Products', href: '/products'},
   // { name: 'Alliances', href: '#alliances' },
 ];
 
@@ -53,6 +55,10 @@ export function Navbar() {
   const handleNavigation = async (href: string) => {
     setIsOpen(false);
     
+    if (href === '/products') {
+      await router.push('/products');
+      return;
+    }
     if (isHomePage) {
       // If on home page, scroll to section
       const element = document.querySelector(href);
