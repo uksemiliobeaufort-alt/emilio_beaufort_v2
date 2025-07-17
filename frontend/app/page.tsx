@@ -717,6 +717,18 @@ export default function Home() {
         <PartnersMarquee />
       </section>
 
+      {/* Inspirational Quote Above Footer */}
+      <div className="relative w-full flex flex-col items-center justify-center py-8 px-0 overflow-hidden" style={{background: 'linear-gradient(90deg, #f5e9c6 0%, #fffbe6 40%, #fffbe6 60%, #f5e9c6 100%)'}}>
+        <span className="relative z-10 text-center font-serif italic text-2xl md:text-3xl font-bold text-[#4b2e1e] leading-relaxed whitespace-nowrap px-8" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', textShadow: '0 2px 8px rgba(212,175,55,0.08)' }}>
+          ~ We built trust when others chased profits. Now the world wants what we’ve perfected.
+        </span>
+      </div>
+      {/* Author signature - separate white background */}
+      <div className="w-full flex flex-col items-center justify-center bg-white py-2">
+        <span className="block font-semibold text-xl md:text-2xl text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>Soniya Badugu</span>
+        <span className="block text-base md:text-lg text-gray-500 uppercase" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 400 }}>Founder's Office</span>
+      </div>
+
       <Footer />
 
       <PartnershipFormDialog

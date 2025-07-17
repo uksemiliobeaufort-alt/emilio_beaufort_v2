@@ -46,6 +46,7 @@ export interface CareerApplication {
   email: string;
   portfolio: string;
   coverLetter: string;
+  jobTitle?: string;
 }
 
 export interface WaitlistSignup {

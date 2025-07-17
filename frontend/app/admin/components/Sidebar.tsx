@@ -10,26 +10,8 @@ import {
   Settings,
   LogOut,
   BookOpen,
-  CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  UserCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
-
-interface SidebarSubItem {
-  name: string;
-  href: string;
-  icon: React.ReactNode;
-}
-
-interface SidebarItem {
-  name: string;
-  href: string;
-  icon: React.ReactNode;
-  subItems?: SidebarSubItem[];
-}
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -37,7 +19,7 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const sidebarItems: SidebarItem[] = [
+const sidebarItems = [
   {
     name: 'Dashboard',
     href: '/admin/dashboard',
@@ -45,31 +27,10 @@ const sidebarItems: SidebarItem[] = [
   },
   {
     name: 'Partnerships',
-    href: '/admin/partnerships',
     icon: <Users className="h-4 w-4" />,
     subItems: [
-      {
-        name: 'Pending Inquiries',
-        href: '/admin/partnerships',
-        icon: <Users className="h-4 w-4" />
-      },
-      {
-        name: 'Accepted Inquiries',
-        href: '/admin/partnerships/accepted',
-        icon: <CheckCircle className="h-4 w-4" />
-      }
-    ]
-  },
-  {
-    name: 'Purchase Details',
-    href: '/admin/purchases',
-    icon: <ShoppingBag className="h-4 w-4" />,
-    subItems: [
-      {
-        name: 'Orders',
-        href: '/admin/purchases',
-        icon: <FileText className="h-4 w-4" />
-      }
+      { name: 'Pending', href: '/admin/partnerships' },
+      { name: 'Accepted', href: '/admin/partnerships/accepted' }
     ]
   },
   {
@@ -83,29 +44,20 @@ const sidebarItems: SidebarItem[] = [
     icon: <BookOpen className="h-4 w-4" />
   },
   {
+    name: 'Career',
+    href: '/admin/career',
+    icon: <FileText className="h-4 w-4" />
+  },
+  {
     name: 'Admin Users',
     href: '/admin/users',
     icon: <Settings className="h-4 w-4" />
   },
-  {
-    name: 'Founders',
-    href: '/admin/founders',
-    icon: <UserCheck className="h-4 w-4" />
-  },
 ];
-
-const founderEmail = 'founder.office@gmail.com';
 
 export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Partnerships']);
-  const user = auth.user;
-
-  // Only show Products and Blog Posts for founder.office@gmail.com
-  const filteredSidebarItems = user && user.email === founderEmail
-    ? sidebarItems.filter(item => ['Products', 'Blog Posts'].includes(item.name))
-    : sidebarItems;
 
   const handleLogout = async () => {
     auth.logout();
@@ -119,42 +71,6 @@ export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarPro
     if (isMobile) {
       onClose();
     }
-  };
-
-  // Handle expand/collapse
-  const toggleExpanded = (itemName: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemName) 
-        ? prev.filter(name => name !== itemName)
-        : [...prev, itemName]
-    );
-  };
-
-  // Parent is only active if pathname matches its href exactly and no sub-item is active
-  const isParentActive = (item: SidebarItem) => {
-    if (!pathname) return false;
-    if (!item.subItems) return pathname === item.href;
-    // If any sub-item is active, parent should not be active
-    const anySubActive = item.subItems.some((sub: SidebarSubItem) => isItemActive(sub.href));
-    return pathname === item.href && !anySubActive;
-  };
-
-  const isItemActive = (href: string) => {
-    if (!pathname) return false;
-    return pathname === href || pathname.startsWith(href + '/');
-  };
-
-  const isPartnershipActive = () => {
-    return pathname && pathname.startsWith('/admin/partnerships');
-  };
-
-  // Sub-item active logic: exact match for pending, exact or subpage for accepted
-  const isSubItemActive = (subItem: SidebarSubItem) => {
-    if (!pathname) return false;
-    if (subItem.href === '/admin/partnerships') {
-      return pathname === '/admin/partnerships';
-    }
-    return pathname === subItem.href || pathname.startsWith(subItem.href + '/');
   };
 
   return (
@@ -181,83 +97,36 @@ export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarPro
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 bg-white">
           <div className="space-y-1">
-            {filteredSidebarItems.map((item) => {
-              const hasSubItems = item.subItems && item.subItems.length > 0;
-              const isExpanded = expandedItems.includes(item.name);
-              const isActive = hasSubItems ? isParentActive(item) : isItemActive(item.href);
-
-              return (
-                <div key={item.href}>
-                  <button
-                    onClick={() => {
-                      if (hasSubItems) {
-                        toggleExpanded(item.name);
-                      } else {
-                        handleNavigation(item.href);
-                      }
-                    }}
-                    className={`
-                      w-full flex items-center justify-between px-4 py-3 text-sm
-                      rounded-lg transition-all duration-200
-                      hover:bg-gray-100 active:bg-gray-200
-                      touch-manipulation
-                      ${isActive
-                        ? 'bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-500 shadow-sm'
-                        : 'text-gray-700 hover:text-gray-900'
-                      }
-                    `}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className={`flex items-center justify-center w-5 ${
-                        isActive ? 'text-blue-600' : 'text-gray-500'
-                      }`}>
-                        {item.icon}
-                      </span>
-                      <span className="font-medium">{item.name}</span>
-                    </div>
-                    {hasSubItems && (
-                      <span className={`transition-transform duration-200 ${
-                        isExpanded ? 'rotate-180' : ''
-                      }`}>
-                        <ChevronDown className="h-4 w-4" />
-                      </span>
-                    )}
-                  </button>
-
-                  {/* Sub-items */}
-                  {hasSubItems && isExpanded && item.subItems && (
-                    <div className="ml-6 mt-1 space-y-1">
-                      {item.subItems.map((subItem) => {
-                        const subItemActive = isSubItemActive(subItem);
-                        return (
-                          <button
-                            key={subItem.href}
-                            onClick={() => handleNavigation(subItem.href)}
-                            className={`
-                              w-full flex items-center gap-3 px-4 py-2 text-sm
-                              rounded-lg transition-all duration-200
-                              hover:bg-gray-100 active:bg-gray-200
-                              touch-manipulation
-                              ${subItemActive
-                                ? 'bg-blue-50 text-blue-700 font-medium'
-                                : 'text-gray-600 hover:text-gray-900'
-                              }
-                            `}
-                          >
-                            <span className={`flex items-center justify-center w-5 ${
-                              subItemActive ? 'text-blue-600' : 'text-gray-400'
-                            }`}>
-                              {subItem.icon}
-                            </span>
-                            <span className="font-medium">{subItem.name}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+            {sidebarItems.map((item) => (
+              item.subItems ? (
+                <div key={item.name}>
+                  <div className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700">
+                    <span className="flex items-center justify-center w-5 text-gray-500">{item.icon}</span>
+                    <span>{item.name}</span>
+                  </div>
+                  <div className="ml-8 space-y-1">
+                    {item.subItems.map((sub) => (
+                      <button
+                        key={sub.name}
+                        onClick={() => handleNavigation(sub.href)}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-gray-100 active:bg-gray-200 touch-manipulation ${pathname === sub.href ? 'bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-500 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                      >
+                        <span>{sub.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              );
-            })}
+              ) : (
+                <button
+                  key={item.href || item.name}
+                  onClick={() => handleNavigation(item.href)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm rounded-lg transition-all duration-200 hover:bg-gray-100 active:bg-gray-200 touch-manipulation ${pathname === item.href ? 'bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-500 shadow-sm' : 'text-gray-700 hover:text-gray-900'}`}
+                >
+                  <span className={`flex items-center justify-center w-5 ${pathname === item.href ? 'text-blue-600' : 'text-gray-500'}`}>{item.icon}</span>
+                  <span className="font-medium">{item.name}</span>
+                </button>
+              )
+            ))}
           </div>
         </nav>
 

@@ -125,63 +125,6 @@ function AnalyticsSection() {
   );
 }
 
-function DailyActivityChart() {
-  const [data, setData] = useState<{ date: string; count: number }[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch('/api/admin/activity/daily');
-        if (!res.ok) throw new Error('Failed to fetch activity data');
-        const json = await res.json();
-        setData(json.data || []);
-      } catch (e: any) {
-        setError(e.message || 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
-
-  if (loading) return <div className="text-center py-8 text-gray-500">Loading activity chart...</div>;
-  if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
-  if (!data.length) return <div className="text-center py-8 text-gray-500">No activity data available.</div>;
-
-  const chartData = {
-    labels: data.map(d => d.date),
-    datasets: [
-      {
-        label: 'Daily Active Events',
-        data: data.map(d => d.count),
-        backgroundColor: 'rgba(59, 130, 246, 0.7)',
-      },
-    ],
-  };
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      title: { display: true, text: 'Daily Activity Events' },
-    },
-    scales: {
-      x: { title: { display: true, text: 'Date' } },
-      y: { title: { display: true, text: 'Events' }, beginAtZero: true },
-    },
-  };
-
-  return (
-    <div className="bg-white rounded-lg shadow p-6 mb-6">
-      <h2 className="text-xl font-semibold mb-4">Daily Activity (Custom Analytics)</h2>
-      <Bar data={chartData} options={options} height={120} />
-    </div>
-  );
-}
-
 export default function AdminDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -566,9 +509,6 @@ export default function AdminDashboard() {
           <span>Live updates</span>
         </div>
       </div>
-
-      {/* Daily Activity Chart */}
-      <DailyActivityChart />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">

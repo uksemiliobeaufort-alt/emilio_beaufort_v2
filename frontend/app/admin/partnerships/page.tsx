@@ -150,42 +150,26 @@ export default function Partnerships() {
 
   const deleteInquiry = async () => {
     if (!deleteDialog.inquiry) return;
-    
+
     setIsProcessing(true);
     try {
       const inquiry = deleteDialog.inquiry;
 
-      // First verify the inquiry still exists
-      const { data: checkData, error: checkError } = await supabase
+      // Delete from partnership_inquiries
+      const { error: deleteError } = await supabase
         .from('partnership_inquiries')
-        .select('*')
-        .eq('id', inquiry.id)
-        .single();
+        .delete()
+        .eq('id', inquiry.id);
 
-      if (checkError) {
-        throw new Error('Could not verify inquiry status');
-      }
+      if (deleteError) throw new Error(`Failed to delete from partnership_inquiries: ${deleteError.message}`);
 
-      if (!checkData) {
-        console.log('Inquiry already deleted, proceeding with temporary data insertion');
-      } else {
-        // Delete from partnership_inquiries if it exists
-        const { error: deleteError } = await supabase
-          .from('partnership_inquiries')
-          .delete()
-          .eq('id', inquiry.id);
-
-        if (deleteError) {
-          throw new Error(`Failed to delete from partnership_inquiries: ${deleteError.message}`);
-        }
-      }
-
-      // Insert into temporary_data
+      // Insert into temporary_data (archive, optional)
       const tempData = {
         full_name: inquiry.name,
         email: inquiry.email,
         company: inquiry.company,
-        message: inquiry.message
+        message: inquiry.message,
+        created_at: inquiry.created_at
       };
 
       const { error: insertError } = await supabase
@@ -193,24 +177,17 @@ export default function Partnerships() {
         .insert([tempData]);
 
       if (insertError) {
-        if (checkData) {
-          const { error: restoreError } = await supabase
-            .from('partnership_inquiries')
-            .insert([inquiry]);
-            
-          if (restoreError) {
-            throw new Error('Failed to move data and could not restore original inquiry. Please contact support.');
-          }
-        }
-        throw new Error(`Failed to insert into temporary_data: ${insertError.message}`);
+        toast.error(`Inquiry deleted, but failed to archive: ${insertError.message}`);
+      } else {
+        toast.success('Inquiry deleted successfully!');
       }
-      
+
       await fetchPartnershipInquiries();
       setDeleteDialog({ open: false, inquiry: null });
       setDetailsDialog({ open: false, inquiry: null });
     } catch (error) {
       console.error('Error in deleteInquiry:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to process the inquiry');
+      toast.error(error instanceof Error ? error.message : 'Failed to delete inquiry');
     } finally {
       setIsProcessing(false);
     }

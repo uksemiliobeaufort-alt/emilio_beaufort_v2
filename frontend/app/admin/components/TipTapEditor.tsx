@@ -455,17 +455,20 @@ export default function TipTapEditor({ content, onChange, placeholder }: TipTapE
       <MenuBar editor={editor} />
       <EditorContent 
         editor={editor} 
-        className="min-h-[180px] max-h-[60vh] p-4 focus:outline-none resize-none"
+        className="min-h-[180px] max-h-[300px] p-4 focus:outline-none resize-none"
         placeholder={placeholder}
       />
       <style jsx global>{`
         .ProseMirror {
           min-height: 180px;
-          max-height: 60vh;
+          max-height: 300px;
           padding: 1rem;
           outline: none;
           overflow-y: auto;
           transition: max-height 0.2s;
+          white-space: pre-wrap !important;
+          word-break: break-word !important;
+          overflow-wrap: break-word !important;
         }
         
         .ProseMirror p.is-editor-empty:first-child::before {
