@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { uploadCareerResume, saveCareerApplication } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -40,13 +40,13 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function CareersPage() {
+function CareersFormContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resumeName, setResumeName] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const searchParams = useSearchParams();
-  const router = useRouter(); // ✅ Router for redirection
+  const router = useRouter();
 
   useEffect(() => {
     const title = searchParams?.get("jobTitle");
@@ -67,10 +67,8 @@ export default function CareersPage() {
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      // Upload resume file
       const resumeFile = data.resume;
       const resumeUrl = await uploadCareerResume(resumeFile, data.fullName);
-      // Save application data in DB
       await saveCareerApplication({
         fullName: data.fullName,
         email: data.email,
@@ -262,5 +260,13 @@ export default function CareersPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CareersPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CareersFormContent />
+    </Suspense>
   );
 }
