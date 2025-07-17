@@ -262,33 +262,23 @@ export default function AdminCareersPage() {
                   <span>{job.department}</span>
                 </div>
               )}
-              <div className="text-sm text-gray-500 mb-1 flex flex-wrap gap-2">
+              <div className="text-sm text-gray-500 mb-4 flex flex-wrap gap-2">
                 {job.location && <span>{job.location}</span>}
                 {job.type && <span>• {job.type}</span>}
                 {job.salary && <span>• Salary: {job.salary}</span>}
               </div>
-              {/* Description preview and expand */}
-              <div className="text-gray-700 text-sm mb-2">
-                <span
-                  className={
-                    expandedJobId === job.id ? "" : "line-clamp-2"
-                  }
-                  dangerouslySetInnerHTML={{ __html: job.description }}
-                />
-                {job.description && job.description.length > 120 && (
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="px-0 text-blue-600 hover:underline"
-                    onClick={() =>
-                      setExpandedJobId(
-                        expandedJobId === job.id ? null : job.id
-                      )
-                    }
-                  >
-                    {expandedJobId === job.id ? "Show Less" : "View Details"}
-                  </Button>
-                )}
+              {/* View Details Button */}
+              <div className="flex justify-end mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedJob(job);
+                    setExpandedJobId(job.id); // for dialog open
+                  }}
+                >
+                  View Details
+                </Button>
               </div>
               <div className="flex justify-between items-center pt-2 text-xs text-gray-400">
                 <span>{new Date(job.created_at).toLocaleDateString()}</span>
@@ -296,6 +286,29 @@ export default function AdminCareersPage() {
             </div>
           ))}
         </div>
+      )}
+      {selectedJob && expandedJobId === selectedJob.id && (
+        <Dialog open={true} onOpenChange={() => { setExpandedJobId(null); setSelectedJob(null); }}>
+          <DialogContent className="w-full max-w-full sm:max-w-xl md:max-w-2xl bg-white rounded-2xl p-0 sm:p-0 overflow-hidden">
+            <DialogHeader className="px-4 pt-6 pb-2 sm:px-8 sm:pt-8">
+              <DialogTitle className="text-2xl font-extrabold mb-1 text-gray-900">{selectedJob.title}</DialogTitle>
+              <div className="flex flex-wrap gap-2 mb-4 text-sm text-gray-600">
+                {selectedJob.department && <span className="flex items-center gap-1">{departmentIcon(selectedJob.department)}{selectedJob.department}</span>}
+                {selectedJob.location && <span className="flex items-center gap-1">{selectedJob.location}</span>}
+                {selectedJob.type && <span className="flex items-center gap-1">{selectedJob.type}</span>}
+                {selectedJob.salary && <span className="flex items-center gap-1">Salary: {selectedJob.salary}</span>}
+              </div>
+            </DialogHeader>
+            <div className="px-4 pb-6 pt-2 sm:px-8 sm:pb-8 sm:pt-2 max-h-[80vh] overflow-y-auto">
+              <div className="text-gray-700 text-base mb-6 whitespace-pre-line mt-2">
+                <span dangerouslySetInnerHTML={{ __html: selectedJob.description }} />
+              </div>
+              <div className="flex justify-end mt-8">
+                <Button variant="outline" onClick={() => { setExpandedJobId(null); setSelectedJob(null); }}>Close</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

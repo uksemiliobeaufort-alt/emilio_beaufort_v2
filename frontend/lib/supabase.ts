@@ -421,26 +421,19 @@ export const updateProduct = async (id: string, productData: any, category: 'cos
   }
 };
 
-export const deleteProduct = async (id: string, category: 'cosmetics' | 'hair-extension'): Promise<void> => {
-  // Try to use admin operations first (bypasses RLS)
-  try {
-    const { adminOperations } = await import('./supabase-admin');
-    return await adminOperations.deleteProduct(id, category);
-  } catch (adminError) {
-    console.warn('Admin operations not available, using regular client:', adminError);
-    
-    const tableName = category === 'cosmetics' ? 'cosmetics' : 'hair_extensions';
-    
-    const { error } = await supabase
-      .from(tableName)
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      throw error;
-    }
+export async function deleteProduct(id: string, category: string) {
+  // Use the admin API route for deletion
+  const res = await fetch('/api/admin', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, category }),
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'Failed to delete product');
   }
-};
+  return true;
+}
 
 // Helper function to get public URL for an image in a bucket
 export const getImageUrl = (bucketName: string, path: string) => {

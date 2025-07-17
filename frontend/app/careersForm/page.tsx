@@ -19,6 +19,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { uploadCareerResume, saveCareerApplication } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Briefcase } from "lucide-react";
+import { UploadCloud } from "lucide-react";
 
 const formSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
@@ -143,9 +144,9 @@ function CareersFormContent() {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-8 bg-white p-8 rounded-2xl shadow-lg border border-gray-100"
+              className="space-y-10 bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-gray-100"
             >
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <FormField
                   control={form.control}
                   name="fullName"
@@ -201,25 +202,27 @@ function CareersFormContent() {
                     <FormItem>
                       <FormLabel className="font-semibold text-black">Resume <span className="text-gray-400 font-normal">(PDF, DOC)</span></FormLabel>
                       <FormControl>
-                        <div className="flex items-center gap-3">
-                          <label className="bg-black text-white px-4 py-2 rounded-xl font-semibold cursor-pointer hover:bg-gray-900 transition-all">
+                        <div className="w-full mt-2">
+                          <label htmlFor="resume-upload" className="block cursor-pointer">
+                            <div className="flex flex-col items-center justify-center gap-2 px-6 py-8 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-all text-center">
+                              <UploadCloud className="h-8 w-8 text-gray-400 mb-1" />
+                              <span className="font-semibold text-black">Drag & drop or <span className="underline text-gold">click to upload</span></span>
+                              <span className="text-gray-500 text-xs">{resumeName || "No file selected."}</span>
+                            </div>
                             <input
                               type="file"
                               accept=".pdf,.doc,.docx"
                               className="hidden"
+                              id="resume-upload"
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
-                                  field.onChange(file);
                                   setResumeName(file.name);
+                                  field.onChange(file);
                                 }
                               }}
                             />
-                            {resumeName ? "Change File" : "Browse..."}
                           </label>
-                          <span className="text-gray-500 text-sm truncate max-w-[180px]">
-                            {resumeName ? resumeName : "No file selected."}
-                          </span>
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -250,7 +253,7 @@ function CareersFormContent() {
 
               <Button
                 type="submit"
-                className="w-full bg-black text-white text-lg py-3 rounded-xl font-bold shadow hover:bg-gray-900 hover:scale-[1.02] transition-all"
+                className="w-full bg-gradient-to-r from-black via-gold to-black text-white text-lg py-4 rounded-2xl shadow-xl hover:from-gold hover:to-black hover:via-black hover:text-gold transition-all font-extrabold tracking-wide border-2 border-black disabled:opacity-60 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Submitting..." : "Submit Application"}

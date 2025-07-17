@@ -13,7 +13,7 @@ import Highlight from '@tiptap/extension-highlight';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import {
@@ -47,9 +47,15 @@ interface TipTapEditorProps {
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;
+  onImagesChange?: (images: File[]) => void;
 }
 
-const MenuBar = ({ editor }: { editor: any }) => {
+export interface TipTapEditorHandle {
+  getImages: () => File[];
+  getHTML: () => string;
+}
+
+const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File, url: string) => void }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
@@ -101,26 +107,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
 
       setIsUploading(true);
       try {
-        const filePath = `blog-images/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('the-house')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('the-house')
-          .getPublicUrl(filePath);
-
-        editor.chain().focus().setImage({ src: publicUrl }).run();
-        toast.success('Image uploaded successfully');
+        const localUrl = URL.createObjectURL(file);
+        editor.chain().focus().setImage({ src: localUrl }).run();
+        onAddImage(file, localUrl);
+        toast.success('Image added (will upload on save)');
       } catch (error: any) {
-        console.error('Image upload failed:', error);
-        toast.error(error.message || 'Failed to upload image');
+        console.error('Image add failed:', error);
+        toast.error(error.message || 'Failed to add image');
       } finally {
         setIsUploading(false);
       }
@@ -144,32 +137,32 @@ const MenuBar = ({ editor }: { editor: any }) => {
     {
       label: 'Bold',
       icon: <Bold className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleBold().run(),
-      isActive: editor.isActive('bold'), can: editor.can().chain().focus().toggleBold().run()
+      isActive: editor.isActive('bold'), can: editor.can().chain().focus().toggleBold().run(), type: 'button'
     },
     {
       label: 'Italic',
       icon: <Italic className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleItalic().run(),
-      isActive: editor.isActive('italic'), can: editor.can().chain().focus().toggleItalic().run()
+      isActive: editor.isActive('italic'), can: editor.can().chain().focus().toggleItalic().run(), type: 'button'
     },
     {
       label: 'Underline',
       icon: <UnderlineIcon className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleUnderline().run(),
-      isActive: editor.isActive('underline'), can: editor.can().chain().focus().toggleUnderline().run()
+      isActive: editor.isActive('underline'), can: editor.can().chain().focus().toggleUnderline().run(), type: 'button'
     },
     {
       label: 'Font Color',
       icon: <Palette className="h-4 w-4" />, onClick: () => setColorPickerOpen((v) => !v),
-      isActive: false, can: true, isColor: true
+      isActive: false, can: true, isColor: true, type: 'button'
     },
     {
       label: 'Link',
       icon: <LinkIcon className="h-4 w-4" />, onClick: () => setLinkDialogOpen(true),
-      isActive: editor.isActive('link'), can: true
+      isActive: editor.isActive('link'), can: true, type: 'button'
     },
     {
       label: 'Image',
       icon: <ImageIcon className="h-4 w-4" />, onClick: addImage,
-      isActive: false, can: !isUploading
+      isActive: false, can: !isUploading, type: 'button'
     },
   ];
 
@@ -256,6 +249,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       {primaryActions.map((action, idx) => (
         <div key={action.label} className="relative">
           <Button
+            type={action.type === 'submit' || action.type === 'reset' ? action.type : 'button'}
             variant={action.isActive ? 'default' : 'ghost'}
             size="sm"
             onClick={action.isColor ? () => setColorPickerOpen((v) => !v) : action.onClick}
@@ -388,7 +382,8 @@ const MenuBar = ({ editor }: { editor: any }) => {
   );
 };
 
-export default function TipTapEditor({ content, onChange, placeholder }: TipTapEditorProps) {
+const TipTapEditor = forwardRef<TipTapEditorHandle, TipTapEditorProps>(({ content, onChange, placeholder, onImagesChange }, ref) => {
+  const [images, setImages] = useState<{ file: File, url: string }[]>([]);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -450,9 +445,21 @@ export default function TipTapEditor({ content, onChange, placeholder }: TipTapE
     }
   }, [content, editor]);
 
+  // Expose imperative handle for parent to get images and HTML
+  useImperativeHandle(ref, () => ({
+    getImages: () => images.map(img => img.file),
+    getHTML: () => editor?.getHTML() || '',
+  }), [images, editor]);
+
+  // When an image is added, update the images state
+  const handleAddImage = (file: File, url: string) => {
+    setImages(prev => [...prev, { file, url }]);
+    if (onImagesChange) onImagesChange(images.map(img => img.file).concat(file));
+  };
+
   return (
     <div className="border rounded-lg overflow-hidden">
-      <MenuBar editor={editor} />
+      <MenuBar editor={editor} onAddImage={handleAddImage} />
       <EditorContent 
         editor={editor} 
         className="min-h-[180px] max-h-[300px] p-4 focus:outline-none resize-none"
@@ -621,4 +628,5 @@ export default function TipTapEditor({ content, onChange, placeholder }: TipTapE
       `}</style>
     </div>
   );
-} 
+});
+export default TipTapEditor; 

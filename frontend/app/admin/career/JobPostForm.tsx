@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import BootstrapDropdown from "@/components/ui/BootstrapDropdown";
-import TipTapEditor from "@/app/admin/components/TipTapEditor";
+import TipTapEditor, { TipTapEditorHandle } from "@/app/admin/components/TipTapEditor";
 import { Code, Cpu, User, Users } from "lucide-react";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { job?: any, onSubmit: (data: any) => void, isSubmitting?: boolean, isEdit?: boolean }) {
   const [title, setTitle] = useState(job?.title || "");
@@ -14,6 +15,7 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
   const [salary, setSalary] = useState(job?.salary || "");
   const [description, setDescription] = useState(job?.description || "");
   const [section, setSection] = useState(1); // 1: fields, 2: editor
+  const editorRef = useRef<TipTapEditorHandle>(null);
 
   // Update form fields when job changes
   useEffect(() => {
@@ -34,9 +36,39 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
     }
   }, [job]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ title, department, type, location, salary, description });
+    let html = description;
+    // If editorRef is set, get images and HTML
+    if (editorRef.current) {
+      html = editorRef.current.getHTML();
+      const images = editorRef.current.getImages();
+      // Map of localUrl to publicUrl
+      let htmlWithUrls = html;
+      for (const file of images) {
+        // Find the local object URL in the HTML
+        const matches = Array.from(html.matchAll(/src=["'](blob:[^"']+)["']/g)) as RegExpMatchArray[];
+        const localMatch = matches.find(match => match && match[1] && match[1].includes(file.name));
+        // Upload to Supabase
+        const filePath = `job-images/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const { error: uploadError } = await supabase.storage
+          .from('the-house')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+        if (uploadError) continue;
+        const { data: { publicUrl } } = supabase.storage
+          .from('the-house')
+          .getPublicUrl(filePath);
+        // Replace localUrl with publicUrl in HTML
+        if (localMatch && localMatch[1]) {
+          htmlWithUrls = htmlWithUrls.replace(new RegExp(localMatch[1], 'g'), publicUrl);
+        }
+      }
+      html = htmlWithUrls;
+    }
+    onSubmit({ title, department, type, location, salary, description: html });
   };
 
   function departmentIcon(dept: string) {
@@ -97,7 +129,7 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
         <div className="space-y-4 flex flex-col h-full">
           <div className="flex-1 flex flex-col">
             <label className="block font-semibold mb-1">Job Description</label>
-            <TipTapEditor content={description} onChange={setDescription} placeholder="Write job details..." />
+            <TipTapEditor ref={editorRef} content={description} onChange={setDescription} placeholder="Write job details..." />
           </div>
         </div>
       </div>
@@ -161,7 +193,7 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
           <div className="space-y-4">
             <div className="flex-1 flex flex-col">
               <label className="block font-semibold mb-1">Job Description</label>
-              <TipTapEditor content={description} onChange={setDescription} placeholder="Write job details..." />
+              <TipTapEditor ref={editorRef} content={description} onChange={setDescription} placeholder="Write job details..." />
             </div>
             <div className="flex gap-2 pt-4">
               <Button type="button" variant="outline" className="w-1/2 rounded-xl" onClick={() => setSection(1)}>

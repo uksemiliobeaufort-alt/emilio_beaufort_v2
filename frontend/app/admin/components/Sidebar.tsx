@@ -45,8 +45,11 @@ const sidebarItems = [
   },
   {
     name: 'Career',
-    href: '/admin/career',
-    icon: <FileText className="h-4 w-4" />
+    icon: <FileText className="h-4 w-4" />,
+    subItems: [
+      { name: 'Manage', href: '/admin/career' },
+      { name: 'View Applications', href: '/admin/career/applications' },
+    ]
   },
   {
     name: 'Admin Users',
