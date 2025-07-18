@@ -10,6 +10,9 @@ import { Toaster as ReactHotToastToaster } from 'react-hot-toast';
 import ConditionalAutoFeedback from '@/components/ConditionalAutoFeedback';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 
+interface RootLayoutProps {
+  children: React.ReactNode;
+}
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
@@ -27,11 +30,7 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>

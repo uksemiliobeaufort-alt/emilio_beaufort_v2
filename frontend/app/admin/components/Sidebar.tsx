@@ -47,7 +47,7 @@ const sidebarItems = [
     name: 'Career',
     icon: <FileText className="h-4 w-4" />,
     subItems: [
-      { name: 'Manage', href: '/admin/career' },
+      { name: 'Manage Job Posts', href: '/admin/career' },
       { name: 'View Applications', href: '/admin/career/applications' },
     ]
   },
