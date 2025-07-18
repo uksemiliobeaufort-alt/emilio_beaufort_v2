@@ -90,32 +90,33 @@ export default function BootstrapDropdown({
       </button>
       
       <ul className={getMenuClasses()}>
-        {items.map((item, index) => (
-          <li key={index}>
-            {item.divider ? (
-              <hr className="dropdown-divider" />
-            ) : item.href ? (
-              <a
-                className={`dropdown-item ${item.disabled ? 'disabled' : ''}`}
-                href={item.href}
-                onClick={() => handleItemClick(item)}
-                tabIndex={item.disabled ? -1 : 0}
-              >
-                {item.label}
-              </a>
-            ) : (
-              <button
-                className={`dropdown-item ${item.disabled ? 'disabled' : ''}`}
-                onClick={() => handleItemClick(item)}
-                disabled={item.disabled}
-                type="button"
-              >
-                {item.label}
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+  {(items ?? []).map((item, index) => (
+    <li key={index}>
+      {item.divider ? (
+        <hr className="dropdown-divider" />
+      ) : item.href ? (
+        <a
+          className={`dropdown-item ${item.disabled ? 'disabled' : ''}`}
+          href={item.href}
+          onClick={() => handleItemClick(item)}
+          tabIndex={item.disabled ? -1 : 0}
+        >
+          {item.label}
+        </a>
+      ) : (
+        <button
+          className={`dropdown-item ${item.disabled ? 'disabled' : ''}`}
+          onClick={() => handleItemClick(item)}
+          disabled={item.disabled}
+          type="button"
+        >
+          {item.label}
+        </button>
+      )}
+    </li>
+  ))}
+</ul>
+
     </div>
   );
 }

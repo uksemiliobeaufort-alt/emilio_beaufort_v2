@@ -107,6 +107,9 @@ interface Founder {
   role: string;
   description: string;
   gradient: string;
+  linkedin?: string;
+  twitter?: string;
+  instagram?: string;
 }
 
 function FounderAvatar({ founder }: { founder: Founder }) {
@@ -139,10 +142,7 @@ function FounderAvatar({ founder }: { founder: Founder }) {
       </div>
       {/* Animated Ring */}
       <div className={`absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br ${founder.gradient} rounded-full opacity-0 group-hover:opacity-30 group-hover:scale-150 transition-all duration-700`}></div>
-      {/* Founder Badge */}
-      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg group-hover:scale-110 transition-transform duration-300">
-        FOUNDER
-      </div>
+     
     </div>
   );
 }
@@ -181,37 +181,61 @@ export default function Home() {
   const founders = [
     {
       name: "Manish Jha",
-      role: "Founder & CEO",
+      role: "CoFounder & CEO",
       description: "CEO | Director & Head of Strategy & Innovation | Emilio Beaufort – Luxury Personal Care Brand | 13 Years in Business Building",
-      gradient: "from-amber-500 via-orange-500 to-red-500"
+      gradient: "from-amber-500 via-orange-500 to-red-500",
+      linkedin: "https://www.linkedin.com/in/manish-jha-786a87257",
+      twitter: "https://x.com/manishXplore?t=WINq2Q-fqSjS-1WBF0K76g&s=09",
+      instagram: "https://www.instagram.com/manish_jha_emilio?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+    },
+    {
+      name: "Emilio Beaufort",
+      role: "Founder ",
+      description: "Personal Care Product Manufacturer",
+      gradient: "from-purple-500 via-pink-500 to-rose-500",
+      linkedin: "https://www.linkedin.com/company/emiliobeaufort/",
+      twitter: "https://x.com/Emilio_Beaufort?t=0p7UVvP0DjaMiqT50ydDEg&s=09",
+      instagram: "https://www.instagram.com/emiliobeaufort_official?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
     },
     {
       name: "Aly Sayyad",
-      role: "CoFounder & Director Professional Trainer",
+      role: "CoFounder & CSO",
       description: "L&D| Training|Consulting|Banking|Startups",
-      gradient: "from-purple-500 via-pink-500 to-rose-500"
+      gradient: "from-purple-500 via-pink-500 to-rose-500",
+      linkedin: "https://www.linkedin.com/in/aly-sayyad-40501a20?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BNy8SkNFVS%2Balz1YV8zEpgw%3D%3D",
+      twitter: "",
+      instagram: ""
     },
     {
       name: "Sreedeep Saha",
-      role: "Founding Member",
-      description: "Founding Partner | EMILIO BEAUFORT Steering Emilio Beaufort Pvt. Ltd. towards excellence",
-      gradient: "from-blue-500 via-indigo-500 to-purple-500"
+      role: "Junior Founder",
+      description: "Junior Founder | EMILIO BEAUFORT Steering Emilio Beaufort Pvt. Ltd. towards excellence",
+      gradient: "from-blue-500 via-indigo-500 to-purple-500",
+      linkedin: "https://www.linkedin.com/in/sreedeep-saha-fm-eb",
+      twitter: "https://x.com/SahaSreede48415?t=yDKm6CvOxpC_s9iCU73MDw&s=09",
+      instagram: "https://www.instagram.com/sreedeep_eb/"
     },
     {
       name: "Uttam Kumar Singh",
-      role: "Founding Member",
-      description: "Founding Member @Emilio Beaufort | Co-Founder @Anteratic Solution | Aspiring Product Manager",
-      gradient: "from-green-500 via-emerald-500 to-teal-500"
+      role: "Junior Founder",
+      description: "Junior Founder @Emilio Beaufort | Co-Founder @Anteratic Solution | Aspiring Product Manager",
+      gradient: "from-green-500 via-emerald-500 to-teal-500",
+      linkedin: "https://www.linkedin.com/in/uttam-kumar-singh-uks?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BxfTU%2FcFyTVCE%2B%2FEKrQdbdw%3D%3D",
+      twitter: "",
+      instagram: ""
     },
     {
       name: "Rahul Pandey",
-      role: "Technical Project Coordinator",
+      role: "Junior Founder and Technical Project Coordinator",
       description: "AI Automation Consultant || Project Technical Coordinator @Emilio Beaufort || CoFounder - Anteratic Solutions ||",
-      gradient: "from-gray-600 via-slate-600 to-zinc-600"
+      gradient: "from-gray-600 via-slate-600 to-zinc-600",
+      linkedin: "https://www.linkedin.com/in/rahulpandey187?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BsVutbbFxRfKWpa4REMD6Gg%3D%3D",
+      twitter: "https://x.com/rahulpandey187",
+      instagram: ""
     }
   ];
-  const firstRow = founders.slice(0, 2);
-  const secondRow = founders.slice(2, 5);
+  const firstRow = founders.slice(0, 3);
+  const secondRow = founders.slice(3, 6);
 
   return (
     <div className="min-h-screen bg-premium">
@@ -481,7 +505,7 @@ export default function Home() {
       </section>
 
       {/* Meet My Team Section */}
-      {/* <section id="team" className="py-6 sm:py-8 md:py-12 relative overflow-hidden">
+       <section id="team" className="py-6 sm:py-8 md:py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-white"></div>
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#B7A16C]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
         
@@ -513,17 +537,18 @@ export default function Home() {
            
             <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 justify-center mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 sm:gap-x-10 lg:gap-x-12 gap-y-14">
                 {safeMap(firstRow as Founder[], (founder: Founder, index: number) => (
                   <motion.div
                     key={index}
-                    className={`founder-card group relative w-full transition-all duration-700 ease-out cursor-pointer`}
+                    className="founder-card group relative w-full transition-all duration-700 ease-out cursor-pointer"
                     initial={{ opacity: 0, y: 50, scale: 0.9 }}
                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.8, delay: index * 0.15, ease: [0.25, 0.25, 0, 1] }}
                     viewport={{ once: true }}
-                    whileHover={{ y: -20, scale: 1.05, zIndex: 10, transition: { duration: 0.4, ease: [0.25, 0.25, 0, 1] } }}
+                   whileHover={{ y: -20, scale: 1.05, zIndex: 10, transition: { duration: 0.4, ease: [0.25, 0.25, 0, 1] } }}
                   >
+                  
                     
                     <div className="relative h-[420px] bg-white rounded-3xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-700">
                       
@@ -553,9 +578,11 @@ export default function Home() {
                           <div className="flex items-center justify-center space-x-3">
                             
                             <a 
-                              href={`https://linkedin.com/in/${founder.name.toLowerCase().replace(/\s+/g, '-')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              href={founder.linkedin || "#"}
+                              target={founder.linkedin ? "_blank" : "_self"}
+                              rel={founder.linkedin ? "noopener noreferrer" : ""}
+                              onClick={(e) => !founder.linkedin && e.preventDefault()}
+                              title={founder.linkedin ? "Visit LinkedIn" : "Link coming soon"}
                               className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
                             >
                               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -564,9 +591,11 @@ export default function Home() {
                             </a>
                             
                             <a 
-                              href={`https://x.com/${founder.name.toLowerCase().replace(/\s+/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              href={founder.twitter || "#"}
+                              target={founder.twitter ? "_blank" : "_self"}
+                              rel={founder.twitter ? "noopener noreferrer" : ""}
+                              onClick={(e) => !founder.twitter && e.preventDefault()}
+                              title={founder.twitter ? "Visit Twitter" : "Link coming soon"}
                               className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
                             >
                               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -575,9 +604,11 @@ export default function Home() {
                             </a>
                             
                             <a 
-                              href={`https://instagram.com/${founder.name.toLowerCase().replace(/\s+/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              href={founder.instagram || "#"}
+                              target={founder.instagram ? "_blank" : "_self"}
+                              rel={founder.instagram ? "noopener noreferrer" : ""}
+                              onClick={(e) => !founder.instagram && e.preventDefault()}
+                              title={founder.instagram ? "Visit Instagram" : "Link coming soon"}
                               className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
                             >
                               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -596,10 +627,10 @@ export default function Home() {
                 ))}
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
+              <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 sm:gap-x-10 lg:gap-x-12">
                 {safeMap(secondRow as Founder[], (founder: Founder, index: number) => (
                   <motion.div
-                    key={index + 2}
+                    key={index + 3}
                     className={`founder-card group relative w-full transition-all duration-700 ease-out cursor-pointer`}
                     initial={{ opacity: 0, y: 50, scale: 0.9 }}
                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -636,9 +667,11 @@ export default function Home() {
                           <div className="flex items-center justify-center space-x-3">
                            
                             <a 
-                              href={`https://linkedin.com/in/${founder.name.toLowerCase().replace(/\s+/g, '-')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              href={founder.linkedin || "#"}
+                              target={founder.linkedin ? "_blank" : "_self"}
+                              rel={founder.linkedin ? "noopener noreferrer" : ""}
+                              onClick={(e) => !founder.linkedin && e.preventDefault()}
+                              title={founder.linkedin ? "Visit LinkedIn" : "Link coming soon"}
                               className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
                             >
                               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -647,9 +680,11 @@ export default function Home() {
                             </a>
                             
                             <a 
-                              href={`https://x.com/${founder.name.toLowerCase().replace(/\s+/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              href={founder.twitter || "#"}
+                              target={founder.twitter ? "_blank" : "_self"}
+                              rel={founder.twitter ? "noopener noreferrer" : ""}
+                              onClick={(e) => !founder.twitter && e.preventDefault()}
+                              title={founder.twitter ? "Visit Twitter" : "Link coming soon"}
                               className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
                             >
                               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -658,9 +693,11 @@ export default function Home() {
                             </a>
                             
                             <a 
-                              href={`https://instagram.com/${founder.name.toLowerCase().replace(/\s+/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                               href={founder.instagram || "#"}
+                               target={founder.instagram ? "_blank" : "_self"}
+                               rel={founder.instagram ? "noopener noreferrer" : ""}
+                               onClick={(e) => !founder.instagram && e.preventDefault()}
+                               title={founder.instagram ? "Visit Instagram" : "Link coming soon"}
                               className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
                             >
                               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -707,7 +744,7 @@ export default function Home() {
             </Button>
           </motion.div>
         </div>
-      </section> */}
+      </section> 
 
       {/* Partnership Section */}
       <section id="partnership" className="py-16 sm:py-20 md:py-24 relative overflow-hidden">

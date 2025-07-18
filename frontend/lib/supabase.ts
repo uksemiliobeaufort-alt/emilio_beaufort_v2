@@ -180,6 +180,8 @@ export interface Cosmetics {
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string[];
+  //varients
+  variants?: Variant[];
 }
 
 // Hair Extensions product interface (includes all fields, cosmetics fields will be empty)
@@ -219,7 +221,31 @@ export interface HairExtensions {
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string[];
+
+  //varients
+  variants?: Variant[];
 }
+export type Variant = {
+  id: string;
+  product_id: string;
+  weight?: number;
+  length?: number;
+  price: number;
+  discount_price?: number | null;
+};
+// supabase.ts
+export async function getHairProductWithVariantsById(productId: string) {
+  const { data, error } = await supabase
+    .from("hair_extensions") 
+    .select("*, variants(*)")
+    .eq("id", productId)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+
 
 // Union type for all products
 export type Product = Cosmetics | HairExtensions;
@@ -232,7 +258,6 @@ export function isCosmeticsProduct(product: Product): product is Cosmetics {
 export function isHairExtensionsProduct(product: Product): product is HairExtensions {
   return product.category === 'hair-extension';
 }
-
 export const getProducts = async (): Promise<Product[]> => {
   console.log('Starting getProducts...');
   // Try to use admin operations first (bypasses RLS)
@@ -271,7 +296,7 @@ export const getProducts = async (): Promise<Product[]> => {
       throw hairExtensionsError;
     }
     console.log('Successfully fetched hair extensions:', hairExtensionsData?.length || 0);
-
+    
     // Add category field to products and combine
     const cosmeticsWithCategory = (cosmeticsData || []).map(product => ({
       ...product,
@@ -300,6 +325,10 @@ export const getProducts = async (): Promise<Product[]> => {
     return allProducts;
   }
 };
+export interface SupabaseProductWithVariants extends Product {
+  variants?: Variant[];
+}
+
 
 export const getProduct = async (id: string, category: 'cosmetics' | 'hair-extension'): Promise<Product | null> => {
   const tableName = category === 'cosmetics' ? 'cosmetics' : 'hair_extensions';
@@ -361,6 +390,38 @@ export const createProduct = async (productData: any): Promise<Product> => {
     }
 
     return data;
+  }
+};
+export const saveVariants = async (productId: string, variants: Variant[]): Promise<void> => {
+  // Step 1: Delete existing variants for this product
+  const { error: deleteError } = await supabase
+    .from('variants')
+    .delete()
+    .eq('product_id', productId); // ✅ Fixed line
+
+  if (deleteError) {
+    console.error('Failed to delete existing variants:', deleteError);
+    throw deleteError;
+  }
+
+  // Step 2: Insert new variants
+  if (variants.length === 0) return;
+
+  const insertPayload = variants.map((v) => ({
+    product_id: productId,
+    weight: v.weight,
+    length: v.length,
+    price: v.price,
+    discount_price: v.discount_price || null,
+  }));
+
+  const { error: insertError } = await supabase
+    .from('variants')
+    .insert(insertPayload);
+
+  if (insertError) {
+    console.error('Failed to insert variants:', insertError);
+    throw insertError;
   }
 };
 
@@ -471,6 +532,10 @@ export const getFounderImageUrl = (founderName: string) => {
   // Special case for Manish Jha
   if (founderName.toLowerCase().includes('manish')) {
     return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'manish sir.jpg');
+  }
+  // Special case for Emilio Beaufort
+  if (founderName.toLowerCase().includes('emilio')) {
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'emilio beaufort.png');
   }
   // Special case for Aly Sayyad
   if (founderName.toLowerCase().includes('aly sayyad')) {

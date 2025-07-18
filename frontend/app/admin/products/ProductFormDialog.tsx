@@ -1,4 +1,8 @@
 "use client";
+import { Label } from "@/components/ui/label";
+import { Variant } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
+import TextField from '@mui/material/TextField';
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -10,6 +14,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { supabase } from '@/lib/supabase';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,17 +46,20 @@ import {
   Star,
   Package,
   DollarSign,
-  Sparkles
+  Sparkles,
+  Waves
 } from 'lucide-react';
-import { uploadProductImage, uploadMultipleImages, deleteProductImage } from '@/lib/supabase';
+import { uploadProductImage, uploadMultipleImages, deleteProductImage, } from '@/lib/supabase';
 import { 
   createProduct, 
   updateProduct, 
   Product,
   isCosmeticsProduct,
-  isHairExtensionsProduct
+  isHairExtensionsProduct,
+   saveVariants,
 } from '@/lib/supabase';
 import { toast } from 'sonner';
+
 
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
@@ -75,6 +91,7 @@ const productSchema = z.object({
   hair_texture: z.string().optional(),
   hair_length: z.string().optional(),
   hair_weight: z.string().optional(),
+  hair_color: z.string().optional(),
   hair_color_shade: z.string().optional(),
   installation_method: z.string().optional(),
   care_instructions: z.string().optional(),
@@ -115,31 +132,6 @@ const skinTypeOptions = [
   { value: 'all-types', label: 'All Skin Types' },
 ];
 
-const hairTypeOptions = [
-  { value: 'remy-human', label: 'Remy Human Hair' },
-  { value: 'virgin-human', label: 'Virgin Human Hair' },
-  { value: 'human-hair', label: 'Human Hair' },
-  { value: 'synthetic', label: 'Synthetic Hair' },
-  { value: 'heat-friendly-synthetic', label: 'Heat-Friendly Synthetic' },
-];
-
-const hairTextureOptions = [
-  { value: 'straight', label: 'Straight' },
-  { value: 'body-wave', label: 'Body Wave' },
-  { value: 'loose-wave', label: 'Loose Wave' },
-  { value: 'deep-wave', label: 'Deep Wave' },
-  { value: 'curly', label: 'Curly' },
-  { value: 'kinky-curly', label: 'Kinky Curly' },
-];
-
-const installationMethodOptions = [
-  { value: 'clip-in', label: 'Clip-In' },
-  { value: 'tape-in', label: 'Tape-In' },
-  { value: 'sew-in', label: 'Sew-In' },
-  { value: 'micro-ring', label: 'Micro Ring' },
-  { value: 'fusion', label: 'Fusion/Keratin' },
-  { value: 'halo', label: 'Halo' },
-];
 
 export default function ProductFormDialog({ open, product, selectedCategory, onClose, onSuccess }: ProductFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -147,6 +139,50 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const [existingGalleryUrls, setExistingGalleryUrls] = useState<string[]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+   const [variants, setVariants] = useState<Variant[]>([
+  {
+    id: uuidv4(),
+    product_id: '', // or 0, if numeric
+    weight: 0,
+    length: 0,
+    price: 0,
+    discount_price: 0,
+  },
+]);
+const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+
+const handleVariantChange = (index: number, field: string, value: string) => {
+  const updated = [...variants];
+  updated[index] = { ...updated[index], [field]: value };
+  setVariants(updated);
+};
+
+const addNewVariant = () => {
+  setVariants([
+    ...variants,
+    {
+      id: uuidv4(),
+      weight: 0,
+      length: 0,
+      price: 0,
+      discount_price: 0,
+      product_id: '', // Or 0 if numeric
+    },
+  ]);
+};
+
+const removeVariant = (index: number) => {
+  const updated = [...variants];
+  updated.splice(index, 1);
+  setVariants(updated);
+};
+
+const handleVariantSelect = (variant: any) => {
+  setSelectedVariant(variant.id);
+  form.setValue('hair_weight', variant.weight);
+  form.setValue('hair_length', variant.length);
+  form.setValue('original_price', variant.price);
+};
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -337,6 +373,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
     }
   };
 
+
   const removeGalleryImage = async (index: number, isExisting: boolean) => {
     if (isExisting) {
       const imageUrl = existingGalleryUrls[index];
@@ -354,7 +391,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
     }
   };
 
-  const onSubmit = async (data: ProductFormData) => {
+   const onSubmit =async (data: ProductFormData) => {
     console.log('Starting form submission:', data);
     setIsSubmitting(true);
     try {
@@ -459,6 +496,27 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
         savedProduct = await createProduct(productData);
         console.log('Product created successfully:', savedProduct);
       }
+      const variantsWithProductId = variants.map((variant) => ({
+       ...variant,
+       product_id: savedProduct.id,
+       price: Number(variant.price),
+       weight: Number(variant.weight),
+       length: Number(variant.length),
+         discount_price: variant.discount_price !== undefined ? Number(variant.discount_price) : null,
+       }));
+
+        await saveVariants(savedProduct.id, variantsWithProductId);
+
+        setVariants([
+       {
+       id: uuidv4(),
+       product_id: savedProduct.id,
+       weight: 0,
+       length: 0,
+       price: 0,
+       discount_price: 0,
+       },
+       ]);
 
       // toast.success(product ? 'Product updated successfully' : 'Product created successfully');
       onSuccess();
@@ -471,6 +529,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
   };
 
   const watchedCategory = form.watch('category');
+ 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -483,7 +542,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
             {product ? 'Edit Product' : 'Add New Product'}
           </DialogTitle>
         </DialogHeader>
-
+        <div className="relative overflow-visible z-50 bg-white p-6 rounded-xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             
@@ -584,44 +643,56 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
               
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-medium">Category *</FormLabel>
-                      <FormControl>
-                        <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={categoryOptions}
-                          placeholder="Select category"
-                          className="h-11"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+  control={form.control}
+  name="category"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="text-base font-medium">Category *</FormLabel>
+      <FormControl>
+        <Select value={field.value} onValueChange={field.onChange}>
+          <SelectTrigger className="w-full h-11">
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent>
+            {categoryOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
 
                 <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-medium">Status *</FormLabel>
-                      <FormControl>
-                        <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={statusOptions}
-                          placeholder="Select status"
-                          className="h-11"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+               <FormItem>
+                <FormLabel className="text-base font-medium">Status *</FormLabel>
+                 <FormControl>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                   <SelectTrigger className="w-full h-11">
+                    <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    {statusOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                     {opt.label}
+                    </SelectItem>
+                    ))}
+                   </SelectContent>
+                </Select>
+               </FormControl>
+              <FormMessage />
+             </FormItem>
+            )}
+             />
+
 
                   <FormField
                     control={form.control}
@@ -832,24 +903,30 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                     
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField
-                        control={form.control}
-                        name="skin_type"
-                        render={({ field }) => (
-                          <FormItem>
-                        <FormLabel className="text-base font-medium">Skin Type</FormLabel>
-                                                  <FormControl>
-                        <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={skinTypeOptions}
-                          placeholder="Select skin type"
-                          className="h-11"
-                        />
-                      </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+  control={form.control}
+  name="skin_type"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="text-base font-medium">Skin Type</FormLabel>
+      <FormControl>
+        <Select value={field.value} onValueChange={field.onChange}>
+          <SelectTrigger className="w-full h-11">
+            <SelectValue placeholder="Select skin type" />
+          </SelectTrigger>
+          <SelectContent>
+            {skinTypeOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
 
                       <FormField
                         control={form.control}
@@ -1031,89 +1108,167 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
 
               {watchedCategory === 'hair-extension' && (
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
-                  <div className="p-2 bg-amber-100 rounded-lg">
-                    <Package className="h-5 w-5 text-amber-600" />
-                  </div>
-                      Hair Extension Information
-                    </h3>
-                    
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="hair_type"
-                        render={({ field }) => (
-                          <FormItem>
-                        <FormLabel className="text-base font-medium">Hair Type</FormLabel>
-                                                  <FormControl>
-                        <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={hairTypeOptions}
-                          placeholder="Select hair type"
-                          className="h-11"
-                        />
-                      </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+               <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+               <div className="p-2 bg-yellow-100 rounded-lg">
+               <Waves className="h-5 w-5 text-yellow-600" />
+              </div>
+              Hair Extension Information
+               </h3>
 
-                      <FormField
-                        control={form.control}
-                        name="hair_texture"
-                        render={({ field }) => (
-                          <FormItem>
-                        <FormLabel className="text-base font-medium">Hair Texture</FormLabel>
-                                                  <FormControl>
-                        <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={hairTextureOptions}
-                          placeholder="Select hair texture"
-                          className="h-11"
-                        />
-                      </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                <div className="grid grid-cols-2 gap-6">
+                 {/* Hair Type */}
+                 <FormField
+  control={form.control}
+  name="hair_type"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel className="text-base font-medium">Hair Type</FormLabel>
+      <FormControl>
+        <div className="relative">
+          <Select value={field.value} onValueChange={field.onChange}>
+            <SelectTrigger className="w-full h-11">
+              <SelectValue placeholder="Select hair type" />
+            </SelectTrigger>
 
-                      <FormField
-                        control={form.control}
-                        name="hair_length"
-                        render={({ field }) => (
-                          <FormItem>
-                        <FormLabel className="text-base font-medium">Hair Length</FormLabel>
-                            <FormControl>
-                          <Input placeholder="e.g., 18 inches, 45cm" className="h-11" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Length in inches or centimeters
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+            <SelectContent side="bottom"
+    sideOffset={4}
+    collisionPadding={8}
+    avoidCollisions={true}
+    sticky="partial"
+    align="start"
+    className="z-[9999] bg-white border shadow-lg rounded-md"
+    asChild={false}
 
-                      <FormField
-                        control={form.control}
-                        name="hair_weight"
-                        render={({ field }) => (
-                          <FormItem>
-                        <FormLabel className="text-base font-medium">Hair Weight</FormLabel>
-                            <FormControl>
-                          <Input placeholder="e.g., 100g, 120g per set" className="h-11" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Weight in grams
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+            >
+              {[
+                { label: 'Remy Human Hair', value: 'remy' },
+                { label: 'Virgin Human Hair', value: 'virgin' },
+                { label: 'Synthetic Hair', value: 'synthetic' },
+                { value: 'human-hair', label: 'Human Hair' },
+                { label: 'Heat-Friendly Synthetic', value: 'heat_friendly' },
+              ].map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
-                      <FormField
+
+
+               {/* Hair Texture */}
+               <FormField
+                control={form.control}
+                name="hair_texture"
+                render={({ field }) => (
+                <FormItem>
+                <FormLabel className="text-base font-medium">Hair Texture</FormLabel>
+                <FormControl>
+                <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className="w-full h-11">
+                <SelectValue placeholder="Select hair texture" />
+                </SelectTrigger>
+                <SelectContent  side="bottom"
+                 sideOffset={0}
+                 avoidCollisions={false} 
+                 className="translate-y-0 animate-none shadow-md border z-50">
+                {[
+                  { label: 'Straight', value: 'straight' },
+                  { label: 'Body Wave', value: 'body_wave' },
+                  { label: 'Deep Wave', value: 'deep_wave' },
+                  { label: 'Kinky Curly', value: 'kinky_curly' },
+                  { label: 'Curly', value: 'curly' },
+                ].map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+                  </SelectContent>
+                </Select>
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+                )}
+                />
+
+                {/* Hair Color / Shade */}
+               <FormField
+                   control={form.control}
+                  name="hair_color"
+                  render={({ field }) => (
+                  <FormItem>
+                  <FormLabel className="text-base font-medium">Hair Color / Shade</FormLabel>
+                  <FormControl>
+                 <Select value={field.value} onValueChange={field.onChange}>
+                 <SelectTrigger className="w-full h-11">
+                 <SelectValue placeholder="Choose shade" />
+                 </SelectTrigger>
+                 <SelectContent  side="bottom"
+                 sideOffset={0}
+                 avoidCollisions={false}
+                className="translate-y-0 animate-none shadow-md border z-50">
+                {[
+                  { label: 'Natural Black', value: 'natural_black' },
+                  { label: 'Dark Brown', value: 'dark_brown' },
+                  { label: 'Ombre', value: 'ombre' },
+                  { label: 'Light Brown', value: 'light_brown' },
+                  { label: 'Highlight #27', value: 'highlight_27' },
+                  { label: 'Burgundy', value: 'burgundy' },
+                ].map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+                </SelectContent>
+                </Select>
+                </FormControl>
+                <FormMessage />
+               </FormItem>
+              )}
+              />
+
+    {/* Installation Method */}
+    <FormField
+      control={form.control}
+      name="installation_method"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel className="text-base font-medium">Installation Method</FormLabel>
+          <FormControl>
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger className="w-full h-11">
+                <SelectValue placeholder="Choose installation" />
+              </SelectTrigger>
+              <SelectContent  side="bottom"
+               sideOffset={0}
+               avoidCollisions={false}
+               className="translate-y-0 animate-none shadow-md border z-50">
+                {[
+                  { label: 'Clip-In', value: 'clip_in' },
+                  { label: 'Tape-In', value: 'tape_in' },
+                  { label: 'Sew-In', value: 'sew_in' },
+                  { label: 'Fusion/Keratin', value: 'fusion' },
+                  { label: 'Micro Ring', value: 'micro_ring' },
+                  { label: 'Halo', value: 'halo' },
+                ].map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+      <FormField
                         control={form.control}
                         name="hair_color_shade"
                         render={({ field }) => (
@@ -1130,44 +1285,118 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                         )}
                       />
 
-                      <FormField
-                        control={form.control}
-                        name="installation_method"
-                        render={({ field }) => (
-                          <FormItem>
-                        <FormLabel className="text-base font-medium">Installation Method</FormLabel>
-                                                  <FormControl>
-                        <BootstrapDropdown
-                          value={field.value}
-                          onChange={field.onChange}
-                          options={installationMethodOptions}
-                          placeholder="Select installation method"
-                          className="h-11"
-                        />
-                      </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+
 
                       <FormField
                         control={form.control}
                         name="quantity_in_set"
                         render={({ field }) => (
-                          <FormItem>
-                        <FormLabel className="text-base font-medium">Quantity in Set</FormLabel>
-                            <FormControl>
-                          <Input placeholder="e.g., 7 pieces, 20 strands" className="h-11" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Number of pieces or strands
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                        <FormItem>
+                       <FormLabel className="text-base font-medium">Quantity in Set</FormLabel>
+                      <FormControl>
+                      <Input
+                       placeholder="e.g., 7 pieces, 20 strands"
+                       className="h-11"
+                      {...field}
                       />
-                    </div>
+                     </FormControl>
+                     <FormDescription>
+                       Number of pieces or strands
+                      </FormDescription>
+                      <FormMessage />
+                     </FormItem>
+                     )}
+                     />
+       </div>
+      {/* Variant Management Section (replacing hair_length & hair_weight) */}
+      <div className="col-span-2">
+        <Label className="text-base font-medium block mb-3">Hair Variant Options</Label>
+        {variants.map((variant, index) => (
+          <div
+            key={variant.id}
+            className={`grid grid-cols-1 md:grid-cols-3 gap-4 p-4 mb-4 border rounded-lg ${
+              selectedVariant === variant.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+            }`}
+          >
+           
 
+
+<TextField
+  label="Discount Price"
+  type="number"
+  value={variant.discount_price ?? ''}
+  onChange={(e) =>
+    setVariants((prev) =>
+      prev.map((v, i) =>
+        i === index
+          ? { ...v, discount_price: e.target.value ? Number(e.target.value) : null }
+          : v
+      )
+    )
+  }
+  fullWidth
+/>
+
+
+            <div>
+              <Label className="block text-sm font-medium mb-1">Weight (gm)</Label>
+              <Input
+                value={variant.weight}
+                onChange={(e) => handleVariantChange(index, 'weight', e.target.value)}
+                placeholder="e.g., 100"
+              />
+            </div>
+            <div>
+              <Label className="block text-sm font-medium mb-1">Length (inches)</Label>
+              <Input
+                value={variant.length}
+                onChange={(e) => handleVariantChange(index, 'length', e.target.value)}
+                placeholder="e.g., 20"
+              />
+            </div>
+            <div>
+              <Label className="block text-sm font-medium mb-1">Price (₹)</Label>
+              <Input
+                type="number"
+                value={variant.price}
+                onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
+                placeholder="e.g., 1200"
+              />
+            </div>
+
+            <div className="col-span-3 flex justify-between mt-2">
+              <Button
+                variant={selectedVariant === variant.id ? 'default' : 'outline'}
+                onClick={() => handleVariantSelect(variant)}
+                className="text-sm"
+              >
+                {selectedVariant === variant.id ? 'Selected' : 'Select this Variant'}
+              </Button>
+
+              {variants.length > 1 && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => removeVariant(index)}
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+
+        <div className="mt-2">
+          <Button
+            type="button"
+            onClick={addNewVariant}
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            + Add New Variant
+          </Button>
+        </div>
+      
                 <div className="mt-6">
                       <FormField
                         control={form.control}
@@ -1191,6 +1420,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                       />
                   </div>
                 </div>
+                </div>
               )}
 
             {/* Images Section */}
@@ -1198,7 +1428,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
               <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
                 <div className="p-2 bg-indigo-100 rounded-lg">
                   <ImageIcon className="h-5 w-5 text-indigo-600" />
-            </div>
+                </div>
                 Product Images
               </h3>
               
@@ -1421,7 +1651,9 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
             </div>
           </form>
         </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );
 } 
+

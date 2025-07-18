@@ -49,7 +49,6 @@ function SelectTrigger({
     </SelectPrimitive.Trigger>
   )
 }
-
 function SelectContent({
   className,
   children,
@@ -66,16 +65,15 @@ function SelectContent({
           "[&]:!animate-none [&]:!transition-none [&]:!duration-0",
           // Override any transform animations
           "[&]:!transform-none [&]:!scale-100 [&]:!opacity-100",
-          position === "popper" &&
-            "",
+          position === "popper" && "",
           className
         )}
         position={position}
         style={{
-          animationDuration: '0s',
-          transitionDuration: '0s',
-          transform: 'none',
-          opacity: 1
+          animationDuration: "0s",
+          transitionDuration: "0s",
+          transform: "none",
+          opacity: 1,
         }}
         {...props}
       >
@@ -92,8 +90,9 @@ function SelectContent({
         <SelectScrollDownButton />
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
-  )
+  );
 }
+
 
 function SelectLabel({
   className,

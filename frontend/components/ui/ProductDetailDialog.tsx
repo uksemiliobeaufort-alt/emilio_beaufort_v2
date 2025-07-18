@@ -5,12 +5,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Product } from "@/lib/api";
+import { supabase } from '@/lib/supabase';
 import { Product as SupabaseProduct, getProducts, isCosmeticsProduct, isHairExtensionsProduct } from "@/lib/supabase";
 import Image from "next/image";
 import { X, Star, Package, Truck, Shield, ArrowLeft, ArrowRight, Heart, Share2, CheckCircle, XCircle, Info, ShoppingBag, MessageCircle, Sparkles, Award, Clock, Zap, Headphones, RotateCcw, Box } from "lucide-react";
 import confetti from 'canvas-confetti';
+import type { Variant } from "@/lib/supabase";
 import { useBag } from '@/components/BagContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { productCardUtils } from '@/lib/utils';
@@ -68,7 +70,9 @@ export function ProductDetailDialog({
   // State for showing add-to-bag alert
   const [addedCount, setAddedCount] = useState(0);
   const [showAddedAlert, setShowAddedAlert] = useState(false);
-
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  
   // Properly use the bag context
   let bagContext;
   try {
@@ -79,72 +83,96 @@ export function ProductDetailDialog({
   }
 
   // Fetch detailed product information
-  useEffect(() => {
-    if (!product || !open) return;
+// 1. Fetch full product details when product or open changes
+useEffect(() => {
+  if (!product || !open) return;
 
-    const fetchDetailedProduct = async () => {
-      setLoading(true);
-      try {
-        const products = await getProducts();
-        const fullProduct = products.find(p => p.id === product.id);
-        console.log('Product data for dialog:', fullProduct);
-        console.log('Image URL:', fullProduct?.main_image_url);
-        console.log('Gallery URLs:', fullProduct?.gallery_urls);
-        console.log('Mapped product imageUrl:', product.imageUrl);
-        setDetailedProduct(fullProduct || null);
-      } catch (error) {
-        console.error('Failed to fetch detailed product:', error);
-        setDetailedProduct(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDetailedProduct();
-  }, [product, open]);
-
-  // Early return after all hooks
-  if (!product) return null;
-  
-  const images = [detailedProduct?.main_image_url || product.imageUrl, ...(detailedProduct?.gallery_urls || [])].filter(Boolean);
-
-  const handleAddToBag = () => {
-    if (product.isSoldOut || !bagContext) return;
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'],
-    });
-    const priceInfo = productCardUtils.getDisplayPrice(product, detailedProduct);
-    for (let i = 0; i < quantity; i++) {
-      bagContext.addToBag({
-        id: product.id,
-        name: product.name,
-        imageUrl: product.imageUrl,
-        price: priceInfo.displayPrice,
-      });
-    }
-    setAddedCount(quantity);
-    setShowAddedAlert(true);
-    setTimeout(() => setShowAddedAlert(false), 2500);
-    if (typeof window !== 'undefined') {
-      import('sonner').then(({ toast }) => 
-        toast.success(`${quantity} × ${product.name} added to bag!`, {
-          duration: 3000,
-        })
-      );
+  const fetchDetailedProduct = async () => {
+    setLoading(true);
+    try {
+      const products = await getProducts();
+      const fullProduct = products.find((p) => p.id === product.id);
+      console.log("Product data for dialog:", fullProduct);
+      console.log("Image URL:", fullProduct?.main_image_url);
+      console.log("Gallery URLs:", fullProduct?.gallery_urls);
+      console.log("Mapped product imageUrl:", product.imageUrl);
+      setDetailedProduct(fullProduct || null);
+    } catch (error) {
+      console.error("Failed to fetch detailed product:", error);
+      setDetailedProduct(null);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
-    if (typeof window !== 'undefined') {
-      import('sonner').then(({ toast }) => 
-        toast.success(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist')
-      );
+  fetchDetailedProduct();
+}, [product, open]);
+
+// 2. Fetch variants when product ID changes
+useEffect(() => {
+  const fetchVariants = async () => {
+    if (!product?.id) return;
+
+    const { data, error } = await supabase
+      .from("variants")
+      .select("*")
+      .eq("product_id", product.id);
+
+    if (error) {
+      console.error("Error fetching variants:", error.message);
+    } else {
+      setVariants(data || []);
+      console.log("Fetched variants:", data);
     }
   };
+
+  fetchVariants();
+}, [product?.id]);
+
+
+// ✅ Safe early return — after all hooks
+if (!product) return null;
+
+// ✅ Safe image array creation
+const images = [
+  detailedProduct?.main_image_url || product.imageUrl,
+  ...(detailedProduct?.gallery_urls || []),
+].filter(Boolean);
+
+// ✅ Add to Bag handler with toast + confetti
+const handleAddToBag = (variant: Variant) => {
+  if (!bagContext || !detailedProduct) return;
+
+  confetti({
+    particleCount: 80,
+    spread: 60,
+    origin: { y: 0.6 },
+  });
+
+  setAddedCount((prev) => prev + 1);
+  setShowAddedAlert(true);
+  setTimeout(() => setShowAddedAlert(false), 2500);
+
+  if (typeof window !== 'undefined') {
+    import('sonner').then(({ toast }) =>
+      toast.success(`${detailedProduct.name} added to bag!`)
+    );
+  }
+
+  // Optional: send to context here if needed
+  // bagContext.addToBag(...)
+};
+
+// ✅ Wishlist toggle handler
+const handleWishlist = () => {
+  setIsWishlisted(!isWishlisted);
+
+  if (typeof window !== 'undefined') {
+    import('sonner').then(({ toast }) =>
+      toast.success(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist')
+    );
+  }
+};
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -350,10 +378,11 @@ export function ProductDetailDialog({
                               {hasDiscount && (
                                 <div className="flex flex-col items-start">
                                   <span className="text-xl text-gray-400 line-through">
-                                    ₹{detailedProduct.original_price.toLocaleString('en-IN')}
+                                    ₹{detailedProduct.original_price?.toLocaleString('en-IN') ?? ''}
                                   </span>
                                   <span className="text-sm text-red-600 font-semibold">
-                                    Save ₹{(detailedProduct.original_price - product.price).toLocaleString('en-IN')}
+                                   {detailedProduct.original_price &&
+                                   `Save ₹${(detailedProduct.original_price - product.price).toLocaleString('en-IN')}`}
                                   </span>
                                 </div>
                               )}
@@ -377,7 +406,42 @@ export function ProductDetailDialog({
                       </div>
                     </div>
                   </div>
-
+                  {/* Variant section*/}
+                  {variants.length > 0 && (
+  <div className="my-4">
+    <h3 className="text-lg font-semibold mb-2">Select Variant</h3>
+    <div className="grid grid-cols-2 gap-2">
+      {variants.map((variant) => (
+        <button
+          key={variant.id}
+          onClick={() => setSelectedVariant(variant)}
+          className={`border rounded-md p-3 text-left ${
+            selectedVariant?.id === variant.id ? 'border-black bg-gray-100' : 'border-gray-300'
+          }`}
+        >
+          <div>Weight: {variant.weight}g</div>
+          <div>Length: {variant.length}cm</div>
+          <div>
+            ₹ {variant.discount_price ?? variant.price}
+            {variant.discount_price && (
+              <span className="ml-2 text-sm line-through text-gray-500">
+                ₹{variant.price}
+              </span>
+            )}
+          </div>
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+            
+                 <Button
+                 onClick={() => selectedVariant && handleAddToBag(selectedVariant)}
+                 disabled={!selectedVariant || product.isSoldOut}
+                 className="w-full bg-gradient-to-r from-black to-gray-800 text-white h-16 text-lg font-bold rounded-2xl shadow-xl hover:scale-105"
+                 >
+                  Add to Bag
+                 </Button>
                   {/* Enhanced Product Description with See More/Less */}
                   {(product.description || detailedProduct?.detailed_description) && (
                     <div className="space-y-4">
@@ -667,13 +731,13 @@ export function ProductDetailDialog({
                       {/* Enhanced Action Buttons */}
                       <div className="space-y-4">
                         <Button
-                          onClick={handleAddToBag}
-                          disabled={product.isSoldOut}
-                          className="w-full bg-gradient-to-r from-black to-gray-800 hover:from-gray-800 hover:to-black text-white h-16 text-lg font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                        onClick={() => selectedVariant && handleAddToBag(selectedVariant)}
+                        disabled={!selectedVariant || product.isSoldOut}
+                        className="w-full bg-gradient-to-r from-black to-gray-800 hover:from-gray-800 hover:to-black text-white h-16 text-lg font-bold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
                         >
-                          <ShoppingBag className="w-6 h-6 mr-3" />
-                          {product.isSoldOut ? 'Currently unavailable' : 'Add to Bag'}
-                        </Button>
+                       <ShoppingBag className="w-6 h-6 mr-3" />
+                       {product.isSoldOut ? 'Currently unavailable' : 'Add to Bag'}
+                      </Button>
                         
                         <div className="grid grid-cols-2 gap-4">
                           <Button
@@ -753,6 +817,3 @@ export function ProductDetailDialog({
     </Dialog>
   );
 }
-
-
-
