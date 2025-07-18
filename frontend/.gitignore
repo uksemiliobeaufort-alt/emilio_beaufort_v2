@@ -120,6 +120,7 @@ temp/
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+frontend/ga-service-account.json
 .idea
 *.suo
 *.ntvs*
