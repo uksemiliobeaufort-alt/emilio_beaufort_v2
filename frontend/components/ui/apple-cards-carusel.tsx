@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from "framer-motion";
 import Image, { ImageProps } from "next/image";
 import { useOutsideClick } from '@/hooks/use-outside-click';
-import { Dialog, DialogTrigger, DialogContent, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogTrigger, DialogContent, DialogClose, DialogTitle } from '@/components/ui/dialog';
 
 interface CarouselProps {
   items: JSX.Element[];
@@ -219,6 +219,7 @@ export const Card = ({
         </motion.button>
       </DialogTrigger>
       <DialogContent className="max-w-5xl w-full p-4 md:p-10 rounded-3xl bg-white dark:bg-neutral-900 shadow-2xl animate-fade-in">
+        <DialogTitle className="sr-only">Card Details</DialogTitle>
         <DialogClose asChild>
           <button className="absolute right-4 top-4 rounded-full bg-black dark:bg-white p-1">
             <IconX className="h-6 w-6 text-white dark:text-black" />
