@@ -14,11 +14,14 @@ import {
 import { Menu, X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
+
 const navItems = [
   { name: 'Philosophy', href: '#philosophy' },
   { name: 'The House', href: '#house' },
   { name: 'Journal', href: '#journal' },
   { name: 'Meet The Brains', href: '#team' },
+  {name: 'Products', href: '/products'},
+  { name: 'Careers', href: '/careers' },
   // { name: 'Alliances', href: '#alliances' },
 ];
 
@@ -52,17 +55,22 @@ export function Navbar() {
 
   const handleNavigation = async (href: string) => {
     setIsOpen(false);
-    
-    if (isHomePage) {
-      // If on home page, scroll to section
+
+    // If it's a hash link (anchor), handle scroll
+    if (isHomePage && href.startsWith('#')) {
       const element = document.querySelector(href);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
       }
-    } else {
-      // If not on home page, navigate to home page with hash and scroll
-      await router.push(`/${href}`);
+      return;
     }
+    // If not on home page but it's a hash link, go to home with hash
+    if (href.startsWith('#')) {
+      await router.push(`/${href}`);
+      return;
+    }
+    // For all other links (pages)
+    await router.push(href);
   };
 
   const handleLogoClick = async () => {
@@ -196,3 +204,6 @@ export function Navbar() {
     </motion.nav>
   );
 } 
+
+
+

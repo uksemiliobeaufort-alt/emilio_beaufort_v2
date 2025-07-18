@@ -28,6 +28,7 @@ yarn-error.log*
 # Local env files
 .env*.local
 .env
+ga-service-account.json
 
 # Vercel
 .vercel
@@ -120,7 +121,6 @@ temp/
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-frontend/ga-service-account.json
 .idea
 *.suo
 *.ntvs*

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { motion } from "framer-motion";
 import { getProducts, Product as SupabaseProduct } from "@/lib/supabase";
 import { Product } from "@/lib/api";
@@ -10,6 +10,9 @@ import { RippleButton } from '@/components/ui/RippleButton';
 import MyBagButton from '@/components/MyBagButton';
 import SimpleCheckoutForm from '@/components/SimpleCheckoutForm';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { safeMap } from "@/lib/utils";
+import { supabase } from '@/lib/supabase';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 // Mapping function to convert Supabase Product to API Product format
 const mapSupabaseProductToAPIProduct = (supabaseProduct: SupabaseProduct): Product => {
@@ -28,9 +31,10 @@ const mapSupabaseProductToAPIProduct = (supabaseProduct: SupabaseProduct): Produ
   };
 };
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'COSMETICS' | 'HAIR'>('COSMETICS');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -54,20 +58,77 @@ export default function ProductsPage() {
     setCheckoutOpen(false);
   };
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const supabaseProducts = await getProducts();
-        const mappedProducts = supabaseProducts.map(mapSupabaseProductToAPIProduct);
+  const fetchProducts = async () => {
+    try {
+      const supabaseProducts = await getProducts();
+      if (supabaseProducts && Array.isArray(supabaseProducts)) {
+        const mappedProducts = safeMap(supabaseProducts, mapSupabaseProductToAPIProduct);
         setProducts(mappedProducts);
-      } catch {
-        console.error('Failed to fetch products');
-      } finally {
-        setLoading(false);
+      } else {
+        console.error('getProducts returned invalid data:', supabaseProducts);
+        setProducts([]);
       }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    // Initial data fetch
+    fetchProducts();
+
+    // Set up real-time subscription for product updates
+    let subscription: RealtimeChannel;
+    
+    const setupSubscription = async () => {
+      subscription = supabase
+        .channel('products_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'cosmetics'
+          },
+          async (payload) => {
+            console.log('Cosmetics products update received:', payload);
+            // Show refreshing state and refresh products when cosmetics table changes
+            setRefreshing(true);
+            await fetchProducts();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'hair_extensions'
+          },
+          async (payload) => {
+            console.log('Hair extensions products update received:', payload);
+            // Show refreshing state and refresh products when hair_extensions table changes
+            setRefreshing(true);
+            await fetchProducts();
+          }
+        )
+        .subscribe();
+
+      console.log('Real-time subscription established for products');
     };
 
-    fetchProducts();
+    setupSubscription();
+
+    // Cleanup subscription when component unmounts
+    return () => {
+      if (subscription) {
+        console.log('Cleaning up products real-time subscription');
+        supabase.removeChannel(subscription);
+      }
+    };
   }, []);
 
   // Handle URL query parameter for product detail
@@ -135,9 +196,17 @@ export default function ProductsPage() {
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 mb-8">
-            PRODUCTS
-          </h1>
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900">
+              PRODUCTS
+            </h1>
+            {refreshing && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
+                <span>Updating...</span>
+              </div>
+            )}
+          </div>
           <form
             className="flex justify-center"
             onSubmit={e => {
@@ -224,5 +293,17 @@ export default function ProductsPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-2xl font-serif text-gray-900">Loading products...</div>
+      </div>
+    }>
+      <ProductsPageContent />
+    </Suspense>
   );
 } 

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { supabase, STORAGE_BUCKETS } from '@/lib/supabase';
 import { auth } from '@/lib/auth';
+import { safeMap } from "@/lib/utils";
 
 interface Founder {
   name: string;
@@ -158,7 +159,7 @@ export default function FoundersPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {founders.map((founder) => (
+          {safeMap(founders, (founder) => (
             <Card key={founder.name} className="overflow-hidden">
               <CardHeader>
                 <CardTitle className="text-lg">{founder.name}</CardTitle>
@@ -179,13 +180,13 @@ export default function FoundersPage() {
                             target.style.display = 'none';
                             const parent = target.parentElement;
                             if (parent) {
-                              parent.innerHTML = `<span class="text-2xl font-bold text-gray-600">${founder.name.split(' ').map(n => n[0]).join('')}</span>`;
+                              parent.innerHTML = `<span class="text-2xl font-bold text-gray-600">${(founder.name || '').split(' ').map(n => n[0]).join('')}</span>`;
                             }
                           }}
                         />
                       ) : (
                         <span className="text-2xl font-bold text-gray-600">
-                          {founder.name.split(' ').map(n => n[0]).join('')}
+                          {(founder.name || '').split(' ').map(n => n[0]).join('')}
                         </span>
                       )}
                     </div>

@@ -48,7 +48,13 @@ export default function PartnerPage() {
   const onSubmit = async (data: PartnershipFormData) => {
     setIsSubmitting(true);
     try {
-      await submitPartnershipInquiry(data);
+      await submitPartnershipInquiry({
+        full_name: data.name,
+        company: data.company,
+        email: data.email,
+        inquiry_type: data.inquiryType,
+        message: data.message,
+      });
       toast.success("Thank you for your inquiry. We'll be in touch soon.");
       reset();
       setSelectedInquiryType("");

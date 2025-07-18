@@ -21,6 +21,17 @@ import { supabase } from '@/lib/supabase';
 import { getProducts } from '@/lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 interface DashboardStats {
   totalProducts: number;
@@ -46,6 +57,72 @@ interface BlogPost {
   featured_image_base64?: string;
   gallery_base64?: string[];
   created_at: string;
+}
+
+// --- Google Analytics Section ---
+interface AnalyticsRow {
+  date: string;
+  pageViews: number;
+}
+
+function AnalyticsSection() {
+  const [data, setData] = useState<AnalyticsRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchAnalytics() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch('/api/admin/analytics');
+        if (!res.ok) throw new Error('Failed to fetch analytics');
+        const json = await res.json();
+        setData(json.data || []);
+      } catch (e: any) {
+        setError(e.message || 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAnalytics();
+  }, []);
+
+  return (
+    <Card className="border-0 shadow-md mb-6">
+      <CardContent className="p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Google Analytics (Daily Page Views)</h2>
+        </div>
+        {loading ? (
+          <div className="text-center py-8 text-gray-500">Loading analytics...</div>
+        ) : error ? (
+          <div className="text-center py-8 text-red-500">{error}</div>
+        ) : data.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">No analytics data available.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-medium text-gray-700">Date</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700">Page Views</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((row, idx) => (
+                  <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-2 px-4 font-mono text-blue-700">{row.date}</td>
+                    <td className="py-2 px-4">{row.pageViews}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function AdminDashboard() {

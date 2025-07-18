@@ -8,6 +8,8 @@ import { Suspense } from "react";
 import { BagProvider } from '@/components/BagContext';
 import { Toaster as ReactHotToastToaster } from 'react-hot-toast';
 import ConditionalAutoFeedback from '@/components/ConditionalAutoFeedback';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
+
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
@@ -33,6 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>
+        
         <BagProvider>
           <ConditionalNavbar />
           <main>
@@ -41,6 +44,7 @@ export default function RootLayout({
         </BagProvider>
         <ConditionalAutoFeedback />
         <ReactHotToastToaster position="top-center" reverseOrder={false} />
+        <GoogleAnalytics />
       </body>
     </html>
   );

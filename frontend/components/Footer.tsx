@@ -81,9 +81,8 @@ export function Footer() {
             </p>
             <div className="flex justify-center md:justify-start space-x-4">
               {[
-                { icon: Instagram, href: 'https://www.linkedin.com/company/emiliobeaufort', label: 'Instagram' },
-                { icon: Twitter, href: 'https://www.linkedin.com/company/emiliobeaufort', label: 'Twitter' },
-                { icon: Facebook, href: 'https://www.linkedin.com/company/emiliobeaufort', label: 'Facebook' },
+                { icon: Instagram, href: 'https://www.instagram.com/emiliobeaufort_official?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==', label: 'Instagram' },
+                { icon: Twitter, href: 'https://x.com/Emilio_Beaufort?t=0p7UVvP0DjaMiqT50ydDEg&s=09', label: 'Twitter' },
                 { icon: Linkedin, href: 'https://www.linkedin.com/company/emiliobeaufort', label: 'LinkedIn' }
               ].map((social) => (
                 <a
