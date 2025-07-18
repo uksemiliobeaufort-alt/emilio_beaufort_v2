@@ -1,90 +1,66 @@
 "use client";
 import { motion } from "framer-motion";
 import SectionWrapper from "@/components/SectionWrapper";
+import Image from 'next/image';
+import { getImageUrl } from '@/lib/supabase';
 
 export default function PhilosophyPage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white flex items-center justify-center">
       <SectionWrapper>
-        <div className="py-20">
+        <div className="py-20 flex flex-col md:flex-row items-center gap-12 md:gap-20 max-w-6xl mx-auto">
+          {/* Left: Text */}
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="max-w-4xl mx-auto"
+            className="flex-1"
           >
-            <h1 className="text-4xl md:text-6xl font-heading font-bold text-center mb-16">
-              Our Philosophy
+            <h1 className="text-4xl md:text-5xl font-heading font-bold mb-8 text-premium">
+              PHILOSOPHY
             </h1>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="prose prose-lg max-w-none"
-            >
-              <p className="text-xl leading-relaxed mb-8 text-muted-foreground">
-                At Emilio Beaufort, we believe that true luxury is not about excess, but about 
-                intentional choices that reflect your inner strength and character. We are not 
-                merely a cosmetics brand—we are a grooming movement that celebrates the 
-                sophisticated man who understands that his appearance is a reflection of his 
-                values and aspirations.
+            <div className="space-y-6 text-lg md:text-xl text-gray-800">
+              <p className="font-serif text-2xl md:text-3xl font-bold text-black mb-4 leading-tight">
+                UNCOMPROMISING HAIR. UNAPOLOGETIC STANDARDS.
               </p>
-
-              <h2 className="text-3xl font-heading font-semibold mb-6 mt-12 text-foreground">
-                The Foundation of Strength
-              </h2>
-              
-              <p className="text-lg leading-relaxed mb-6 text-muted-foreground">
-                Our philosophy is built on three core principles: authenticity, quality, and 
-                purpose. Every product we create is designed to enhance your natural features 
-                while maintaining the integrity of your individual style. We reject the notion 
-                that grooming is about conforming to societal standards—instead, we empower you 
-                to express your unique identity through carefully crafted formulations that 
-                respect both your skin and your values.
+              <p>
+                At Emilio Beaufort, we believe that authenticity is the new luxury. In a world flooded with synthetic blends and mass-market vendors, we stand firm on our core principle — only real, raw Indian hair makes the cut.
               </p>
-
-              <h2 className="text-3xl font-heading font-semibold mb-6 mt-12 text-foreground">
-                Beyond the Surface
-              </h2>
-              
-              <p className="text-lg leading-relaxed mb-6 text-muted-foreground">
-                True grooming goes beyond the physical. It&apos;s about cultivating confidence, 
-                discipline, and self-respect. When you take the time to care for your appearance, 
-                you&apos;re not just applying products—you&apos;re practicing self-care, building 
-                discipline, and honoring the person you are becoming. This daily ritual becomes 
-                a meditation, a moment of reflection, and a commitment to excellence in all 
-                aspects of your life.
+              <ul className="list-disc pl-5 space-y-2">
+                <li>We don't chase volume.</li>
+                <li>We build legacy.</li>
+              </ul>
+              <p>
+                We partner only with those who share our obsession with quality, ethics, and originality.
               </p>
-
-              <h2 className="text-3xl font-heading font-semibold mb-6 mt-12 text-foreground">
-                The Emilio Beaufort Difference
-              </h2>
-              
-              <p className="text-lg leading-relaxed mb-6 text-muted-foreground">
-                What sets us apart is our unwavering commitment to quality and our deep 
-                understanding of the modern man&apos;s needs. We don&apos;t create products for the 
-                masses—we craft solutions for the individual who demands excellence. Our 
-                formulations are developed with the finest ingredients, our packaging reflects 
-                timeless elegance, and our approach to customer service is as personal as the 
-                products themselves.
+              <p className="italic text-premium font-medium">
+                This is more than product. It’s principle.<br/>
+                And our clients don’t just buy hair. They inherit trust.
               </p>
-
-              <h2 className="text-3xl font-heading font-semibold mb-6 mt-12 text-foreground">
-                Join the Movement
-              </h2>
-              
-              <p className="text-lg leading-relaxed mb-6 text-muted-foreground">
-                When you choose Emilio Beaufort, you&apos;re not just purchasing a product—you&apos;re 
-                joining a community of men who understand that true strength comes from within, 
-                but is reflected in how we present ourselves to the world. You&apos;re choosing to 
-                invest in yourself, in your confidence, and in the image you project to others.
-              </p>
-
-              <p className="text-xl leading-relaxed mt-12 text-foreground font-medium">
-                This is not just grooming. This is a reflection of strength.
-              </p>
-            </motion.div>
+            </div>
+          </motion.div>
+          {/* Right: Image(s) */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="flex-1 flex flex-col md:flex-row justify-center gap-6"
+          >
+            {[1, 2, 3].map((num) => (
+              <div
+                key={num}
+                className="relative w-[220px] h-[300px] md:w-[140px] md:h-[180px] lg:w-[120px] lg:h-[160px] xl:w-[120px] xl:h-[160px] rounded-3xl overflow-hidden shadow-2xl"
+              >
+                <Image
+                  src={getImageUrl('philosophy', `philosophy${num}.jpg`)}
+                  alt={`Philosophy ${num}`}
+                  fill
+                  className="object-cover object-center hover:scale-105 transition-transform duration-700"
+                  priority={num === 1}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              </div>
+            ))}
           </motion.div>
         </div>
       </SectionWrapper>
