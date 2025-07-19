@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, X } from "lucide-react";
-import Image from "next/image";
+// import Image from "next/image"; // Commented out to avoid Vercel billing
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ProductCard } from "@/components/ui/ProductCard";
@@ -69,13 +69,10 @@ export default function CardGrid() {
                 {/* Image */}
                 <div className="relative h-[300px] w-full overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
-                  <Image
+                  <img
                     src={card.image}
                     alt={card.title}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                   />
                 </div>
 

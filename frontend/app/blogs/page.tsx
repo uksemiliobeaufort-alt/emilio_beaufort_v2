@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import Image from "next/image";
+// import Image from "next/image"; // Commented out to avoid Vercel billing
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { api, Post } from "@/lib/api";
@@ -139,11 +139,10 @@ export default function BlogsPage() {
                   <div className="grid grid-cols-2 gap-4 mt-4">
                     {imagePreviews.map((src, idx) => (
                       <div key={idx} className="relative w-full aspect-[4/3] rounded-md overflow-hidden">
-                        <Image
+                        <img
                           src={src}
                           alt={`Preview ${idx + 1}`}
-                          fill
-                          className="object-cover"
+                          className="object-cover w-full h-full"
                         />
                       </div>
                     ))}
@@ -172,11 +171,10 @@ export default function BlogsPage() {
                 <Link href={`/journal/${post.slug}`}>
                   <Card className="overflow-hidden hover:shadow-lg cursor-pointer group transition">
                     <div className="relative aspect-[4/3]">
-                      <Image
+                      <img
                         src={post.featuredImageUrl || defaultImageUrl}
                         alt={post.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform"
+                        className="object-cover w-full h-full group-hover:scale-105 transition-transform"
                       />
                     </div>
                     <CardContent className="p-5">

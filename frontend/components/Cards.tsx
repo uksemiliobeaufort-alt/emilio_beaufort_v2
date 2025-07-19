@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+// import Image from "next/image"; // Commented out to avoid Vercel billing
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -62,12 +62,10 @@ export function Cards() {
         {currentProducts.map((product) => (
           <Card key={product.id} className="overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
             <div className="relative h-40 w-full bg-gray-50">
-              <Image
+              <img
                 src={product.image}
                 alt={product.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover w-full h-full"
               />
             </div>
             <CardContent className="p-3">
