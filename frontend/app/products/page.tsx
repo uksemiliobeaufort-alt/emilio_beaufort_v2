@@ -13,6 +13,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { safeMap } from "@/lib/utils";
 import { supabase } from '@/lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { Package, Search } from 'lucide-react';
 
 // Mapping function to convert Supabase Product to API Product format
 const mapSupabaseProductToAPIProduct = (supabaseProduct: SupabaseProduct): Product => {
@@ -40,6 +41,7 @@ function ProductsPageContent() {
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -155,6 +157,18 @@ function ProductsPageContent() {
     (product.description && product.description.toLowerCase().includes(search.toLowerCase()))
   );
 
+  // Pagination logic
+  const productsPerPage = 6;
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Reset to first page when search or category changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedCategory]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -261,30 +275,144 @@ function ProductsPageContent() {
         {/* Products Grid */}
         {/* Mobile List View */}
         <div className="block sm:hidden">
-          {filteredProducts.map((product, index) => (
+          {currentProducts.length > 0 ? (
+            currentProducts.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: index * 0.1 }}
+              >
+                <ProductListItem product={product} onViewDetails={(p) => { setSelectedProduct(p); setDetailDialogOpen(true); }} />
+              </motion.div>
+            ))
+          ) : (
             <motion.div
-              key={product.id}
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: index * 0.1 }}
+              transition={{ duration: 0.8 }}
+              className="text-center py-16"
             >
-              <ProductListItem product={product} onViewDetails={(p) => { setSelectedProduct(p); setDetailDialogOpen(true); }} />
+              <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                {search ? <Search className="h-12 w-12 text-gray-400" /> : <Package className="h-12 w-12 text-gray-400" />}
+              </div>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">
+                {search ? 'No products found' : 'No products available'}
+              </h3>
+              <p className="text-gray-500 mb-4">
+                {search 
+                  ? `No products match "${search}" in ${selectedCategory === 'COSMETICS' ? 'Cosmetics' : 'Hair'} category`
+                  : `No ${selectedCategory === 'COSMETICS' ? 'cosmetics' : 'hair'} products are currently available`
+                }
+              </p>
+                             {search && (
+                 <button
+                   onClick={() => {
+                     setSearch('');
+                     setSearchInput('');
+                   }}
+                   className="text-blue-600 hover:text-blue-800 hover:underline font-semibold"
+                 >
+                   Clear search
+                 </button>
+               )}
             </motion.div>
-          ))}
+          )}
         </div>
          {/* Grid View for sm and up */}
-         <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 gap-y-8">
-           {filteredProducts.map((product, index) => (
+         <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8 gap-y-8">
+           {currentProducts.length > 0 ? (
+             currentProducts.map((product, index) => (
+               <motion.div
+                 key={product.id}
+                 initial={{ opacity: 0, y: 50 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ duration: 0.8, delay: index * 0.1 }}
+               >
+                 <ProductCard product={product} onViewDetails={(p) => { setSelectedProduct(p); setDetailDialogOpen(true); }} />
+               </motion.div>
+             ))
+           ) : (
              <motion.div
-               key={product.id}
                initial={{ opacity: 0, y: 50 }}
                animate={{ opacity: 1, y: 0 }}
-               transition={{ duration: 0.8, delay: index * 0.1 }}
+               transition={{ duration: 0.8 }}
+               className="col-span-full text-center py-16"
              >
-               <ProductCard product={product} onViewDetails={(p) => { setSelectedProduct(p); setDetailDialogOpen(true); }} />
+               <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                 {search ? <Search className="h-12 w-12 text-gray-400" /> : <Package className="h-12 w-12 text-gray-400" />}
+               </div>
+               <h3 className="text-xl font-medium text-gray-900 mb-2">
+                 {search ? 'No products found' : 'No products available'}
+               </h3>
+               <p className="text-gray-500 mb-4">
+                 {search 
+                   ? `No products match "${search}" in ${selectedCategory === 'COSMETICS' ? 'Cosmetics' : 'Hair'} category`
+                   : `No ${selectedCategory === 'COSMETICS' ? 'cosmetics' : 'hair'} products are currently available`
+                 }
+               </p>
+               {search && (
+                 <button
+                   onClick={() => {
+                     setSearch('');
+                     setSearchInput('');
+                   }}
+                   className="text-blue-600 hover:text-blue-800 hover:underline font-semibold"
+                 >
+                   Clear search
+                 </button>
+               )}
              </motion.div>
-           ))}
+           )}
          </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex justify-center items-center gap-2 mt-12"
+          >
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              Previous
+            </button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, index) => {
+                const pageNumber = index + 1;
+                const isCurrentPage = pageNumber === currentPage;
+                
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => setCurrentPage(pageNumber)}
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                      isCurrentPage
+                        ? 'bg-black text-white'
+                        : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-700'
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              Next
+            </button>
+          </motion.div>
+        )}
+
         <ProductDetailDialog 
           product={selectedProduct} 
           open={detailDialogOpen} 
