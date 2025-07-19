@@ -806,8 +806,8 @@ export default function Home() {
       </section>
 
       {/* Inspirational Quote Above Footer */}
-      <div className="relative w-full flex flex-col items-center justify-center py-8 px-0 overflow-hidden" style={{background: 'linear-gradient(90deg, #f5e9c6 0%, #fffbe6 40%, #fffbe6 60%, #f5e9c6 100%)'}}>
-        <span className="relative z-10 text-center font-serif italic text-2xl md:text-3xl font-bold text-[#4b2e1e] leading-relaxed whitespace-nowrap px-8" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', textShadow: '0 2px 8px rgba(212,175,55,0.08)' }}>
+      <div className="relative w-full flex flex-col items-center justify-center py-8 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 overflow-hidden" style={{background: 'linear-gradient(90deg, #f5e9c6 0%, #fffbe6 40%, #fffbe6 60%, #f5e9c6 100%)'}}>
+        <span className="relative z-10 text-center font-serif italic text-lg sm:text-xl md:text-2xl lg:text-2xl xl:text-3xl font-bold text-[#4b2e1e] leading-relaxed px-4 sm:px-6 md:px-8 max-w-6xl mx-auto lg:whitespace-nowrap flex justify-center items-center" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', textShadow: '0 2px 8px rgba(212,175,55,0.08)' }}>
           ~ We built trust when others chased profits. Now the world wants what we’ve perfected.
         </span>
       </div>
