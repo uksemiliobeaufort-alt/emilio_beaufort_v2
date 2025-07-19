@@ -7,7 +7,7 @@ import {
 import { Product } from "@/lib/api";
 import { Product as SupabaseProduct, getProducts, isCosmeticsProduct, isHairExtensionsProduct } from "@/lib/supabase";
 import Image from "next/image";
-import { X, Star, Package, Truck, Shield, ArrowLeft, ArrowRight, Heart, Share2, CheckCircle, XCircle, Info, ShoppingBag, MessageCircle, Sparkles, Award, Clock, Zap, Headphones, RotateCcw, Box } from "lucide-react";
+import { X, Star, Package, Truck, Shield, ArrowLeft, ArrowRight, Heart, Share2, CheckCircle, XCircle, Info, ShoppingBag, MessageCircle, Sparkles, Award, Clock, Zap, Headphones, RotateCcw, Box, Mail, Phone } from "lucide-react";
 import confetti from 'canvas-confetti';
 import { useBag } from '@/components/BagContext';
 import { useState, useEffect } from 'react';
@@ -68,6 +68,8 @@ export function ProductDetailDialog({
   // State for showing add-to-bag alert
   const [addedCount, setAddedCount] = useState(0);
   const [showAddedAlert, setShowAddedAlert] = useState(false);
+  // State for contact dialog
+  const [showContactDialog, setShowContactDialog] = useState(false);
 
   // Properly use the bag context
   let bagContext;
@@ -347,7 +349,7 @@ export function ProductDetailDialog({
                               <span className="text-5xl lg:text-6xl font-light text-black">
                                 {displayPrice.toLocaleString('en-IN')}
                               </span>
-                              {hasDiscount && (
+                              {hasDiscount && detailedProduct?.original_price && (
                                 <div className="flex flex-col items-start">
                                   <span className="text-xl text-gray-400 line-through">
                                     ₹{detailedProduct.original_price.toLocaleString('en-IN')}
@@ -368,14 +370,25 @@ export function ProductDetailDialog({
                           <CheckCircle className="w-5 h-5 text-green-600" />
                           <span className="text-sm font-medium">All taxes included</span>
                         </div>
-                        {(detailedProduct?.original_price || product.price) > 500 && (
+                        {/* {(detailedProduct?.original_price || product.price) > 500 && (
                           <div className="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm">
                             <Truck className="w-5 h-5 text-green-600" />
                             <span className="text-sm font-medium">Free delivery</span>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </div>
+                  </div>
+
+                  {/* Bulk Order Contact Line */}
+                  <div className="text-center py-6">
+                    <button
+                      onClick={() => setShowContactDialog(true)}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#B7A16C] to-[#D4AF37] hover:from-[#D4AF37] hover:to-[#B7A16C] text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Contact Sales Team for Bulk Orders
+                    </button>
                   </div>
 
                   {/* Enhanced Product Description with See More/Less */}
@@ -703,7 +716,7 @@ export function ProductDetailDialog({
                       Services & Guarantees
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="flex items-start gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
+                      {/* <div className="flex items-start gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
                         <div className="w-10 h-10 bg-gradient-to-r from-[#B7A16C] to-[#D4AF37] rounded-xl flex items-center justify-center flex-shrink-0">
                           <Truck className="w-5 h-5 text-white" />
                         </div>
@@ -711,7 +724,7 @@ export function ProductDetailDialog({
                           <span className="font-bold text-black block text-sm">Free Delivery</span>
                           <span className="text-xs text-gray-600">On orders ₹500+</span>
                         </div>
-                      </div>
+                      </div> */}
                       
                       <div className="flex items-start gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
                         <div className="w-10 h-10 bg-gradient-to-r from-[#B7A16C] to-[#D4AF37] rounded-xl flex items-center justify-center flex-shrink-0">
@@ -750,6 +763,46 @@ export function ProductDetailDialog({
           </div>
         </div>
       </DialogContent>
+
+      {/* Contact Dialog */}
+      <Dialog open={showContactDialog} onOpenChange={setShowContactDialog}>
+        <DialogContent className="max-w-md mx-auto p-6">
+          <DialogTitle className="text-xl font-bold text-black mb-4">
+            Contact Sales Team
+          </DialogTitle>
+          <DialogDescription className="text-gray-600 mb-6 text-justify">
+            Get in touch with our sales team for bulk orders and special pricing.
+          </DialogDescription>
+          
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+              <div className="w-10 h-10 bg-gradient-to-r from-[#B7A16C] to-[#D4AF37] rounded-xl flex items-center justify-center">
+                <Mail className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="font-bold text-black block text-sm">Email</span>
+                <span className="text-sm text-gray-600">hello@emiliobeaufort.com</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+              <div className="w-10 h-10 bg-gradient-to-r from-[#B7A16C] to-[#D4AF37] rounded-xl flex items-center justify-center">
+                <Phone className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="font-bold text-black block text-sm">Phone</span>
+                <span className="text-sm text-gray-600">+91 8962648358</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-500">
+              Available 24/7
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
