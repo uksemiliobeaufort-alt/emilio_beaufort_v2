@@ -813,8 +813,7 @@ export default function Home() {
       </div>
       {/* Author signature - separate white background */}
       <div className="w-full flex flex-col items-center justify-center bg-white py-2">
-        <span className="block font-semibold text-xl md:text-2xl text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>Soniya Badugu</span>
-        <span className="block text-base md:text-lg text-gray-500 uppercase" style={{ fontFamily: "'Playfair Display', serif", fontWeight: 400 }}>Founder's Office</span>
+        <span className="block font-semibold text-xl md:text-2xl text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>Founder's Office</span>
       </div>
 
       <Footer />
