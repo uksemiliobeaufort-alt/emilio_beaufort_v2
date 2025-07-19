@@ -1,6 +1,6 @@
 'use client';
 
-import { Leaf, Globe, Shield, BadgePercent } from 'lucide-react';
+import { Leaf, Globe, Shield, BadgePercent, Award } from 'lucide-react';
 
 const cards = [
   {
@@ -44,6 +44,11 @@ const cards = [
     icon: <BadgePercent className="w-7 h-7 text-black" />,
     text: 'For resellers and private labels',
   },
+  {
+    title: '100% MoneyBack Guarantee',
+    icon: <Award className="w-7 h-7 text-black" />,
+    text: 'Full refund within 15 days',
+  },
 ];
 
 export default function WhyChooseSection() {
@@ -61,9 +66,9 @@ export default function WhyChooseSection() {
           </p>
         </div>
 
-        {/* 2-column grid, each card is a direct child */}
+        {/* Grid layout for 7 cards - 2 columns with last card centered */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {cards.map((card, idx) => (
+          {cards.slice(0, 6).map((card, idx) => (
             <div
               key={card.title}
               className="relative bg-white rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:border-[#B7A16C]"
@@ -81,6 +86,19 @@ export default function WhyChooseSection() {
               <span className="text-gray-700">{card.text}</span>
             </div>
           ))}
+        </div>
+        
+        {/* 7th card centered */}
+        <div className="flex justify-center mt-8">
+          <div
+            className="relative bg-white rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:border-[#B7A16C] max-w-md"
+          >
+            <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-4 shadow">
+              {cards[6].icon}
+            </div>
+            <span className="font-extrabold text-xl text-black mb-2">{cards[6].title}</span>
+            <span className="text-gray-700">{cards[6].text}</span>
+          </div>
         </div>
       </div>
     </section>
