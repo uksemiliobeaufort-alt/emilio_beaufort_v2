@@ -4,17 +4,22 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
-import { supabase } from "@/lib/supabase";
+import { firestore } from '@/lib/firebase';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import HtmlContent from "@/components/ui/HtmlContent";
+import Head from "next/head";
+import Link from "next/link";
 
 interface BlogPost {
-  id: number;
+  id: string;
   title: string;
   slug: string;
   content: string;
-  featured_image_base64?: string;
-  gallery_base64?: string[];
+  featured_image_url?: string;
+  gallery_urls?: string[];
   created_at: string;
+  keywords?: string[];
+  tags?: string[];
 }
 
 type Props = {
@@ -49,27 +54,32 @@ export default function BlogPostPage({ params }: Props) {
     if (!slug) return;
 
     const fetchPost = async () => {
+      setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('blog_posts')
-          .select('*')
-          .eq('slug', slug)
-          .single();
-
-        if (error) {
-          console.error("Error fetching post:", error);
-          throw error;
-        }
-
-        console.log("Fetched blog post:", data);
-        setPost(data);
+        const q = query(collection(firestore, 'blog_posts'));
+        const querySnapshot = await getDocs(q);
+        const firebasePosts: BlogPost[] = querySnapshot.docs.map(doc => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            title: d.title || '',
+            slug: d.slug || '',
+            content: d.content || '',
+            featured_image_url: d.featured_image_url || '',
+            gallery_urls: d.gallery_urls || [],
+            created_at: d.created_at && d.created_at.toDate ? d.created_at.toDate().toISOString() : (d.created_at || new Date().toISOString()),
+            keywords: d.keywords || [],
+            tags: d.tags || [],
+          };
+        });
+        const found = firebasePosts.find(p => p.slug === slug);
+        setPost(found || null);
       } catch (error) {
-        console.error("Failed to fetch post:", error);
+        setPost(null);
       } finally {
         setLoading(false);
       }
     };
-
     fetchPost();
   }, [slug]);
 
@@ -82,9 +92,7 @@ export default function BlogPostPage({ params }: Props) {
     if (imageError) {
       return defaultImageUrl;
     }
-    
-    // Use featured_image_base64 as the primary image source
-    return post.featured_image_base64 || defaultImageUrl;
+    return post.featured_image_url || defaultImageUrl;
   };
 
   const handleBack = () => {
@@ -107,14 +115,40 @@ export default function BlogPostPage({ params }: Props) {
     );
   }
 
+  // SEO helpers
+  const getDescription = (html: string, maxLength = 160) => {
+    if (!html) return '';
+    const tempDiv = typeof document !== 'undefined' ? document.createElement('div') : { innerHTML: html, textContent: '' };
+    tempDiv.innerHTML = html;
+    const textContent = tempDiv.textContent || '';
+    return textContent.length > maxLength ? textContent.slice(0, maxLength) + '...' : textContent;
+  };
+  const metaDescription = getDescription(post.content);
+  const metaKeywords = [
+    ...(post.keywords || []),
+    ...(post.tags || [])
+  ].join(', ');
+
   return (
     <div className="min-h-screen bg-white">
+      <Head>
+        <title>{post.title} | Emilio Beaufort Journal</title>
+        <meta name="description" content={metaDescription} />
+        {metaKeywords && <meta name="keywords" content={metaKeywords} />}
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:image" content={post.featured_image_url || '/default-image.jpg'} />
+      </Head>
       {/* <Navbar /> */}
       <main className="pt-32 md:pt-36 lg:pt-40 pb-20 px-4">
         <div className="max-w-3xl mx-auto">
           <article>
             <div className="mb-8">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-4">{post.title}</h1>
+              {/* Only show tags visually, not keywords */}
+              {(post.tags && post.tags.length > 0) && (
+                <></> // Remove tags from the top
+              )}
               <p className="text-sm text-gray-500">
                 {new Date(post.created_at).toLocaleDateString("en-US", {
                   year: "numeric",
@@ -143,9 +177,20 @@ export default function BlogPostPage({ params }: Props) {
               />
             </div>
 
+            {/* Show tags at the bottom as clickable links, just above the back button */}
+            {(post.tags && post.tags.length > 0) && (
+              <div className="flex flex-wrap gap-2 mb-8">
+                {post.tags.map((tag, idx) => (
+                  <Link key={idx} href={`/journal/tag/${encodeURIComponent(tag)}`}>
+                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-200 transition">#{tag}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+
             <button 
               onClick={handleBack}
-              className="inline-flex items-center text-gray-600 hover:text-[#B7A16C] transition-colors duration-300 group"
+              className="inline-flex items-center text-gray-600 hover:text-[#B7A16C] transition-colors duration-300 group mt-8"
             >
               <span className="mr-2 text-sm font-medium">←</span>
               <span className="text-sm font-medium group-hover:underline">Back to Journal</span>

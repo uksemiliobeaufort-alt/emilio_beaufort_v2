@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { getImageUrl, supabase } from "@/lib/supabase";
+// import { getImageUrl, supabase } from "@/lib/supabase";
+import { firestore, uploadBlogImagesToFirebase } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -18,14 +20,16 @@ import EnhancedEditor from "@/components/ui/EnhancedEditor";
 import TipTapEditor from "@/app/admin/components/TipTapEditor";
 
 interface Post {
-  id: number;
+  id: string;
   title: string;
   slug: string;
   content: string;
-  featured_image_base64?: string;
-  gallery_base64?: string[];
+  featured_image_url?: string;
+  gallery_urls?: string[];
   created_at: string;
-  createdAt?: string;
+  updated_at?: string | null;
+  keywords?: string[];
+  tags?: string[];
 }
 
 export default function AdminBlogsPage() {
@@ -40,6 +44,10 @@ export default function AdminBlogsPage() {
   const [content, setContent] = useState("");
   const [imageFiles, setImageFiles] = useState<FileList | null>(null);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [keywordInput, setKeywordInput] = useState("");
+  const [tagInput, setTagInput] = useState("");
 
   const defaultImageUrl = "/default-image.jpg";
 
@@ -48,44 +56,31 @@ export default function AdminBlogsPage() {
   }, []);
 
   const fetchPosts = async () => {
+    setLoading(true);
     try {
-      console.log('Starting to fetch posts...');
-      
-      // Check if supabase client is properly initialized
-      if (!supabase) {
-        throw new Error('Supabase client is not initialized');
-      }
-      
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .order('created_at', { ascending: false });
-        
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-      
-      console.log("Fetched posts:", data);
-      setPosts(data || []);
+      const q = query(collection(firestore, 'blog_posts'));
+      const querySnapshot = await getDocs(q);
+      const firebasePosts: Post[] = querySnapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          title: d.title || '',
+          slug: d.slug || '',
+          content: d.content || '',
+          featured_image_url: d.featured_image_url || '',
+          gallery_urls: d.gallery_urls || [],
+          created_at: d.created_at && d.created_at.toDate ? d.created_at.toDate().toISOString() : (d.created_at || new Date().toISOString()),
+          updated_at: d.updated_at && d.updated_at.toDate ? d.updated_at.toDate().toISOString() : (d.updated_at || null),
+          keywords: d.keywords || [],
+          tags: d.tags || [],
+        };
+      });
+      // Sort by created_at descending
+      firebasePosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setPosts(firebasePosts);
     } catch (error) {
       console.error("Failed to fetch posts:", error);
-      
-      // Check if it's a table not found error
-      if (error && typeof error === 'object' && 'message' in error) {
-        const errorMessage = (error as any).message;
-        if (errorMessage.includes('relation "blog_posts" does not exist')) {
-          toast.error("Blog posts table does not exist. Please check your database setup.");
-        } else if (errorMessage.includes('permission denied')) {
-          toast.error("Permission denied. Please check your database policies.");
-        } else {
-          toast.error(`Failed to fetch posts: ${errorMessage}`);
-        }
-      } else {
-        toast.error("Failed to fetch posts. Please check your connection.");
-      }
-      
-      // Set empty array to prevent further errors
+      toast.error("Failed to fetch posts. Please check your connection.");
       setPosts([]);
     } finally {
       setLoading(false);
@@ -162,6 +157,10 @@ export default function AdminBlogsPage() {
     setImageFiles(null);
     setImagePreviews([]);
     setSelectedPost(null);
+    setKeywords([]);
+    setTags([]);
+    setKeywordInput("");
+    setTagInput("");
   };
 
   const handleCreatePost = async () => {
@@ -174,30 +173,21 @@ export default function AdminBlogsPage() {
     const slug = title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
     try {
-      const imageBase64Array: string[] = [];
+      // Upload images to Firebase Storage
+      const filesArray = Array.from(imageFiles);
+      const imageUrls = await uploadBlogImagesToFirebase(filesArray, slug);
 
-      // Convert all files to base64
-      for (let i = 0; i < imageFiles.length; i++) {
-        const file = imageFiles[i];
-        console.log(`Converting file ${i + 1} to base64: ${file.name}`);
-        
-        const base64String = await convertFileToBase64(file);
-        imageBase64Array.push(base64String);
-        
-        console.log(`File ${i + 1} converted successfully`);
-      }
-
-      // Insert into blog_posts table
-      const { error: insertError } = await supabase.from('blog_posts').insert([
-        {
-          title,
-          slug,
-          content,
-          featured_image_base64: imageBase64Array[0],
-          gallery_base64: imageBase64Array,
-        }
-      ]);
-      if (insertError) throw insertError;
+      // Save blog post to Firestore
+      await addDoc(collection(firestore, "blog_posts"), {
+        title,
+        slug,
+        content,
+        featured_image_url: imageUrls[0],
+        gallery_urls: imageUrls,
+        keywords,
+        tags,
+        created_at: serverTimestamp(),
+      });
 
       resetForm();
       setDialogOpen(false);
@@ -214,9 +204,18 @@ export default function AdminBlogsPage() {
     setSelectedPost(post);
     setTitle(post.title);
     setContent(post.content || "");
-    if (post.gallery_base64) {
-      setImagePreviews(post.gallery_base64 || []);
+    setKeywords(post.keywords || []);
+    setTags(post.tags || []);
+    setKeywordInput("");
+    setTagInput("");
+
+    // Set image preview for edit
+    if (post.featured_image_url) {
+      setImagePreviews([post.featured_image_url]);
+    } else {
+      setImagePreviews([]);
     }
+
     setDialogOpen(true);
   };
 
@@ -230,8 +229,7 @@ export default function AdminBlogsPage() {
 
     setIsProcessing(true);
     try {
-      const { error } = await supabase.from('blog_posts').delete().eq('id', selectedPost.id);
-      if (error) throw error;
+      await deleteDoc(doc(firestore, 'blog_posts', selectedPost.id));
       setDeleteDialogOpen(false);
       setSelectedPost(null);
       fetchPosts();
@@ -252,32 +250,20 @@ export default function AdminBlogsPage() {
     setIsProcessing(true);
     try {
       const slug = title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-      const updateData: any = {
+      let updateData: any = {
         title,
         content,
         slug,
+        keywords,
+        tags,
       };
-
       if (imageFiles && imageFiles.length > 0) {
-        const imageBase64Array: string[] = [];
-
-        // Convert all files to base64
-        for (let i = 0; i < imageFiles.length; i++) {
-          const file = imageFiles[i];
-          console.log(`Converting file ${i + 1} to base64: ${file.name}`);
-          
-          const base64String = await convertFileToBase64(file);
-          imageBase64Array.push(base64String);
-          
-          console.log(`File ${i + 1} converted successfully`);
-        }
-
-        updateData.featured_image_base64 = imageBase64Array[0];
-        updateData.gallery_base64 = imageBase64Array;
+        const filesArray = Array.from(imageFiles);
+        const imageUrls = await uploadBlogImagesToFirebase(filesArray, slug);
+        updateData.featured_image_url = imageUrls[0];
+        updateData.gallery_urls = imageUrls;
       }
-
-      const { error } = await supabase.from('blog_posts').update(updateData).eq('id', selectedPost.id);
-      if (error) throw error;
+      await updateDoc(doc(firestore, 'blog_posts', selectedPost.id), updateData);
       resetForm();
       setDialogOpen(false);
       fetchPosts();
@@ -405,6 +391,57 @@ export default function AdminBlogsPage() {
               )}
             </div>
 
+            <div className="space-y-2">
+              <Label className="text-base font-medium">Keywords</Label>
+              <Input
+                value={keywordInput}
+                onChange={e => setKeywordInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    if (keywordInput.trim() && !keywords.includes(keywordInput.trim())) {
+                      setKeywords([...keywords, keywordInput.trim()]);
+                    }
+                    setKeywordInput("");
+                  }
+                }}
+                placeholder="Type a keyword and press Enter"
+              />
+              <div className="flex flex-wrap gap-2 mt-2">
+                {keywords.map((kw, idx) => (
+                  <span key={idx} className="bg-gray-200 px-2 py-1 rounded">
+                    {kw}
+                    <button onClick={() => setKeywords(keywords.filter((k, i) => i !== idx))} className="ml-1 text-red-500">×</button>
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-base font-medium">Tags</Label>
+              <Input
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+                      setTags([...tags, tagInput.trim()]);
+                    }
+                    setTagInput("");
+                  }
+                }}
+                placeholder="Type a tag and press Enter"
+              />
+              <div className="flex flex-wrap gap-2 mt-2">
+                {tags.map((tag, idx) => (
+                  <span key={idx} className="bg-blue-200 px-2 py-1 rounded">
+                    #{tag}
+                    <button onClick={() => setTags(tags.filter((t, i) => i !== idx))} className="ml-1 text-red-500">×</button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
             <Button 
               className="w-full h-12 text-base bg-black text-white hover:bg-gray-800 transition-colors" 
               onClick={selectedPost ? handleUpdatePost : handleCreatePost}
@@ -463,88 +500,90 @@ export default function AdminBlogsPage() {
         </div>
       ) : posts.length > 0 ? (
         <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {posts.map((post) => (
-            <motion.div
-              key={post.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <Card className="overflow-hidden group hover:shadow-lg transition-all duration-200 h-full flex flex-col">
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img
-                    src={(() => {
-                      console.log("Post image base64:", post.featured_image_base64 ? "Present" : "Not present");
-                      console.log("Gallery base64:", post.gallery_base64);
-                      
-                      // Use base64 image if available
-                      if (post.featured_image_base64) {
-                        return post.featured_image_base64;
-                      }
-                      
-                      return defaultImageUrl;
-                    })()}
-                    alt={post.title}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      console.error("Image failed to load");
-                      e.currentTarget.src = defaultImageUrl;
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
-                </div>
-                <CardContent className="p-4 lg:p-5 flex-1 flex flex-col">
-                  <h3 className="font-bold text-lg lg:text-xl mb-2 group-hover:text-gray-900 transition line-clamp-2 min-h-[3.5rem]">
-                    {post.title}
-                  </h3>
-                  <div 
-                    className="text-sm text-gray-600 line-clamp-3 flex-1 mb-4"
-                    dangerouslySetInnerHTML={{
-                      __html: truncateHtmlContent(post.content || "", 120)
-                    }}
-                    style={{
-                      overflow: 'hidden',
-                      display: '-webkit-box',
-                      WebkitBoxOrient: 'vertical',
-                      WebkitLineClamp: 3,
-                    }}
-                  />
-                  <div className="mt-auto">
-                    <div className="flex items-center justify-between mb-4">
-                      <p className="text-xs text-gray-500">
-                        {new Date(post.created_at).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </p>
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                        Published
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="flex-1 bg-black text-white hover:bg-gray-800"
-                        onClick={() => handleEditClick(post)}
-                      >
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleDeleteClick(post)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+          {posts.map((post) => {
+            let imageSrc = '';
+            if (post.featured_image_url) {
+              imageSrc = post.featured_image_url;
+            }
+            return (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <Card className="overflow-hidden group hover:shadow-lg transition-all duration-200 h-full flex flex-col">
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    {imageSrc ? (
+                      <img
+                        src={imageSrc}
+                        alt={post.title}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={e => {
+                          // Hide the image if it fails to load
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7a4 4 0 00-4-4H7a4 4 0 00-4 4z" /></svg>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                  <CardContent className="p-4 lg:p-5 flex-1 flex flex-col">
+                    <h3 className="font-bold text-lg lg:text-xl mb-2 group-hover:text-gray-900 transition line-clamp-2 min-h-[3.5rem]">
+                      {post.title}
+                    </h3>
+                    <div 
+                      className="text-sm text-gray-600 line-clamp-3 flex-1 mb-4"
+                      dangerouslySetInnerHTML={{
+                        __html: truncateHtmlContent(post.content || "", 120)
+                      }}
+                      style={{
+                        overflow: 'hidden',
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical',
+                        WebkitLineClamp: 3,
+                      }}
+                    />
+                    <div className="mt-auto">
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-xs text-gray-500">
+                          {new Date(post.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </p>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                          Published
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1 bg-black text-white hover:bg-gray-800"
+                          onClick={() => handleEditClick(post)}
+                        >
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleDeleteClick(post)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-16 lg:py-20">

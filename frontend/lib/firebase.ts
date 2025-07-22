@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { getFirestore, collection, addDoc, Timestamp } from 'firebase/firestore';
 
 // Firebase configuration - Add your config here
 const firebaseConfig = {
@@ -14,8 +15,9 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
+const firestore = getFirestore(app);
 
-export { storage };
+export { storage, firestore };
 
 // Helper function to generate unique filename
 const generateFileName = (originalName: string, productId: string, imageType: 'main' | 'gallery'): string => {
@@ -113,5 +115,27 @@ export const getCategoryFromFirebaseUrl = (url: string): 'cosmetics' | 'hair-ext
     return null;
   } catch {
     return null;
+  }
+}; 
+
+// Helper function to upload blog images to 'blog_posts' folder
+export const uploadBlogImagesToFirebase = async (
+  files: File[],
+  slug: string
+): Promise<string[]> => {
+  try {
+    const uploadPromises = files.map(async (file, idx) => {
+      const timestamp = Date.now();
+      const fileExtension = file.name.split('.').pop() || 'jpg';
+      const imagePath = `blog_posts/${slug}_${timestamp}_${idx}.${fileExtension}`;
+      const imageRef = ref(storage, imagePath);
+      const snapshot = await uploadBytes(imageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    });
+    return await Promise.all(uploadPromises);
+  } catch (error) {
+    console.error('Error uploading blog images:', error);
+    throw error;
   }
 }; 

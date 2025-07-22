@@ -1,0 +1,20 @@
+[
+    {
+      "origin": [
+        "http://localhost:3000",
+        "https://emiliobeaufort.com"
+      ],
+      "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "maxAgeSeconds": 3600,
+      "responseHeader": [
+        "Content-Type",
+        "x-goog-meta-custom",
+        "x-firebase-storage-version",
+        "x-goog-upload-protocol",
+        "x-goog-upload-header-content-length",
+        "x-goog-upload-command",
+        "x-goog-upload-offset",
+        "x-goog-upload-url"
+      ]
+    }
+  ]

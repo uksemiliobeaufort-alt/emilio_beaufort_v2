@@ -1,31 +1,33 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { firestore } from '@/lib/firebase';
 import { collection, getDocs, query } from 'firebase/firestore';
+import { Card, CardContent } from '@/components/ui/card';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface BlogPost {
   id: string;
   title: string;
   slug: string;
-  content: string;
+  content?: string;
   featured_image_url?: string;
   gallery_urls?: string[];
   created_at: string;
   updated_at?: string;
+  tags?: string[];
 }
 
 const POSTS_PER_PAGE = 6;
 
-export default function BlogGalleryPage() {
+export default function TagArchivePage({ params }: { params: { tag: string } }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const tag = decodeURIComponent(params.tag);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -44,8 +46,11 @@ export default function BlogGalleryPage() {
             gallery_urls: d.gallery_urls || [],
             created_at: d.created_at && d.created_at.toDate ? d.created_at.toDate().toISOString() : (d.created_at || new Date().toISOString()),
             updated_at: d.updated_at && d.updated_at.toDate ? d.updated_at.toDate().toISOString() : (d.updated_at || null),
+            tags: d.tags || [],
           };
         });
+        // Filter by tag
+        firebasePosts = firebasePosts.filter(post => post.tags && post.tags.includes(tag));
         // Sort by created_at descending
         firebasePosts = firebasePosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         setPosts(firebasePosts);
@@ -56,7 +61,7 @@ export default function BlogGalleryPage() {
       }
     };
     fetchPosts();
-  }, []);
+  }, [tag]);
 
   // Pagination logic
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
@@ -68,40 +73,35 @@ export default function BlogGalleryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-6 py-12 mt-12">
-        <div className="mb-8">
-          <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 mb-4 text-center">Gallery</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed text-center">
-            Explore our complete collection of stories, insights, and perspectives. Dive deep into the world of style, culture, and the pursuit of excellence.
-          </p>
-        </div>
+    <div className="min-h-screen bg-white py-10 px-6">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold mb-4">Posts tagged with <span className="text-blue-600">#{tag}</span></h1>
         {loading ? (
           <div className="text-center text-gray-500">Loading...</div>
         ) : paginatedPosts.length > 0 ? (
           <>
-            <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-8">
               {paginatedPosts.map((post) => (
                 <Link key={post.id} href={`/journal/${post.slug}`}>
-                  <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer group h-full flex flex-col">
-                    <div className="relative aspect-[4/3] bg-gray-100">
+                  <Card className="overflow-hidden hover:shadow-lg cursor-pointer group transition">
+                    <div className="relative aspect-[4/3]">
                       {post.featured_image_url ? (
                         <img
                           src={post.featured_image_url}
                           alt={post.title}
-                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="object-cover w-full h-full group-hover:scale-105 transition-transform"
                         />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-gray-500">No image</span>
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-400">
+                          <span>No image</span>
                         </div>
                       )}
                     </div>
-                    <CardContent className="p-5 flex-1 flex flex-col">
+                    <CardContent className="p-5">
                       <h3 className="font-bold text-xl mb-1 group-hover:text-gray-900 transition line-clamp-2">
                         {post.title}
                       </h3>
-                      <p className="text-sm text-gray-600 line-clamp-3 mb-2 flex-1">
+                      <p className="text-sm text-gray-600 line-clamp-3 mb-2">
                         {post.content?.replace(/<[^>]+>/g, '').slice(0, 150)}
                       </p>
                       <p className="text-xs text-gray-400 mt-2">
@@ -111,14 +111,13 @@ export default function BlogGalleryPage() {
                           day: "numeric",
                         })}
                       </p>
-                      <Button className="w-full bg-black text-white hover:bg-gray-800 mt-4">Read Article</Button>
                     </CardContent>
                   </Card>
                 </Link>
               ))}
             </div>
             {/* Pagination Controls */}
-            <div className="flex justify-center gap-2 mt-12">
+            <div className="flex justify-center gap-2 mb-8">
               <Button
                 variant="outline"
                 size="sm"
@@ -148,12 +147,7 @@ export default function BlogGalleryPage() {
             </div>
           </>
         ) : (
-          <div className="text-center text-gray-500 mt-10">
-            <p className="text-xl mb-4">No blog posts available yet.</p>
-            <Link href="/journal" className="border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white inline-block px-4 py-2 border rounded">
-              Back to Journal
-            </Link>
-          </div>
+          <div className="text-center text-gray-500">No posts found for this tag.</div>
         )}
       </div>
     </div>

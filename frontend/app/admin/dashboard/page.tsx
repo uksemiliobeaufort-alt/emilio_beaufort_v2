@@ -17,8 +17,8 @@ import {
   Plus
 } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
-import { getProducts } from '@/lib/supabase';
+import { firestore } from '@/lib/firebase';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { Bar } from 'react-chartjs-2';
@@ -32,6 +32,8 @@ import {
   Legend,
 } from 'chart.js';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+import { supabase } from '@/lib/supabase';
+import { getProducts } from '@/lib/supabase';
 
 interface DashboardStats {
   totalProducts: number;
@@ -50,12 +52,12 @@ interface PartnershipInquiry {
 }
 
 interface BlogPost {
-  id: number;
+  id: string;
   title: string;
   slug: string;
   content: string;
-  featured_image_base64?: string;
-  gallery_base64?: string[];
+  featured_image_url?: string;
+  gallery_urls?: string[];
   created_at: string;
 }
 
@@ -259,19 +261,23 @@ export default function AdminDashboard() {
 
   const fetchRecentPosts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('id, title, slug, content, featured_image_base64, created_at')
-        .order('created_at', { ascending: false })
-        .limit(3); // Show 3 most recent posts
-
-      if (error) {
-        console.error('Error fetching recent posts:', error);
-        throw error;
-      }
-
-      console.log('Fetched recent posts:', data?.length || 0);
-      setRecentPosts(data || []);
+      const q = query(collection(firestore, 'blog_posts'));
+      const querySnapshot = await getDocs(q);
+      let firebasePosts: BlogPost[] = querySnapshot.docs.map(doc => {
+        const d = doc.data();
+        return {
+          id: doc.id,
+          title: d.title || '',
+          slug: d.slug || '',
+          content: d.content || '',
+          featured_image_url: d.featured_image_url || '',
+          gallery_urls: d.gallery_urls || [],
+          created_at: d.created_at && d.created_at.toDate ? d.created_at.toDate().toISOString() : (d.created_at || new Date().toISOString()),
+        };
+      });
+      // Sort by created_at descending and limit to 3
+      firebasePosts = firebasePosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 3);
+      setRecentPosts(firebasePosts);
     } catch (error) {
       console.error('Error in fetchRecentPosts:', error);
     }
@@ -279,27 +285,20 @@ export default function AdminDashboard() {
 
   const fetchDashboardStats = async () => {
     try {
-      // Fetch partnership inquiries count
+      // Fetch partnership inquiries count from Supabase
       const { count: inquiriesCount, error: inquiriesError } = await supabase
         .from('partnership_inquiries')
         .select('*', { count: 'exact', head: true });
-
       if (inquiriesError) {
         console.error('Error fetching partnership inquiries count:', inquiriesError);
         throw inquiriesError;
       }
 
-      // Fetch blog posts count
-      const { count: postsCount, error: postsError } = await supabase
-        .from('blog_posts')
-        .select('*', { count: 'exact', head: true });
+      // Fetch blog posts count from Firebase
+      const postsSnapshot = await getDocs(collection(firestore, 'blog_posts'));
+      const postsCount = postsSnapshot.size;
 
-      if (postsError) {
-        console.error('Error fetching blog posts count:', postsError);
-        throw postsError;
-      }
-
-      // Fetch actual products count from both tables
+      // Fetch products count from Supabase
       let totalProductsCount = 0;
       try {
         const products = await getProducts();
@@ -313,11 +312,9 @@ export default function AdminDashboard() {
             supabase.from('cosmetics').select('*', { count: 'exact', head: true }),
             supabase.from('hair_extensions').select('*', { count: 'exact', head: true })
           ]);
-          
           const cosmeticsCount = cosmeticsResult.count || 0;
           const hairExtensionsCount = hairExtensionsResult.count || 0;
           totalProductsCount = cosmeticsCount + hairExtensionsCount;
-          
           console.log('Fetched products count (fallback):', totalProductsCount);
         } catch (fallbackError) {
           console.error('Error in fallback product count:', fallbackError);
@@ -326,8 +323,8 @@ export default function AdminDashboard() {
 
       setStats({
         totalProducts: totalProductsCount,
-        totalPosts: postsCount || 0,
-        totalPartnershipInquiries: inquiriesCount || 0
+        totalPosts: postsCount,
+        totalPartnershipInquiries: inquiriesCount
       });
     } catch (error) {
       console.error('Error in fetchDashboardStats:', error);
@@ -569,7 +566,7 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {inquiries.map((inquiry) => (
+                    {inquiries.slice(0, 3).map((inquiry) => (
                       <tr key={inquiry.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-3 px-4 text-sm text-gray-900">{formatDateShort(inquiry.created_at)}</td>
                         <td className="py-3 px-4 text-sm font-medium text-gray-900">{inquiry.full_name}</td>
@@ -603,7 +600,7 @@ export default function AdminDashboard() {
 
               {/* Mobile Cards */}
               <div className="lg:hidden space-y-4">
-                {inquiries.map((inquiry) => (
+                {inquiries.slice(0, 3).map((inquiry) => (
                   <Card key={inquiry.id} className="border border-gray-200">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
@@ -674,9 +671,9 @@ export default function AdminDashboard() {
                 {recentPosts.map((post) => (
                   <div key={post.id} className="flex items-start gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                      {post.featured_image_base64 ? (
+                      {post.featured_image_url ? (
                         <img
-                          src={post.featured_image_base64}
+                          src={post.featured_image_url}
                           alt={post.title}
                           className="w-full h-full object-cover"
                         />

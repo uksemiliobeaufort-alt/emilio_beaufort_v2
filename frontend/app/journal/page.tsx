@@ -6,20 +6,19 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+import { firestore } from '@/lib/firebase';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { useRouter } from "next/navigation";
 import { Share2, Copy, MessageCircle, Linkedin, Twitter, Facebook, Check, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 interface BlogPost {
-  id: number;
+  id: string;
   title: string;
   slug: string;
   content?: string;
   featured_image_url?: string;
-  gallery?: string[];
-  featured_image_base64?: string;
-  gallery_base64?: string[];
+  gallery_urls?: string[];
   created_at: string;
   updated_at?: string;
 }
@@ -38,27 +37,30 @@ export default function JournalPage() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        // Optimize query: Only fetch needed fields and limit to 10 posts for marquee
-        const { data, error } = await supabase
-          .from('blog_posts')
-          .select('id, title, slug, featured_image_base64, created_at')
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        if (error) {
-          console.error("Error fetching posts:", error);
-          throw error;
-        }
-
-        console.log("Fetched journal posts:", data?.length || 0);
-        setPosts(data || []);
+        const q = query(collection(firestore, 'blog_posts'));
+        const querySnapshot = await getDocs(q);
+        let firebasePosts: BlogPost[] = querySnapshot.docs.map(doc => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            title: d.title || '',
+            slug: d.slug || '',
+            content: d.content || '',
+            featured_image_url: d.featured_image_url || '',
+            gallery_urls: d.gallery_urls || [],
+            created_at: d.created_at && d.created_at.toDate ? d.created_at.toDate().toISOString() : (d.created_at || new Date().toISOString()),
+            updated_at: d.updated_at && d.updated_at.toDate ? d.updated_at.toDate().toISOString() : (d.updated_at || null),
+          };
+        });
+        // Sort by created_at descending and limit to 10
+        firebasePosts = firebasePosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10);
+        setPosts(firebasePosts);
       } catch (error) {
         console.error("Failed to fetch posts:", error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchPosts();
   }, []);
 
@@ -210,9 +212,9 @@ export default function JournalPage() {
                     <Link href={`/journal/${posts[currentIndex].slug}`}>
                       <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer group h-full">
                         <div className="relative aspect-[4/3] bg-gray-100">
-                          {posts[currentIndex].featured_image_base64 ? (
+                          {posts[currentIndex].featured_image_url ? (
                             <img
-                              src={posts[currentIndex].featured_image_base64}
+                              src={posts[currentIndex].featured_image_url}
                               alt={posts[currentIndex].title || 'Blog post image'}
                               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               loading="lazy"
@@ -229,9 +231,7 @@ export default function JournalPage() {
                           <h3 className="font-semibold text-xl mb-1 group-hover:text-gray-900 transition-colors line-clamp-2">
                             {posts[currentIndex].title}
                           </h3>
-                          <p className="text-gray-600 text-sm line-clamp-3 mb-3">
-                            Click to read this fascinating article and discover more insights.
-                          </p>
+                          <p className="text-gray-600 text-sm line-clamp-3 mb-3">{stripHtmlAndTruncate(posts[currentIndex].content || '', 150)}</p>
                           <p className="text-xs text-gray-500 mb-4">
                             {new Date(posts[currentIndex].created_at).toLocaleDateString("en-US", {
                               year: "numeric",
@@ -303,9 +303,9 @@ export default function JournalPage() {
                         <Link href={`/journal/${post.slug}`}>
                           <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer group h-full">
                             <div className="relative aspect-[4/3] bg-gray-100">
-                              {post.featured_image_base64 ? (
+                              {post.featured_image_url ? (
                                 <img
-                                  src={post.featured_image_base64}
+                                  src={post.featured_image_url}
                                   alt={post.title || 'Blog post image'}
                                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                   loading="lazy"
@@ -322,9 +322,7 @@ export default function JournalPage() {
                               <h3 className="font-semibold text-xl mb-1 group-hover:text-gray-900 transition-colors line-clamp-2">
                                 {post.title}
                               </h3>
-                              <p className="text-gray-600 text-sm line-clamp-3 mb-3">
-                                Click to read this fascinating article and discover more insights.
-                              </p>
+                              <p className="text-gray-600 text-sm line-clamp-3 mb-3">{stripHtmlAndTruncate(post.content || '', 150)}</p>
                               <p className="text-xs text-gray-500 mb-4">
                                 {new Date(post.created_at).toLocaleDateString("en-US", {
                                   year: "numeric",
