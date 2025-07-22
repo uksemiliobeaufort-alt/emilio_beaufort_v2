@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next';
 import { SITE_CONFIG } from '@/lib/seo';
 
+export const dynamic = 'force-dynamic';
+
 interface BlogPost {
   slug: string;
   updatedAt?: string | Date;
@@ -74,10 +76,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // Fetch blogs dynamically from API route
-  const res = await fetch(`${baseUrl}/api/sitemap-data`, {
-    next: { revalidate: 60 }, // ISR: revalidate every 60 seconds
-  });
-  const blogs: BlogPost[] = await res.json();
+  let blogs: BlogPost[] = [];
+  try {
+    const res = await fetch(`${baseUrl}/api/sitemap-data`);
+    if (res.ok) {
+      blogs = await res.json();
+    } else {
+      // fallback to static pages only
+      return staticPages;
+    }
+  } catch (e) {
+    // fallback to static pages only
+    return staticPages;
+  }
 
   const dynamicBlogPages: MetadataRoute.Sitemap = blogs.map((data) => ({
     url: `${baseUrl}/journal/${data.slug}`,
