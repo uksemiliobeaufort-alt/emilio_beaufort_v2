@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { Share2, Copy, MessageCircle, Linkedin, Twitter, Facebook, Check, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
+
 interface BlogPost {
   id: string;
   title: string;
@@ -26,7 +27,7 @@ interface BlogPost {
 export default function JournalPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copiedPostId, setCopiedPostId] = useState<number | null>(null);
+  const [copiedPostId, setCopiedPostId] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0); // For mobile carousel
   const [navigating, setNavigating] = useState(false); // For loading animation
   const router = useRouter();
@@ -232,13 +233,59 @@ export default function JournalPage() {
                             {posts[currentIndex].title}
                           </h3>
                           <p className="text-gray-600 text-sm line-clamp-3 mb-3">{stripHtmlAndTruncate(posts[currentIndex].content || '', 150)}</p>
-                          <p className="text-xs text-gray-500 mb-4">
+                          <p className="text-xs text-gray-500 mb-2">
                             {new Date(posts[currentIndex].created_at).toLocaleDateString("en-US", {
                               year: "numeric",
                               month: "long",
                               day: "numeric",
                             })}
                           </p>
+                          {/* Share Row */}
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm text-gray-600 font-medium">Share it:</span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                title="Share on WhatsApp"
+                                onClick={e => { e.preventDefault(); shareOnWhatsApp(posts[currentIndex]); }}
+                                className="flex items-center justify-center w-7 h-7 rounded-full bg-green-500 hover:bg-green-600 transition-colors"
+                              >
+                                <MessageCircle className="w-4 h-4 text-white" />
+                              </button>
+                              <button
+                                type="button"
+                                title="Share on LinkedIn"
+                                onClick={e => { e.preventDefault(); shareOnLinkedIn(posts[currentIndex]); }}
+                                className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-700 hover:bg-blue-800 transition-colors"
+                              >
+                                <Linkedin className="w-4 h-4 text-white" />
+                              </button>
+                              <button
+                                type="button"
+                                title="Share on Twitter"
+                                onClick={e => { e.preventDefault(); shareOnTwitter(posts[currentIndex]); }}
+                                className="flex items-center justify-center w-7 h-7 rounded-full bg-sky-500 hover:bg-sky-600 transition-colors"
+                              >
+                                <Twitter className="w-4 h-4 text-white" />
+                              </button>
+                              <button
+                                type="button"
+                                title="Share on Facebook"
+                                onClick={e => { e.preventDefault(); shareOnFacebook(posts[currentIndex]); }}
+                                className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors"
+                              >
+                                <Facebook className="w-4 h-4 text-white" />
+                              </button>
+                              <button
+                                type="button"
+                                title="Copy Link"
+                                onClick={e => { e.preventDefault(); copyToClipboard(posts[currentIndex]); }}
+                                className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
+                              >
+                                {copiedPostId === posts[currentIndex].id ? <Check className="w-4 h-4 text-green-700" /> : <Copy className="w-4 h-4 text-gray-700" />}
+                              </button>
+                            </div>
+                          </div>
                           <div className="space-y-3">
                             <Button 
                               className="w-full bg-gray-900 text-white hover:bg-gray-800 transition-colors flex items-center justify-center"
@@ -323,13 +370,59 @@ export default function JournalPage() {
                                 {post.title}
                               </h3>
                               <p className="text-gray-600 text-sm line-clamp-3 mb-3">{stripHtmlAndTruncate(post.content || '', 150)}</p>
-                              <p className="text-xs text-gray-500 mb-4">
+                              <p className="text-xs text-gray-500 mb-2">
                                 {new Date(post.created_at).toLocaleDateString("en-US", {
                                   year: "numeric",
                                   month: "long",
                                   day: "numeric",
                                 })}
                               </p>
+                              {/* Share Row */}
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm text-gray-600 font-medium">Share it:</span>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    title="Share on WhatsApp"
+                                    onClick={e => { e.preventDefault(); shareOnWhatsApp(post); }}
+                                    className="flex items-center justify-center w-7 h-7 rounded-full bg-green-500 hover:bg-green-600 transition-colors"
+                                  >
+                                    <MessageCircle className="w-4 h-4 text-white" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    title="Share on LinkedIn"
+                                    onClick={e => { e.preventDefault(); shareOnLinkedIn(post); }}
+                                    className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-700 hover:bg-blue-800 transition-colors"
+                                  >
+                                    <Linkedin className="w-4 h-4 text-white" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    title="Share on Twitter"
+                                    onClick={e => { e.preventDefault(); shareOnTwitter(post); }}
+                                    className="flex items-center justify-center w-7 h-7 rounded-full bg-sky-500 hover:bg-sky-600 transition-colors"
+                                  >
+                                    <Twitter className="w-4 h-4 text-white" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    title="Share on Facebook"
+                                    onClick={e => { e.preventDefault(); shareOnFacebook(post); }}
+                                    className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors"
+                                  >
+                                    <Facebook className="w-4 h-4 text-white" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    title="Copy Link"
+                                    onClick={e => { e.preventDefault(); copyToClipboard(post); }}
+                                    className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
+                                  >
+                                    {copiedPostId === post.id ? <Check className="w-4 h-4 text-green-700" /> : <Copy className="w-4 h-4 text-gray-700" />}
+                                  </button>
+                                </div>
+                              </div>
                               <div className="space-y-3">
                                 <Button 
                                   className="w-full bg-gray-900 text-white hover:bg-gray-800 transition-colors flex items-center justify-center"

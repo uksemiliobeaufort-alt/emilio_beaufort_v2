@@ -1,4 +1,7 @@
 "use client";
+import { Label } from "@/components/ui/label";
+import { v4 as uuidv4 } from 'uuid';
+import TextField from '@mui/material/TextField';
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -10,6 +13,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { supabase } from '@/lib/supabase';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,63 +45,86 @@ import {
   Star,
   Package,
   DollarSign,
-  Sparkles
+  Sparkles,
+  Waves
 } from 'lucide-react';
-import { uploadProductImage, uploadMultipleImages, deleteProductImage } from '@/lib/supabase';
+import { uploadProductImage, uploadMultipleImages, deleteProductImage, } from '@/lib/supabase';
 import { 
   createProduct, 
   updateProduct, 
-  Product,
-  isCosmeticsProduct,
-  isHairExtensionsProduct
+  // Product, // Removed Product import
+  
 } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { Resolver } from 'react-hook-form';
 
-const productSchema = z.object({
-  name: z.string().min(1, 'Product name is required'),
-  description: z.string().optional(),
-  detailed_description: z.string().optional(),
-  original_price: z.string().min(1, 'Original price is required'),
-  price: z.string().optional(),
-  category: z.enum(['cosmetics', 'hair-extension']),
-  status: z.enum(['draft', 'published', 'archived']),
-  featured: z.boolean(),
-  in_stock: z.boolean(),
-  stock_quantity: z.string().optional(),
-  sku: z.string().optional(),
-  weight: z.string().optional(),
-  dimensions: z.string().optional(),
+// Define Variant type locally if not imported from supabase
+interface Variant {
+  id: string;
+  product_id: string;
+  weight: number;
+  length: number;
+  price: number;
+  discount_price: number | null;
+}
+
+// Use ProductFormData for form, defaultValues, and all form logic
+// Only use Product type for backend data
+type ProductFormData = {
+  name: string;
+  description?: string;
+  detailed_description?: string;
+  original_price: string;
+  price?: string;
+  category: 'cosmetics' | 'hair-extension';
+  status: 'draft' | 'published' | 'archived';
+  featured: boolean;
+  in_stock: boolean;
+  stock_quantity?: string;
+  sku?: string;
+  weight?: string;
+  dimensions?: string;
   
   // Cosmetics specific fields
-  ingredients: z.string().optional(),
-  skin_type: z.string().optional(),
-  product_benefits: z.string().optional(),
-  spf_level: z.string().optional(),
-  volume_size: z.string().optional(),
-  dermatologist_tested: z.boolean().optional(),
-  cruelty_free: z.boolean().optional(),
-  organic_natural: z.boolean().optional(),
+  ingredients?: string;
+  skin_type?: string;
+  product_benefits?: string;
+  spf_level?: string;
+  volume_size?: string;
+  dermatologist_tested?: boolean;
+  cruelty_free?: boolean;
+  organic_natural?: boolean;
   
   // Hair extension specific fields
-  hair_type: z.string().optional(),
-  hair_texture: z.string().optional(),
-  hair_length: z.string().optional(),
-  hair_weight: z.string().optional(),
-  hair_color_shade: z.string().optional(),
-  installation_method: z.string().optional(),
-  care_instructions: z.string().optional(),
-  quantity_in_set: z.string().optional(),
+  hair_type?: string;
+  hair_texture?: string;
+  hair_length?: string;
+  hair_weight?: string;
+  hair_color?: string;
+  hair_color_shade?: string;
+  installation_method?: string;
+  care_instructions?: string;
+  quantity_in_set?: string;
   
-  seo_title: z.string().optional(),
-  seo_description: z.string().optional(),
-  seo_keywords: z.string().optional(),
-});
+  seo_title?: string;
+  seo_description?: string;
+  seo_keywords?: string;
+  // Add these for image and id support
+  main_image_url?: string;
+  gallery_urls?: string[];
+  id?: string;
+};
 
-type ProductFormData = z.infer<typeof productSchema>;
+function isCosmeticsProduct(product: ProductFormData): product is ProductFormData {
+  return product.category === 'cosmetics';
+}
+function isHairExtensionsProduct(product: ProductFormData): product is ProductFormData {
+  return product.category === 'hair-extension';
+}
 
 interface ProductFormDialogProps {
   open: boolean;
-  product: Product | null;
+  product: ProductFormData | null;
   selectedCategory?: string;
   onClose: () => void;
   onSuccess: () => void;
@@ -141,6 +176,26 @@ const installationMethodOptions = [
   { value: 'halo', label: 'Halo' },
 ];
 
+// Add color options for hair extensions
+const hairColorOptions = [
+  { value: 'natural_black', label: 'Natural Black' },
+  { value: 'dark_brown', label: 'Dark Brown' },
+  { value: 'ombre', label: 'Ombre' },
+  { value: 'light_brown', label: 'Light Brown' },
+  { value: 'highlight_27', label: 'Highlight #27' },
+  { value: 'burgundy', label: 'Burgundy' },
+];
+
+// Add a color swatch map for hair colors
+const hairColorSwatchMap: Record<string, string> = {
+  natural_black: '#232323',
+  dark_brown: '#4B2E19',
+  ombre: 'linear-gradient(90deg, #232323 0%, #FFD700 100%)', // example gradient
+  light_brown: '#A0522D',
+  highlight_27: '#E2B369',
+  burgundy: '#800020',
+};
+
 export default function ProductFormDialog({ open, product, selectedCategory, onClose, onSuccess }: ProductFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mainImageUrl, setMainImageUrl] = useState<string>('');
@@ -149,7 +204,46 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
 
   const form = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(z.object({
+      name: z.string().min(1, 'Product name is required'),
+      description: z.string().optional(),
+      detailed_description: z.string().optional(),
+      original_price: z.string().min(1, 'Original price is required'),
+      price: z.string().optional(),
+      category: z.enum(['cosmetics', 'hair-extension']),
+      status: z.enum(['draft', 'published', 'archived']),
+      featured: z.boolean(),
+      in_stock: z.boolean(),
+      stock_quantity: z.string().optional(),
+      sku: z.string().optional(),
+      weight: z.string().optional(),
+      dimensions: z.string().optional(),
+      
+      // Cosmetics specific fields
+      ingredients: z.string().optional(),
+      skin_type: z.string().optional(),
+      product_benefits: z.string().optional(),
+      spf_level: z.string().optional(),
+      volume_size: z.string().optional(),
+      dermatologist_tested: z.boolean().optional(),
+      cruelty_free: z.boolean().optional(),
+      organic_natural: z.boolean().optional(),
+      
+      // Hair extension specific fields
+      hair_type: z.string().optional(),
+      hair_texture: z.string().optional(),
+      hair_length: z.string().optional(),
+      hair_weight: z.string().optional(),
+      hair_color: z.string().optional(),
+      hair_color_shade: z.string().optional(),
+      installation_method: z.string().optional(),
+      care_instructions: z.string().optional(),
+      quantity_in_set: z.string().optional(),
+      
+      seo_title: z.string().optional(),
+      seo_description: z.string().optional(),
+      seo_keywords: z.string().optional(),
+    })) as Resolver<ProductFormData, any>,
     defaultValues: {
       name: '',
       description: '',
@@ -191,41 +285,87 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
     },
   });
 
+  const [variants, setVariants] = useState<Variant[]>([
+    {
+      id: uuidv4(),
+      product_id: '',
+      weight: 0,
+      length: 0,
+      price: 0,
+      discount_price: 0,
+    },
+  ]);
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+
+  const handleVariantChange = (index: number, field: keyof Variant, value: string) => {
+    const updated = [...variants];
+    updated[index] = { ...updated[index], [field]: value === '' ? 0 : Number(value) };
+    setVariants(updated);
+  };
+
+  const addNewVariant = () => {
+    setVariants([
+      ...variants,
+      {
+        id: uuidv4(),
+        weight: 0,
+        length: 0,
+        price: 0,
+        discount_price: 0,
+        product_id: '',
+      },
+    ]);
+  };
+
+  const removeVariant = (index: number) => {
+    const updated = [...variants];
+    updated.splice(index, 1);
+    setVariants(updated);
+  };
+
+  const handleVariantSelect = (variant: Variant) => {
+    setSelectedVariant(variant.id);
+    form.setValue('hair_weight', String(variant.weight));
+    form.setValue('hair_length', String(variant.length));
+    form.setValue('original_price', String(variant.price));
+  };
+
   // Reset form when product changes
   useEffect(() => {
     if (product) {
+      const typedProduct = product as ProductFormData;
       const baseData = {
-        name: product.name,
-        description: product.description || '',
-        detailed_description: product.detailed_description || '',
-        original_price: product.original_price?.toString() || '',
-        price: product.price?.toString() || '',
-        category: product.category,
-        status: product.status,
-        featured: product.featured,
-        in_stock: product.in_stock,
-        stock_quantity: product.stock_quantity?.toString() || '',
-        sku: product.sku || '',
-        weight: product.weight?.toString() || '',
-        dimensions: product.dimensions || '',
-        seo_title: product.seo_title || '',
-        seo_description: product.seo_description || '',
-        seo_keywords: product.seo_keywords?.join(', ') || '',
+        name: typedProduct.name,
+        description: typedProduct.description || '',
+        detailed_description: typedProduct.detailed_description || '',
+        original_price: typedProduct.original_price || '',
+        price: typedProduct.price || '',
+        category: typedProduct.category,
+        status: typedProduct.status,
+        featured: typedProduct.featured,
+        in_stock: typedProduct.in_stock,
+        stock_quantity: typedProduct.stock_quantity || '',
+        sku: typedProduct.sku || '',
+        weight: typedProduct.weight || '',
+        dimensions: typedProduct.dimensions || '',
+        seo_title: typedProduct.seo_title || '',
+        seo_description: typedProduct.seo_description || '',
+        seo_keywords: typedProduct.seo_keywords || '',
       };
         
       // Add category-specific fields
-      if (isCosmeticsProduct(product)) {
+      if (isCosmeticsProduct(typedProduct)) {
         form.reset({
           ...baseData,
-        // Cosmetics fields
-        ingredients: product.ingredients || '',
-        skin_type: product.skin_type || '',
-        product_benefits: product.product_benefits || '',
-        spf_level: product.spf_level || '',
-        volume_size: product.volume_size || '',
-        dermatologist_tested: product.dermatologist_tested || false,
-        cruelty_free: product.cruelty_free || false,
-        organic_natural: product.organic_natural || false,
+          // Cosmetics fields
+          ingredients: (typedProduct as any).ingredients || '',
+          skin_type: (typedProduct as any).skin_type || '',
+          product_benefits: (typedProduct as any).product_benefits || '',
+          spf_level: (typedProduct as any).spf_level || '',
+          volume_size: (typedProduct as any).volume_size || '',
+          dermatologist_tested: (typedProduct as any).dermatologist_tested || false,
+          cruelty_free: (typedProduct as any).cruelty_free || false,
+          organic_natural: (typedProduct as any).organic_natural || false,
           // Hair extension fields (empty)
           hair_type: '',
           hair_texture: '',
@@ -235,8 +375,9 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
           installation_method: '',
           care_instructions: '',
           quantity_in_set: '',
-        });
-      } else if (isHairExtensionsProduct(product)) {
+        } as ProductFormData);
+      } else if (isHairExtensionsProduct(typedProduct)) {
+        const heProduct = typedProduct as ProductFormData;
         form.reset({
           ...baseData,
           // Cosmetics fields (empty)
@@ -248,20 +389,40 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
           dermatologist_tested: false,
           cruelty_free: false,
           organic_natural: false,
-        // Hair extension fields
-        hair_type: product.hair_type || '',
-        hair_texture: product.hair_texture || '',
-        hair_length: product.hair_length || '',
-        hair_weight: product.hair_weight || '',
-        hair_color_shade: product.hair_color_shade || '',
-        installation_method: product.installation_method || '',
-        care_instructions: product.care_instructions || '',
-        quantity_in_set: product.quantity_in_set || '',
-        });
+          // Hair extension fields
+          hair_type: heProduct.hair_type || '',
+          hair_texture: heProduct.hair_texture || '',
+          hair_length: heProduct.hair_length || '',
+          hair_weight: heProduct.hair_weight || '',
+          hair_color_shade: heProduct.hair_color_shade || '',
+          installation_method: heProduct.installation_method || '',
+          care_instructions: heProduct.care_instructions || '',
+          quantity_in_set: heProduct.quantity_in_set || '',
+        } as ProductFormData);
+      } else {
+        // fallback: reset all fields to empty/false to avoid 'never' type
+        form.reset({
+          ...baseData,
+          ingredients: '',
+          skin_type: '',
+          product_benefits: '',
+          spf_level: '',
+          volume_size: '',
+          dermatologist_tested: false,
+          cruelty_free: false,
+          organic_natural: false,
+          hair_type: '',
+          hair_texture: '',
+          hair_length: '',
+          hair_weight: '',
+          hair_color_shade: '',
+          installation_method: '',
+          care_instructions: '',
+          quantity_in_set: '',
+        } as ProductFormData);
       }
-      
-      setMainImageUrl(product.main_image_url || '');
-      setExistingGalleryUrls(product.gallery_urls || []);
+      setMainImageUrl(product?.main_image_url || '');
+      setExistingGalleryUrls(product?.gallery_urls || []);
       setGalleryUrls([]);
       setImagesToDelete([]);
     } else {
@@ -311,6 +472,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
     }
   }, [product, selectedCategory, form]);
 
+  // Replace handleMainImageSelect with Firebase logic
   const handleMainImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -324,6 +486,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
     }
   };
 
+  // Replace handleGallerySelect with Firebase logic
   const handleGallerySelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
@@ -337,6 +500,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
     }
   };
 
+  // Replace removeGalleryImage with Firebase logic
   const removeGalleryImage = async (index: number, isExisting: boolean) => {
     if (isExisting) {
       const imageUrl = existingGalleryUrls[index];
@@ -354,25 +518,23 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
     }
   };
 
+  // Replace onSubmit with Firestore logic
   const onSubmit = async (data: ProductFormData) => {
-    console.log('Starting form submission:', data);
     setIsSubmitting(true);
     try {
       const category = data.category as 'cosmetics' | 'hair-extension';
-      console.log('Processing category:', category);
-      
-      // Base product data (common to both categories)
+      let productId = product?.id || uuidv4();
       let productData: any = {
         name: data.name,
         description: data.description,
         detailed_description: data.detailed_description,
-        original_price: data.original_price ? parseFloat(data.original_price) : undefined, // Original price is now the main price
-        price: data.price ? parseFloat(data.price) : null, // Discounted price (optional)
+        original_price: data.original_price ? parseFloat(data.original_price) : undefined,
+        price: data.price ? parseFloat(data.price) : undefined,
         category: data.category,
         status: data.status,
         featured: data.featured,
         in_stock: data.in_stock,
-        stock_quantity: data.stock_quantity ? parseInt(data.stock_quantity) : null,
+        stock_quantity: data.stock_quantity ? parseInt(data.stock_quantity) : undefined,
         sku: data.sku,
         weight: data.weight ? parseFloat(data.weight) : undefined,
         dimensions: data.dimensions,
@@ -380,15 +542,9 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
         seo_description: data.seo_description,
         seo_keywords: data.seo_keywords ? data.seo_keywords.split(',').map(k => k.trim()).filter(k => k) : [],
       };
-
-      console.log('Base product data:', productData);
-
-      // Add category-specific fields
       if (category === 'cosmetics') {
-        console.log('Adding cosmetics-specific fields');
         productData = {
           ...productData,
-          // Cosmetics-specific fields
           ingredients: data.ingredients,
           skin_type: data.skin_type,
           product_benefits: data.product_benefits,
@@ -399,10 +555,8 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
           organic_natural: data.organic_natural,
         };
       } else if (category === 'hair-extension') {
-        console.log('Adding hair extension-specific fields');
         productData = {
           ...productData,
-          // Hair extension-specific fields
           hair_type: data.hair_type,
           hair_texture: data.hair_texture,
           hair_length: data.hair_length,
@@ -413,57 +567,51 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
           quantity_in_set: data.quantity_in_set,
         };
       }
-
-      // Include image URLs in product data
       if (mainImageUrl) {
-        console.log('Adding main image URL:', mainImageUrl);
         productData.main_image_url = mainImageUrl;
       }
-
-      // Combine existing and new gallery URLs
       const allGalleryUrls = [...existingGalleryUrls, ...galleryUrls];
-      console.log('All gallery URLs:', allGalleryUrls);
-      
-      // Remove deleted images
       const finalGalleryUrls = allGalleryUrls.filter(url => !imagesToDelete.includes(url));
-      console.log('Final gallery URLs:', finalGalleryUrls);
-      
       if (finalGalleryUrls.length > 0) {
         productData.gallery_urls = finalGalleryUrls;
       }
-
       // Delete images marked for deletion
       if (imagesToDelete.length > 0) {
-        console.log('Deleting images:', imagesToDelete);
         for (const imageUrl of imagesToDelete) {
           try {
-            await deleteProductImage(imageUrl, category);
-            console.log('Successfully deleted image:', imageUrl);
+            await deleteProductImage(imageUrl, form.getValues('category'));
           } catch (error) {
-            console.error('Error deleting image:', imageUrl, error);
             // Continue with other deletions even if one fails
           }
         }
       }
-
-      let savedProduct: Product;
-
-      if (product) {
-        console.log('Updating existing product:', product.id);
+      // Firestore logic
+      if (product?.id) {
         // Update existing product
-        savedProduct = await updateProduct(product.id, productData, category);
-        console.log('Product updated successfully:', savedProduct);
+        const { data: existingProduct, error: selectError } = await supabase.from('Products').select('*').eq('id', String(product.id)).single();
+        if (selectError) {
+          throw selectError;
+        }
+        const { error: updateError } = await supabase.from('Products').update(productData).eq('id', String(product.id));
+        if (updateError) {
+          throw updateError;
+        }
       } else {
-        console.log('Creating new product');
         // Create new product
-        savedProduct = await createProduct(productData);
-        console.log('Product created successfully:', savedProduct);
-      }
+        const { data, error } = await supabase.from('Products').insert([
+          {
+            ...productData,
+            created_at: new Date().toISOString(),
+          },
+        ]).select().single();
 
-      // toast.success(product ? 'Product updated successfully' : 'Product created successfully');
+        if (error) {
+          throw error;
+        }
+        productId = data.id;
+      }
       onSuccess();
     } catch (error) {
-      console.error('Error saving product:', error);
       toast.error('Failed to save product');
     } finally {
       setIsSubmitting(false);
@@ -474,173 +622,172 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-7xl max-h-[95vh] overflow-y-auto">
-        <DialogHeader className="pb-6 border-b">
-          <DialogTitle className="flex items-center gap-3 text-2xl font-bold">
+      <DialogContent className="max-w-full md:max-w-4xl w-full max-h-[95vh] mx-auto overflow-y-auto flex flex-col items-center justify-center p-2 sm:p-4 md:p-8">
+        <DialogHeader className="pb-4 md:pb-6 border-b">
+          <DialogTitle className="flex items-center gap-2 md:gap-3 text-xl md:text-2xl font-bold">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <Package className="h-6 w-6 text-blue-600" />
+              <Package className="h-5 w-5 text-blue-600" />
             </div>
             {product ? 'Edit Product' : 'Add New Product'}
           </DialogTitle>
         </DialogHeader>
+        <div className="relative overflow-visible z-50 bg-white p-2 sm:p-4 md:p-8 rounded-xl md:rounded-2xl w-full">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 md:space-y-10">
+              {/* Basic Information Section */}
+              <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
+                <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
+                  <div className="p-2 bg-gray-100 rounded-lg">
+                    <Package className="h-5 w-5 text-gray-600" />
+                  </div>
+                  Basic Information
+                </h3>
+                
+                <div className="space-y-4 md:space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-base font-medium">Product Name *</FormLabel>
+                          <FormControl>
+                              <Input 
+                                placeholder="Enter product name" 
+                                className="h-11 w-full"
+                                {...field} 
+                              />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            
-            {/* Basic Information Section */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <Package className="h-5 w-5 text-gray-600" />
-                </div>
-                Basic Information
-              </h3>
-              
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-base font-medium">Product Name *</FormLabel>
-                      <FormControl>
-                          <Input 
-                            placeholder="Enter product name" 
-                            className="h-11"
-                            {...field} 
-                          />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="sku"
-                  render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-base font-medium">SKU</FormLabel>
-                      <FormControl>
-                          <Input 
-                            placeholder="Product SKU" 
-                            className="h-11"
-                            {...field} 
-                          />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                      <FormLabel className="text-base font-medium">Short Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Brief product description" 
-                          className="min-h-[80px] resize-none"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="detailed_description"
-                render={({ field }) => (
-                  <FormItem>
-                      <FormLabel className="text-base font-medium">Detailed Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Detailed product description" 
-                          className="min-h-[120px] resize-none"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              </div>
-            </div>
-
-            {/* Category and Status Section */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Sparkles className="h-5 w-5 text-purple-600" />
-                </div>
-                Category & Status
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-medium">Category *</FormLabel>
-                      <FormControl>
-                        <BootstrapDropdown
-                          trigger={
-                            categoryOptions.find(opt => opt.value === field.value)?.label || 'Select category'
-                          }
-                          items={categoryOptions.map(opt => ({
-                            label: opt.label,
-                            onClick: () => field.onChange(opt.value)
-                          }))}
-                          className="h-11"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-medium">Status *</FormLabel>
-                      <FormControl>
-                        <BootstrapDropdown
-                          trigger={
-                            statusOptions.find(opt => opt.value === field.value)?.label || 'Select status'
-                          }
-                          items={statusOptions.map(opt => ({
-                            label: opt.label,
-                            onClick: () => field.onChange(opt.value)
-                          }))}
-                          className="h-11"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={form.control}
+                      name="sku"
+                      render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="text-base font-medium">SKU</FormLabel>
+                          <FormControl>
+                              <Input 
+                                placeholder="Product SKU" 
+                                className="h-11 w-full"
+                                {...field} 
+                              />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}
-                    name="featured"
+                    name="description"
                     render={({ field }) => (
-                    <FormItem className={`flex flex-col justify-between h-full rounded-xl border-2 p-4 transition-all duration-200 ${
-                      field.value ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
-                      }`}>
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base font-semibold cursor-pointer flex items-center gap-2">
-                          <Star className={`h-5 w-5 ${field.value ? 'text-yellow-500' : 'text-gray-400'}`} />
-                            Featured Product
-                          </FormLabel>
+                      <FormItem>
+                          <FormLabel className="text-base font-medium">Short Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Brief product description" 
+                              className="min-h-[80px] resize-none w-full"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="detailed_description"
+                    render={({ field }) => (
+                      <FormItem>
+                          <FormLabel className="text-base font-medium">Detailed Description</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Detailed product description" 
+                              className="min-h-[120px] resize-none w-full"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Category and Status Section */}
+              <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
+                <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Sparkles className="h-5 w-5 text-purple-600" />
+                  </div>
+                  Category & Status
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Category *</FormLabel>
+                        <FormControl>
+                          <BootstrapDropdown
+                            trigger={
+                              categoryOptions.find(opt => opt.value === field.value)?.label || 'Select category'
+                            }
+                            items={categoryOptions.map(opt => ({
+                              label: opt.label,
+                              onClick: () => field.onChange(opt.value)
+                            }))}
+                            className="h-11 w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Status *</FormLabel>
+                        <FormControl>
+                          <BootstrapDropdown
+                            trigger={
+                              statusOptions.find(opt => opt.value === field.value)?.label || 'Select status'
+                            }
+                            items={statusOptions.map(opt => ({
+                              label: opt.label,
+                              onClick: () => field.onChange(opt.value)
+                            }))}
+                            className="h-11 w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                    <FormField
+                      control={form.control}
+                      name="featured"
+                      render={({ field }) => (
+                      <FormItem className={`flex flex-col justify-between h-full rounded-xl border-2 p-4 transition-all duration-200 ${
+                        field.value ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                        }`}>
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base font-semibold cursor-pointer flex items-center gap-2">
+                            <Star className={`h-5 w-5 ${field.value ? 'text-yellow-500' : 'text-gray-400'}`} />
+                              Featured Product
+                            </FormLabel>
                         <FormDescription className="text-sm text-gray-500">
                             Show in featured section
                           </FormDescription>
@@ -660,100 +807,100 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                       </FormItem>
                     )}
                   />
+                </div>
               </div>
-            </div>
 
-            {/* Pricing & Inventory Section */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign className="h-5 w-5 text-green-600" />
-                </div>
-                Pricing & Inventory
-              </h3>
-              
-              <div className="space-y-6">
-                {/* Original Price - Full Width */}
-                <FormField
-                  control={form.control}
-                  name="original_price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-medium">Original Price (₹) *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
-                          className="h-11"
+              {/* Pricing & Inventory Section */}
+              <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
+                <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                  </div>
+                  Pricing & Inventory
+                </h3>
+                
+                <div className="space-y-6">
+                  {/* Original Price - Full Width */}
+                  <FormField
+                    control={form.control}
+                    name="original_price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Original Price (₹) *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            placeholder="0.00" 
+                            className="h-11 w-full"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription className="text-sm text-gray-500">
+                          The regular price of the product in INR (₹)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Discounted Price and Stock Quantity - Two Columns */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                      name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                          <FormLabel className="text-base font-medium">Discounted Price (₹)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            placeholder="0.00" 
+                            className="h-11 w-full"
                           {...field} 
                         />
-                      </FormControl>
-                      <FormDescription className="text-sm text-gray-500">
-                        The regular price of the product in INR (₹)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        </FormControl>
+                        <FormDescription className="text-sm text-gray-500">
+                          Sale price in INR (₹) (leave empty if no discount)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {/* Discounted Price and Stock Quantity - Two Columns */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                    name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-base font-medium">Discounted Price (₹)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
-                            className="h-11"
+                  <FormField
+                    control={form.control}
+                    name="stock_quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                          <FormLabel className="text-base font-medium">Stock Quantity</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="0" 
+                            className="h-11 w-full"
                           {...field} 
                         />
-                      </FormControl>
-                      <FormDescription className="text-sm text-gray-500">
-                        Sale price in INR (₹) (leave empty if no discount)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  </div>
 
-                <FormField
-                  control={form.control}
-                  name="stock_quantity"
-                  render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="text-base font-medium">Stock Quantity</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="0" 
-                            className="h-11"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="in_stock"
-                  render={({ field }) => (
-                    <FormItem className={`flex items-center justify-between rounded-xl border-2 p-4 transition-all duration-200 ${
-                      field.value ? 'border-emerald-400 bg-emerald-50' : 'border-red-200 bg-red-50 hover:border-red-300'
-                    }`}>
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base font-semibold cursor-pointer flex items-center gap-2">
-                          <div className={`h-4 w-4 rounded-full ${field.value ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                          Inventory Status
-                        </FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="in_stock"
+                    render={({ field }) => (
+                      <FormItem className={`flex items-center justify-between rounded-xl border-2 p-4 transition-all duration-200 ${
+                        field.value ? 'border-emerald-400 bg-emerald-50' : 'border-red-200 bg-red-50 hover:border-red-300'
+                      }`}>
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base font-semibold cursor-pointer flex items-center gap-2">
+                            <div className={`h-4 w-4 rounded-full ${field.value ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                            Inventory Status
+                          </FormLabel>
                         <FormDescription className="text-sm text-gray-500">
                           Product availability for customers
                         </FormDescription>
@@ -777,8 +924,8 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
             </div>
 
             {/* Product Details Section */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+            <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
+              <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <Package className="h-5 w-5 text-blue-600" />
                 </div>
@@ -797,7 +944,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                           type="number" 
                           step="0.01" 
                           placeholder="0.00" 
-                          className="h-11"
+                          className="h-11 w-full"
                           {...field} 
                         />
                       </FormControl>
@@ -815,7 +962,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                       <FormControl>
                         <Input 
                           placeholder="L × W × H" 
-                          className="h-11"
+                          className="h-11 w-full"
                           {...field} 
                         />
                       </FormControl>
@@ -824,408 +971,553 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                   )}
                 />
               </div>
-              </div>
+            </div>
 
-                          {/* Category-Specific Fields */}
+            {/* Category-Specific Fields */}
             {watchedCategory === 'cosmetics' && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+              <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
+                <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
                   <div className="p-2 bg-pink-100 rounded-lg">
                     <Sparkles className="h-5 w-5 text-pink-600" />
                   </div>
-                      Cosmetics Information
-                    </h3>
-                    
+                  Cosmetics Information
+                </h3>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="skin_type"
-                        render={({ field }) => (
-                          <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="skin_type"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel className="text-base font-medium">Skin Type</FormLabel>
-                                                  <FormControl>
-                        <BootstrapDropdown
-                          trigger={
-                            skinTypeOptions.find(opt => opt.value === field.value)?.label || 'Select skin type'
-                          }
-                          items={skinTypeOptions.map(opt => ({
-                            label: opt.label,
-                            onClick: () => field.onChange(opt.value)
-                          }))}
-                          className="h-11"
-                        />
-                      </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormControl>
+                          <BootstrapDropdown
+                            trigger={
+                              skinTypeOptions.find(opt => opt.value === field.value)?.label || 'Select skin type'
+                            }
+                            items={skinTypeOptions.map(opt => ({
+                              label: opt.label,
+                              onClick: () => field.onChange(opt.value)
+                            }))}
+                            className="h-11 w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="volume_size"
-                        render={({ field }) => (
-                          <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="volume_size"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel className="text-base font-medium">Volume/Size</FormLabel>
-                            <FormControl>
-                          <Input placeholder="e.g., 50ml, 1.7 fl oz" className="h-11" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Product volume or size
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormControl>
+                          <Input placeholder="e.g., 50ml, 1.7 fl oz" className="h-11 w-full" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Product volume or size
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="spf_level"
-                        render={({ field }) => (
-                          <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="spf_level"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel className="text-base font-medium">SPF Level</FormLabel>
-                            <FormControl>
-                          <Input placeholder="e.g., SPF 30, SPF 50+" className="h-11" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Sun protection factor (if applicable)
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                        <FormControl>
+                          <Input placeholder="e.g., SPF 30, SPF 50+" className="h-11 w-full" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Sun protection factor (if applicable)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="mt-6">
-                      <FormField
-                        control={form.control}
-                        name="ingredients"
-                        render={({ field }) => (
-                          <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="ingredients"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel className="text-base font-medium">Ingredients (INCI Names)</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="List ingredients using INCI names, separated by commas"
-                            className="min-h-[100px] resize-none"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Use International Nomenclature of Cosmetic Ingredients (INCI) names
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="List ingredients using INCI names, separated by commas"
+                            className="min-h-[100px] resize-none w-full"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Use International Nomenclature of Cosmetic Ingredients (INCI) names
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="mt-6">
-                      <FormField
-                        control={form.control}
-                        name="product_benefits"
-                        render={({ field }) => (
-                          <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="product_benefits"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel className="text-base font-medium">Product Benefits</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="e.g., Anti-aging, Moisturizing, Brightening, Acne-fighting"
-                            className="min-h-[100px] resize-none"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Key benefits and claims
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="e.g., Anti-aging, Moisturizing, Brightening, Acne-fighting"
+                            className="min-h-[100px] resize-none w-full"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Key benefits and claims
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                      <FormField
-                        control={form.control}
-                        name="dermatologist_tested"
-                        render={({ field }) => (
+                  <FormField
+                    control={form.control}
+                    name="dermatologist_tested"
+                    render={({ field }) => (
                       <FormItem className={`flex flex-row items-center justify-between rounded-xl border-2 p-4 transition-all duration-200 ${
                         field.value ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                           }`}>
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base font-semibold cursor-pointer">
-                                Dermatologist Tested
-                              </FormLabel>
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base font-semibold cursor-pointer">
+                            Dermatologist Tested
+                          </FormLabel>
                           <FormDescription className="text-sm text-gray-500">
-                                Tested by dermatologists
-                              </FormDescription>
-                            </div>
-                            <FormControl>
+                            Tested by dermatologists
+                          </FormDescription>
+                        </div>
+                        <FormControl>
                           <div className="flex items-center space-x-3">
-                                <span className={`text-sm font-medium ${field.value ? 'text-green-600' : 'text-gray-500'}`}>
-                                  {field.value ? 'Yes' : 'No'}
-                                </span>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
+                            <span className={`text-sm font-medium ${field.value ? 'text-green-600' : 'text-gray-500'}`}>
+                              {field.value ? 'Yes' : 'No'}
+                            </span>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
                               className="data-[state=checked]:bg-green-500"
-                                />
-                              </div>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                            />
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="cruelty_free"
-                        render={({ field }) => (
+                  <FormField
+                    control={form.control}
+                    name="cruelty_free"
+                    render={({ field }) => (
                       <FormItem className={`flex flex-row items-center justify-between rounded-xl border-2 p-4 transition-all duration-200 ${
                         field.value ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                           }`}>
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base font-semibold cursor-pointer">
-                                Cruelty Free
-                              </FormLabel>
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base font-semibold cursor-pointer">
+                            Cruelty Free
+                          </FormLabel>
                           <FormDescription className="text-sm text-gray-500">
-                                Not tested on animals
-                              </FormDescription>
-                            </div>
-                            <FormControl>
+                            Not tested on animals
+                          </FormDescription>
+                        </div>
+                        <FormControl>
                           <div className="flex items-center space-x-3">
-                                <span className={`text-sm font-medium ${field.value ? 'text-blue-600' : 'text-gray-500'}`}>
-                                  {field.value ? 'Yes' : 'No'}
-                                </span>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
+                            <span className={`text-sm font-medium ${field.value ? 'text-blue-600' : 'text-gray-500'}`}>
+                              {field.value ? 'Yes' : 'No'}
+                            </span>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
                               className="data-[state=checked]:bg-blue-500"
-                                />
-                              </div>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                            />
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="organic_natural"
-                        render={({ field }) => (
+                  <FormField
+                    control={form.control}
+                    name="organic_natural"
+                    render={({ field }) => (
                       <FormItem className={`flex flex-row items-center justify-between rounded-xl border-2 p-4 transition-all duration-200 ${
                         field.value ? 'border-purple-400 bg-purple-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                           }`}>
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-base font-semibold cursor-pointer">
-                                Organic/Natural
-                              </FormLabel>
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base font-semibold cursor-pointer">
+                            Organic/Natural
+                          </FormLabel>
                           <FormDescription className="text-sm text-gray-500">
-                                Made with organic/natural ingredients
-                              </FormDescription>
-                            </div>
-                            <FormControl>
+                            Made with organic/natural ingredients
+                          </FormDescription>
+                        </div>
+                        <FormControl>
                           <div className="flex items-center space-x-3">
-                                <span className={`text-sm font-medium ${field.value ? 'text-purple-600' : 'text-gray-500'}`}>
-                                  {field.value ? 'Yes' : 'No'}
-                                </span>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
+                            <span className={`text-sm font-medium ${field.value ? 'text-purple-600' : 'text-gray-500'}`}>
+                              {field.value ? 'Yes' : 'No'}
+                            </span>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
                               className="data-[state=checked]:bg-purple-500"
-                                />
-                              </div>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                  </div>
+                            />
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </div>
-              )}
+              </div>
+            )}
 
-              {watchedCategory === 'hair-extension' && (
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+            {watchedCategory === 'hair-extension' && (
+              <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
+                <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
                   <div className="p-2 bg-amber-100 rounded-lg">
                     <Package className="h-5 w-5 text-amber-600" />
                   </div>
-                      Hair Extension Information
-                    </h3>
-                    
+                  Hair Extension Information
+                </h3>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormField
-                        control={form.control}
-                        name="hair_type"
-                        render={({ field }) => (
-                          <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="hair_type"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel className="text-base font-medium">Hair Type</FormLabel>
-                                                  <FormControl>
-                        <BootstrapDropdown
-                          trigger={
-                            hairTypeOptions.find(opt => opt.value === field.value)?.label || 'Select hair type'
-                          }
-                          items={hairTypeOptions.map(opt => ({
-                            label: opt.label,
-                            onClick: () => field.onChange(opt.value)
-                          }))}
-                          className="h-11"
-                        />
-                      </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormControl>
+                          <BootstrapDropdown
+                            trigger={
+                              hairTypeOptions.find(opt => opt.value === field.value)?.label || 'Select hair type'
+                            }
+                            items={hairTypeOptions.map(opt => ({
+                              label: opt.label,
+                              onClick: () => field.onChange(opt.value)
+                            }))}
+                            className="h-11 w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="hair_texture"
-                        render={({ field }) => (
-                          <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="hair_texture"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel className="text-base font-medium">Hair Texture</FormLabel>
-                                                  <FormControl>
-                        <BootstrapDropdown
-                          trigger={
-                            hairTextureOptions.find(opt => opt.value === field.value)?.label || 'Select hair texture'
-                          }
-                          items={hairTextureOptions.map(opt => ({
-                            label: opt.label,
-                            onClick: () => field.onChange(opt.value)
-                          }))}
-                          className="h-11"
-                        />
-                      </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormControl>
+                          <BootstrapDropdown
+                            trigger={
+                              hairTextureOptions.find(opt => opt.value === field.value)?.label || 'Select hair texture'
+                            }
+                            items={hairTextureOptions.map(opt => ({
+                              label: opt.label,
+                              onClick: () => field.onChange(opt.value)
+                            }))}
+                            className="h-11 w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="hair_length"
-                        render={({ field }) => (
-                          <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="hair_length"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel className="text-base font-medium">Hair Length</FormLabel>
-                            <FormControl>
-                          <Input placeholder="e.g., 18 inches, 45cm" className="h-11" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Length in inches or centimeters
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormControl>
+                          <Input placeholder="e.g., 18 inches, 45cm" className="h-11 w-full" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Length in inches or centimeters
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="hair_weight"
-                        render={({ field }) => (
-                          <FormItem>
+                  <FormField
+                    control={form.control}
+                    name="hair_weight"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormLabel className="text-base font-medium">Hair Weight</FormLabel>
-                            <FormControl>
-                          <Input placeholder="e.g., 100g, 120g per set" className="h-11" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Weight in grams
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormControl>
+                          <Input placeholder="e.g., 100g, 120g per set" className="h-11 w-full" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Weight in grams
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="hair_color_shade"
-                        render={({ field }) => (
-                          <FormItem>
-                        <FormLabel className="text-base font-medium">Hair Color/Shade</FormLabel>
-                            <FormControl>
-                          <Input placeholder="e.g., #2 Dark Brown, #613 Blonde" className="h-11" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Color number or shade name
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  <FormField
+                    control={form.control}
+                    name="hair_color"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Hair Color</FormLabel>
+                        <FormControl>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger className="w-full h-11">
+                              <SelectValue placeholder="Choose color" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="natural_black">
+                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['natural_black'] }} />
+                                Natural Black
+                              </SelectItem>
+                              <SelectItem value="dark_brown">
+                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['dark_brown'] }} />
+                                Dark Brown
+                              </SelectItem>
+                              <SelectItem value="ombre">
+                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['ombre'] }} />
+                                Ombre
+                              </SelectItem>
+                              <SelectItem value="light_brown">
+                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['light_brown'] }} />
+                                Light Brown
+                              </SelectItem>
+                              <SelectItem value="highlight_27">
+                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['highlight_27'] }} />
+                                Highlight #27
+                              </SelectItem>
+                              <SelectItem value="burgundy">
+                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['burgundy'] }} />
+                                Burgundy
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <FormField
-                        control={form.control}
-                        name="installation_method"
-                        render={({ field }) => (
-                          <FormItem>
-                        <FormLabel className="text-base font-medium">Installation Method</FormLabel>
-                                                  <FormControl>
-                        <BootstrapDropdown
-                          trigger={
-                            installationMethodOptions.find(opt => opt.value === field.value)?.label || 'Select installation method'
-                          }
-                          items={installationMethodOptions.map(opt => ({
-                            label: opt.label,
-                            onClick: () => field.onChange(opt.value)
-                          }))}
-                          className="h-11"
-                        />
-                      </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="quantity_in_set"
-                        render={({ field }) => (
-                          <FormItem>
-                        <FormLabel className="text-base font-medium">Quantity in Set</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="hair_color_shade"
+                    render={({ field }) => {
+                      // Try to use the input as a color, fallback to gray if invalid
+                      let swatchColor = field.value?.trim() || '#eee';
+                      // Optionally, add validation for hex or CSS color names
+                      return (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium">Custom Color / Shade</FormLabel>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="inline-block w-6 h-6 rounded-full border"
+                              style={{ background: swatchColor }}
+                              title={swatchColor}
+                            />
                             <FormControl>
-                          <Input placeholder="e.g., 7 pieces, 20 strands" className="h-11" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Number of pieces or strands
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                <div className="mt-6">
-                      <FormField
-                        control={form.control}
-                        name="care_instructions"
-                        render={({ field }) => (
-                          <FormItem>
-                        <FormLabel className="text-base font-medium">Care Instructions</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Washing, styling, and maintenance instructions"
-                            className="min-h-[100px] resize-none"
-                                {...field} 
+                              <Input
+                                placeholder="e.g., #2 Dark Brown, #613 Blonde, custom mix"
+                                className="h-11 w-full"
+                                {...field}
                               />
                             </FormControl>
-                            <FormDescription>
-                              How to care for and maintain the extensions
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                  </div>
+                          </div>
+                          <FormDescription>
+                            Enter a custom color number, shade, or description. If you enter a valid color code (e.g., #613, #FFD700, red), you'll see a preview.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="installation_method"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Installation Method</FormLabel>
+                        <FormControl>
+                          <BootstrapDropdown
+                            trigger={
+                              installationMethodOptions.find(opt => opt.value === field.value)?.label || 'Select installation method'
+                            }
+                            items={installationMethodOptions.map(opt => ({
+                              label: opt.label,
+                              onClick: () => field.onChange(opt.value)
+                            }))}
+                            className="h-11 w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="quantity_in_set"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Quantity in Set</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., 7 pieces, 20 strands" className="h-11 w-full" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Number of pieces or strands
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-              )}
+
+                <div className="mt-6">
+                  <FormField
+                    control={form.control}
+                    name="care_instructions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Care Instructions</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Washing, styling, and maintenance instructions"
+                            className="min-h-[100px] resize-none w-full"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          How to care for and maintain the extensions
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Variant Management Section (replacing hair_length & hair_weight) */}
+            {watchedCategory === 'hair-extension' && (
+              <div className="col-span-2">
+                <Label className="text-base font-medium block mb-3">Hair Variant Options</Label>
+                {variants.map((variant, index) => (
+                  <div
+                    key={variant.id}
+                    className={`grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 p-4 mb-4 border rounded-lg ${
+                      selectedVariant === variant.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="mb-2 md:mb-0">
+                      <Label className="block text-sm font-medium mb-1">Weight (gm)</Label>
+                      <Input
+                        className="w-full"
+                        type="number"
+                        value={variant.weight === 0 ? '' : String(variant.weight)}
+                        onChange={e => handleVariantChange(index, 'weight', e.target.value)}
+                        placeholder="Weight (gm)"
+                      />
+                    </div>
+                    <div className="mb-2 md:mb-0">
+                      <Label className="block text-sm font-medium mb-1">Length (inches)</Label>
+                      <Input
+                        className="w-full"
+                        type="number"
+                        value={variant.length === 0 ? '' : String(variant.length)}
+                        onChange={e => handleVariantChange(index, 'length', e.target.value)}
+                        placeholder="Length (inches)"
+                      />
+                    </div>
+                    <div className="mb-2 md:mb-0">
+                      <Label className="block text-sm font-medium mb-1">Price (₹)</Label>
+                      <Input
+                        className="w-full"
+                        type="number"
+                        value={variant.price === 0 ? '' : String(variant.price)}
+                        onChange={e => handleVariantChange(index, 'price', e.target.value)}
+                        placeholder="Price (₹)"
+                      />
+                    </div>
+                    <div className="mb-2 md:mb-0">
+                      <Label className="block text-sm font-medium mb-1">Discount Price</Label>
+                      <TextField
+                        type="number"
+                        value={variant.discount_price === 0 ? '' : String(variant.discount_price)}
+                        onChange={e => handleVariantChange(index, 'discount_price', e.target.value)}
+                        placeholder="Discount Price"
+                        fullWidth
+                      />
+                    </div>
+                    <div className="col-span-1 md:col-span-3 flex flex-col md:flex-row justify-between mt-2 gap-2 md:gap-4">
+                      <Button
+                        variant={selectedVariant === variant.id ? 'default' : 'outline'}
+                        onClick={() => handleVariantSelect(variant)}
+                        className="text-sm w-full md:w-auto"
+                      >
+                        {selectedVariant === variant.id ? 'Selected' : 'Select this Variant'}
+                      </Button>
+                      {variants.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removeVariant(index)}
+                          className="w-full md:w-auto"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                <div className="mt-2">
+                  <Button
+                    type="button"
+                    onClick={addNewVariant}
+                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    + Add New Variant
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Images Section */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+            <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
+              <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
                 <div className="p-2 bg-indigo-100 rounded-lg">
                   <ImageIcon className="h-5 w-5 text-indigo-600" />
-            </div>
+                </div>
                 Product Images
               </h3>
               
               <div className="space-y-8">
-              {/* Main Image */}
-              <div>
-                  <FormLabel className="text-base font-medium">Main Product Image</FormLabel>
-                  <div className="mt-4">
-                                        {mainImageUrl ? (
+                {/* Main Image */}
+                <div>
+                    <FormLabel className="text-base font-medium">Main Product Image</FormLabel>
+                    <div className="mt-4">
+                                          {mainImageUrl ? (
                       <div className="relative w-40 h-40 rounded-lg overflow-hidden border-2 border-gray-200">
                         <img
                           src={mainImageUrl}
@@ -1340,8 +1632,8 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
             </div>
 
             {/* SEO Section */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-xl font-semibold flex items-center gap-3 mb-6 text-gray-800">
+            <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
+              <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
                 <div className="p-2 bg-orange-100 rounded-lg">
                   <Sparkles className="h-5 w-5 text-orange-600" />
                 </div>
@@ -1356,7 +1648,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                   <FormItem>
                       <FormLabel className="text-base font-medium">SEO Title</FormLabel>
                     <FormControl>
-                        <Input placeholder="SEO optimized title" className="h-11" {...field} />
+                        <Input placeholder="SEO optimized title" className="h-11 w-full" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1372,7 +1664,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                     <FormControl>
                       <Textarea 
                         placeholder="SEO meta description" 
-                          className="min-h-[100px] resize-none"
+                        className="min-h-[100px] resize-none w-full"
                         {...field} 
                       />
                     </FormControl>
@@ -1388,7 +1680,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                   <FormItem>
                       <FormLabel className="text-base font-medium">SEO Keywords</FormLabel>
                     <FormControl>
-                        <Input placeholder="keyword1, keyword2, keyword3" className="h-11" {...field} />
+                        <Input placeholder="keyword1, keyword2, keyword3" className="h-11 w-full" {...field} />
                     </FormControl>
                       <FormDescription className="text-sm text-gray-500">
                         Separate keywords with commas
@@ -1401,7 +1693,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
             </div>
 
             {/* Form Actions */}
-            <div className="bg-gray-50 rounded-xl border border-gray-200 p-6">
+            <div className="bg-gray-50 rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-600">
                   <p className="font-medium">Ready to {product ? 'update' : 'create'} this product?</p>
@@ -1439,7 +1731,8 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
             </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </DialogContent>
+  </Dialog>
   );
 } 

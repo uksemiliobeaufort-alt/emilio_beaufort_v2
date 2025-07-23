@@ -28,6 +28,15 @@ const DEPARTMENTS = [
   { name: "Social and Outreach", icon: <HeartHandshake className="h-4 w-4 mr-2" /> },
 ];
 
+const DEPARTMENT_GRADIENTS: Record<string, string> = {
+  'Software Development': 'linear-gradient(135deg, #e3f0ff 0%, #f7fbff 100%)',
+  'AI/ML': 'linear-gradient(135deg, #f3e8ff 0%, #f9f6ff 100%)',
+  'HR': 'linear-gradient(135deg, #fff0e6 0%, #fff8f3 100%)',
+  "Founder's Office": 'linear-gradient(135deg, #fffbe6 0%, #fdf6e3 100%)',
+  'Social and Outreach': 'linear-gradient(135deg, #e6fff7 0%, #f3fffb 100%)',
+  'Default': 'linear-gradient(135deg, #f8fafc 0%, #f3f4f6 100%)',
+};
+
 export default function CareersListingPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,8 +136,11 @@ export default function CareersListingPage() {
               {paginatedJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="relative border border-gray-200 bg-white flex flex-col h-full group transition-all duration-300 ring-1 ring-transparent hover:ring-[#B7A16C]/40 sm:rounded-3xl sm:shadow-lg sm:p-8 p-4 rounded-none shadow-none hover:shadow-none sm:hover:shadow-2xl sm:hover:-translate-y-2 sm:hover:scale-[1.03] hover:border-[#B7A16C]"
-                  style={{ boxShadow: '0 8px 32px 0 rgba(17,17,17,0.06)' }}
+                  className="relative border border-gray-200 flex flex-col h-full group transition-all duration-300 ring-1 ring-transparent hover:ring-[#B7A16C]/40 sm:rounded-3xl sm:shadow-lg sm:p-8 p-4 rounded-none shadow-none hover:shadow-none sm:hover:shadow-2xl sm:hover:-translate-y-2 sm:hover:scale-[1.03] hover:border-[#B7A16C]"
+                  style={{
+                    boxShadow: '0 8px 32px 0 rgba(17,17,17,0.06)',
+                    background: DEPARTMENT_GRADIENTS[job.department as keyof typeof DEPARTMENT_GRADIENTS] || DEPARTMENT_GRADIENTS['Default'],
+                  }}
                 >
                   {/* Job Title */}
                   <div className="text-xl font-bold text-premium mb-2 line-clamp-2 min-h-[2.5em]">{job.title}</div>

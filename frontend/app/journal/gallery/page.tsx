@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { firestore } from '@/lib/firebase';
 import { collection, getDocs, query } from 'firebase/firestore';
+import { Share2, Copy, MessageCircle, Linkedin, Twitter, Facebook, Check } from "lucide-react";
+import { toast } from "sonner";
 
 interface BlogPost {
   id: string;
@@ -26,6 +28,63 @@ export default function BlogGalleryPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [copiedPostId, setCopiedPostId] = useState<string | null>(null);
+
+  // Share/copy helpers (adapted from journal page)
+  const getPostUrl = (post: BlogPost): string => {
+    const baseUrl = 'https://emiliobeaufort.com';
+    return `${baseUrl}/journal/${post.slug}`;
+  };
+  const copyToClipboard = async (post: BlogPost) => {
+    try {
+      const url = getPostUrl(post);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+        } finally {
+          document.body.removeChild(textArea);
+        }
+      }
+      setCopiedPostId(post.id);
+      toast.success("Link copied to clipboard!");
+      setTimeout(() => { setCopiedPostId(null); }, 2000);
+    } catch (error) {
+      toast.error("Failed to copy link");
+    }
+  };
+  const shareOnWhatsApp = (post: BlogPost) => {
+    const url = getPostUrl(post);
+    const text = `Check out this blog post: ${post.title}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+  const shareOnLinkedIn = (post: BlogPost) => {
+    const url = getPostUrl(post);
+    const summary = post.content?.replace(/<[^>]+>/g, '').slice(0, 200) || '';
+    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(post.title)}&summary=${encodeURIComponent(summary)}`;
+    window.open(linkedinUrl, '_blank');
+  };
+  const shareOnTwitter = (post: BlogPost) => {
+    const url = getPostUrl(post);
+    const text = `Check out: ${post.title}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    window.open(twitterUrl, '_blank');
+  };
+  const shareOnFacebook = (post: BlogPost) => {
+    const url = getPostUrl(post);
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    window.open(facebookUrl, '_blank');
+  };
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -111,6 +170,52 @@ export default function BlogGalleryPage() {
                           day: "numeric",
                         })}
                       </p>
+                      {/* Share Row */}
+                      <div className="flex items-center justify-between mb-3 mt-2">
+                        <span className="text-sm text-gray-600 font-medium">Share it:</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            title="Share on WhatsApp"
+                            onClick={e => { e.preventDefault(); shareOnWhatsApp(post); }}
+                            className="flex items-center justify-center w-7 h-7 rounded-full bg-green-500 hover:bg-green-600 transition-colors"
+                          >
+                            <MessageCircle className="w-4 h-4 text-white" />
+                          </button>
+                          <button
+                            type="button"
+                            title="Share on LinkedIn"
+                            onClick={e => { e.preventDefault(); shareOnLinkedIn(post); }}
+                            className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-700 hover:bg-blue-800 transition-colors"
+                          >
+                            <Linkedin className="w-4 h-4 text-white" />
+                          </button>
+                          <button
+                            type="button"
+                            title="Share on Twitter"
+                            onClick={e => { e.preventDefault(); shareOnTwitter(post); }}
+                            className="flex items-center justify-center w-7 h-7 rounded-full bg-sky-500 hover:bg-sky-600 transition-colors"
+                          >
+                            <Twitter className="w-4 h-4 text-white" />
+                          </button>
+                          <button
+                            type="button"
+                            title="Share on Facebook"
+                            onClick={e => { e.preventDefault(); shareOnFacebook(post); }}
+                            className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors"
+                          >
+                            <Facebook className="w-4 h-4 text-white" />
+                          </button>
+                          <button
+                            type="button"
+                            title="Copy Link"
+                            onClick={e => { e.preventDefault(); copyToClipboard(post); }}
+                            className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
+                          >
+                            {copiedPostId === post.id ? <Check className="w-4 h-4 text-green-700" /> : <Copy className="w-4 h-4 text-gray-700" />}
+                          </button>
+                        </div>
+                      </div>
                       <Button className="w-full bg-black text-white hover:bg-gray-800 mt-4">Read Article</Button>
                     </CardContent>
                   </Card>
