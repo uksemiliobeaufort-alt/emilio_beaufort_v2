@@ -1,4 +1,4 @@
-  "use client";
+"use client";
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -30,6 +30,7 @@ import BootstrapDropdown from '@/components/ui/BootstrapDropdown';
 import ProductFormDialog from './ProductFormDialog';
 import CategorySelectionDialog from './CategorySelectionDialog';
 import ProductCard from './components/ProductCard';
+import { productSchema, ProductFormData } from './productFormTypes';
 
 const categoryLabels = {
   'cosmetics': 'Cosmetics',
@@ -53,10 +54,13 @@ export default function ProductsAdmin() {
     open: false,
     product: null
   });
-  const [productFormDialog, setProductFormDialog] = useState<{ open: boolean; product: Product | null; selectedCategory?: string }>({
-    open: false,
-    product: null
-  });
+  // Update the productFormDialog state type to allow product: ProductFormData | null
+  const [productFormDialog, setProductFormDialog] = useState<{ open: boolean; product: ProductFormData | null; selectedCategory?: string }>(
+    {
+      open: false,
+      product: null
+    }
+  );
   const [categorySelectionDialog, setCategorySelectionDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -90,7 +94,7 @@ export default function ProductsAdmin() {
   };
 
   const handleEditClick = (product: Product) => {
-    setProductFormDialog({ open: true, product });
+    setProductFormDialog({ open: true, product: productSchema.parse(product ?? {}) });
   };
 
   const handleAddClick = () => {
@@ -143,8 +147,7 @@ export default function ProductsAdmin() {
   };
 
   const handleProductFormSuccess = () => {
-    console.log('Product form success, refreshing products...');
-    setProductFormDialog({ open: false, product: null });
+    setProductFormDialog({ open: false, product: productSchema.parse({}) });
     fetchProducts();
   };
 
@@ -198,10 +201,11 @@ export default function ProductsAdmin() {
           
           {/* Product Form Dialog */}
           <ProductFormDialog
+            key={productFormDialog.selectedCategory || 'default'}
             open={productFormDialog.open}
             product={productFormDialog.product}
             selectedCategory={productFormDialog.selectedCategory}
-            onClose={() => setProductFormDialog({ open: false, product: null })}
+            onClose={() => setProductFormDialog({ open: false, product: productSchema.parse({}) })}
             onSuccess={handleProductFormSuccess}
           />
         </div>
@@ -329,7 +333,7 @@ export default function ProductsAdmin() {
         open={productFormDialog.open}
         product={productFormDialog.product}
         selectedCategory={productFormDialog.selectedCategory}
-        onClose={() => setProductFormDialog({ open: false, product: null })}
+        onClose={() => setProductFormDialog({ open: false, product: productSchema.parse({}) })}
         onSuccess={handleProductFormSuccess}
       />
 

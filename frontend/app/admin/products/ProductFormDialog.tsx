@@ -46,7 +46,8 @@ import {
   Package,
   DollarSign,
   Sparkles,
-  Waves
+  Waves,
+  Plus
 } from 'lucide-react';
 import { uploadProductImage, uploadMultipleImages, deleteProductImage, } from '@/lib/supabase';
 import { 
@@ -58,6 +59,13 @@ import {
 import { toast } from 'sonner';
 import { Resolver } from 'react-hook-form';
 
+// 1. Import Firestore and Storage helpers from lib/firebase.ts
+import { firestore, storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { collection, addDoc, updateDoc, doc, Timestamp } from 'firebase/firestore';
+
+import { productSchema, ProductFormData } from './productFormTypes';
+
 // Define Variant type locally if not imported from supabase
 interface Variant {
   id: string;
@@ -66,54 +74,9 @@ interface Variant {
   length: number;
   price: number;
   discount_price: number | null;
+  colors?: string[]; // <-- add this
+  topper_size?: string; // <-- added
 }
-
-// Use ProductFormData for form, defaultValues, and all form logic
-// Only use Product type for backend data
-type ProductFormData = {
-  name: string;
-  description?: string;
-  detailed_description?: string;
-  original_price: string;
-  price?: string;
-  category: 'cosmetics' | 'hair-extension';
-  status: 'draft' | 'published' | 'archived';
-  featured: boolean;
-  in_stock: boolean;
-  stock_quantity?: string;
-  sku?: string;
-  weight?: string;
-  dimensions?: string;
-  
-  // Cosmetics specific fields
-  ingredients?: string;
-  skin_type?: string;
-  product_benefits?: string;
-  spf_level?: string;
-  volume_size?: string;
-  dermatologist_tested?: boolean;
-  cruelty_free?: boolean;
-  organic_natural?: boolean;
-  
-  // Hair extension specific fields
-  hair_type?: string;
-  hair_texture?: string;
-  hair_length?: string;
-  hair_weight?: string;
-  hair_color?: string;
-  hair_color_shade?: string;
-  installation_method?: string;
-  care_instructions?: string;
-  quantity_in_set?: string;
-  
-  seo_title?: string;
-  seo_description?: string;
-  seo_keywords?: string;
-  // Add these for image and id support
-  main_image_url?: string;
-  gallery_urls?: string[];
-  id?: string;
-};
 
 function isCosmeticsProduct(product: ProductFormData): product is ProductFormData {
   return product.category === 'cosmetics';
@@ -178,12 +141,31 @@ const installationMethodOptions = [
 
 // Add color options for hair extensions
 const hairColorOptions = [
-  { value: 'natural_black', label: 'Natural Black' },
-  { value: 'dark_brown', label: 'Dark Brown' },
-  { value: 'ombre', label: 'Ombre' },
-  { value: 'light_brown', label: 'Light Brown' },
-  { value: 'highlight_27', label: 'Highlight #27' },
-  { value: 'burgundy', label: 'Burgundy' },
+  {
+    name: 'Natural Black',
+    value: 'natural-black',
+    image: 'https://m.media-amazon.com/images/I/616-QJ5oHML._UF1000,1000_QL80_.jpg',
+  },
+  {
+    name: 'Dark Brown',
+    value: 'dark-brown',
+    image: 'https://www.shutterstock.com/image-photo/brown-hair-closeup-background-womens-600nw-2220526961.jpg',
+  },
+  {
+    name: 'Medium Brown',
+    value: 'medium-brown',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUQpHBJjuNF7ggbA-UKOQXcZuhm7s1EGuFdw&s',
+  },
+  {
+    name: 'Light Brown',
+    value: 'light-brown',
+    image: 'https://www.shutterstock.com/image-photo/blond-hair-closeup-background-womens-260nw-2282714539.jpg',
+  },
+  {
+    name: 'Auburn',
+    value: 'auburn',
+    image: 'https://lh3.googleusercontent.com/VT4q6dvB-Bt8jnXQXd1NhZ9i4tpIHmBWKE4g7NUi69vdFmfuSjfJ5cWadyr5pFbOR-IYxYP_IwYN5CsWbOXnwA_VCCOCxEFf3JS_9MCl=w360-rw',
+  },
 ];
 
 // Add a color swatch map for hair colors
@@ -196,6 +178,27 @@ const hairColorSwatchMap: Record<string, string> = {
   burgundy: '#800020',
 };
 
+// 1. Define a simple hair texture SVG as a React component at the top of the file:
+const HairTextureSVG = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', inset: 0 }}>
+    <path d="M3 20c2-4 4-4 6 0s4 4 6 0 4-4 6 0" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.35" />
+    <path d="M3 16c2-4 4-4 6 0s4 4 6 0 4-4 6 0" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.25" />
+  </svg>
+);
+
+// Helper to upload a file and return its download URL
+async function uploadImage(file: File, path: string): Promise<string> {
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  return getDownloadURL(storageRef);
+}
+
+// Helper to delete an image by URL
+async function deleteImageByUrl(url: string): Promise<void> {
+  const storageRef = ref(storage, url);
+  await deleteObject(storageRef);
+}
+
 export default function ProductFormDialog({ open, product, selectedCategory, onClose, onSuccess }: ProductFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mainImageUrl, setMainImageUrl] = useState<string>('');
@@ -203,87 +206,12 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
   const [existingGalleryUrls, setExistingGalleryUrls] = useState<string[]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
 
+  // Correct useForm usage
   const form = useForm<ProductFormData>({
-    resolver: zodResolver(z.object({
-      name: z.string().min(1, 'Product name is required'),
-      description: z.string().optional(),
-      detailed_description: z.string().optional(),
-      original_price: z.string().min(1, 'Original price is required'),
-      price: z.string().optional(),
-      category: z.enum(['cosmetics', 'hair-extension']),
-      status: z.enum(['draft', 'published', 'archived']),
-      featured: z.boolean(),
-      in_stock: z.boolean(),
-      stock_quantity: z.string().optional(),
-      sku: z.string().optional(),
-      weight: z.string().optional(),
-      dimensions: z.string().optional(),
-      
-      // Cosmetics specific fields
-      ingredients: z.string().optional(),
-      skin_type: z.string().optional(),
-      product_benefits: z.string().optional(),
-      spf_level: z.string().optional(),
-      volume_size: z.string().optional(),
-      dermatologist_tested: z.boolean().optional(),
-      cruelty_free: z.boolean().optional(),
-      organic_natural: z.boolean().optional(),
-      
-      // Hair extension specific fields
-      hair_type: z.string().optional(),
-      hair_texture: z.string().optional(),
-      hair_length: z.string().optional(),
-      hair_weight: z.string().optional(),
-      hair_color: z.string().optional(),
-      hair_color_shade: z.string().optional(),
-      installation_method: z.string().optional(),
-      care_instructions: z.string().optional(),
-      quantity_in_set: z.string().optional(),
-      
-      seo_title: z.string().optional(),
-      seo_description: z.string().optional(),
-      seo_keywords: z.string().optional(),
-    })) as Resolver<ProductFormData, any>,
-    defaultValues: {
-      name: '',
-      description: '',
-      detailed_description: '',
-      original_price: '',
-      price: '',
-      category: 'cosmetics',
-      status: 'draft',
-      featured: false,
-      in_stock: true,
-      stock_quantity: '',
-      sku: '',
-      weight: '',
-      dimensions: '',
-      
-      // Cosmetics fields
-      ingredients: '',
-      skin_type: '',
-      product_benefits: '',
-      spf_level: '',
-      volume_size: '',
-      dermatologist_tested: false,
-      cruelty_free: false,
-      organic_natural: false,
-      
-      // Hair extension fields
-      hair_type: '',
-      hair_texture: '',
-      hair_length: '',
-      hair_weight: '',
-      hair_color_shade: '',
-      installation_method: '',
-      care_instructions: '',
-      quantity_in_set: '',
-      
-      seo_title: '',
-      seo_description: '',
-      seo_keywords: '',
-    },
+    resolver: zodResolver(productSchema) as Resolver<ProductFormData, any>,
+    defaultValues: productSchema.parse({}),
   });
+  const { reset } = form;
 
   const [variants, setVariants] = useState<Variant[]>([
     {
@@ -293,13 +221,19 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
       length: 0,
       price: 0,
       discount_price: 0,
+      colors: [], // <-- initialize
     },
   ]);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
 
   const handleVariantChange = (index: number, field: keyof Variant, value: string) => {
     const updated = [...variants];
-    updated[index] = { ...updated[index], [field]: value === '' ? 0 : Number(value) };
+    // Only convert to number for numeric fields
+    if (field === 'weight' || field === 'length' || field === 'price' || field === 'discount_price') {
+      updated[index] = { ...updated[index], [field]: value === '' ? 0 : Number(value) };
+    } else {
+      updated[index] = { ...updated[index], [field]: value };
+    }
     setVariants(updated);
   };
 
@@ -313,6 +247,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
         price: 0,
         discount_price: 0,
         product_id: '',
+        colors: [], // <-- initialize
       },
     ]);
   };
@@ -323,14 +258,24 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
     setVariants(updated);
   };
 
-  const handleVariantSelect = (variant: Variant) => {
-    setSelectedVariant(variant.id);
-    form.setValue('hair_weight', String(variant.weight));
-    form.setValue('hair_length', String(variant.length));
-    form.setValue('original_price', String(variant.price));
+  const handleVariantSelect = (variantId: string) => {
+    setSelectedVariant(variantId);
+    const variant = variants.find(v => v.id === variantId);
+    if (variant) {
+      form.setValue('hair_weight', String(variant.weight));
+      form.setValue('hair_length', String(variant.length));
+      form.setValue('original_price', String(variant.price));
+    }
   };
 
-  // Reset form when product changes
+  // Add a handler for color selection for a variant:
+  const handleVariantColorsChange = (index: number, selectedColors: string[]) => {
+    const updated = [...variants];
+    updated[index] = { ...updated[index], colors: selectedColors };
+    setVariants(updated);
+  };
+
+  // Reset form when product or selectedCategory changes
   useEffect(() => {
     if (product) {
       const typedProduct = product as ProductFormData;
@@ -425,14 +370,15 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
       setExistingGalleryUrls(product?.gallery_urls || []);
       setGalleryUrls([]);
       setImagesToDelete([]);
-    } else {
+    } else if (selectedCategory) {
+      // New product: use selectedCategory as initial value
       form.reset({
         name: '',
         description: '',
         detailed_description: '',
         original_price: '',
         price: '',
-        category: (selectedCategory as 'cosmetics' | 'hair-extension') || 'cosmetics',
+        category: (selectedCategory as 'cosmetics' | 'hair-extension') || 'hair-extension', // <-- always use selectedCategory
         status: 'draft',
         featured: false,
         in_stock: true,
@@ -440,7 +386,6 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
         sku: '',
         weight: '',
         dimensions: '',
-        
         // Cosmetics fields
         ingredients: '',
         skin_type: '',
@@ -450,7 +395,6 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
         dermatologist_tested: false,
         cruelty_free: false,
         organic_natural: false,
-        
         // Hair extension fields
         hair_type: '',
         hair_texture: '',
@@ -460,7 +404,6 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
         installation_method: '',
         care_instructions: '',
         quantity_in_set: '',
-        
         seo_title: '',
         seo_description: '',
         seo_keywords: '',
@@ -472,147 +415,107 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
     }
   }, [product, selectedCategory, form]);
 
-  // Replace handleMainImageSelect with Firebase logic
+  // useEffect to initialize form values when editing a product
+  useEffect(() => {
+    if (product) {
+      reset({
+        ...product,
+        main_image_url: product.main_image_url || '',
+        // ...other fields as needed
+      });
+    }
+  }, [product, reset]); // reset comes from useForm
+
+  // On edit: initialize all image states from product prop
+  useEffect(() => {
+    if (product) {
+      setMainImageUrl(product.main_image_url || '');
+      setExistingGalleryUrls(product.gallery_urls || []);
+      setGalleryUrls([]);
+    }
+  }, [product]);
+
+  // Add a useEffect to always reset the form to the selectedCategory when the dialog opens for a new product
+  useEffect(() => {
+    if (open && !product && selectedCategory) {
+      form.reset({
+        ...productSchema.parse({}),
+        category: selectedCategory as 'cosmetics' | 'hair-extension',
+      });
+      setMainImageUrl('');
+      setExistingGalleryUrls([]);
+      setGalleryUrls([]);
+      setImagesToDelete([]);
+    }
+  }, [open, selectedCategory, product, form]);
+
+  // Main image upload handler
   const handleMainImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const url = await uploadProductImage(file, form.getValues('category'));
-        setMainImageUrl(url);
-      } catch (error) {
-        console.error('Error uploading main image:', error);
-        toast.error('Failed to upload main image');
-      }
-    }
+    if (!file) return;
+    const productId = product?.id || uuidv4();
+    const path = `products/${productId}/main.jpg`;
+    const url = await uploadImage(file, path);
+    setMainImageUrl(url);
   };
 
-  // Replace handleGallerySelect with Firebase logic
+  // Gallery images upload handler
   const handleGallerySelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length > 0) {
-      try {
-        const urls = await uploadMultipleImages(files, form.getValues('category'));
-        setGalleryUrls(prev => [...prev, ...urls]);
-      } catch (error) {
-        console.error('Error uploading gallery images:', error);
-        toast.error('Failed to upload gallery images');
-      }
-    }
+    if (!files.length) return;
+    const productId = product?.id || uuidv4();
+    const urls = await Promise.all(
+      files.map((file: File) => uploadImage(file, `products/${productId}/gallery/${uuidv4()}.jpg`))
+    );
+    setGalleryUrls(prev => [...prev, ...urls]);
   };
 
-  // Replace removeGalleryImage with Firebase logic
+  // Remove gallery image handler
   const removeGalleryImage = async (index: number, isExisting: boolean) => {
+    const url = isExisting ? existingGalleryUrls[index] : galleryUrls[index];
+    await deleteImageByUrl(url);
     if (isExisting) {
-      const imageUrl = existingGalleryUrls[index];
-      setImagesToDelete(prev => [...prev, imageUrl]);
       setExistingGalleryUrls(prev => prev.filter((_, i) => i !== index));
     } else {
-      const imageUrl = galleryUrls[index];
-      try {
-        await deleteProductImage(imageUrl, form.getValues('category'));
-        setGalleryUrls(prev => prev.filter((_, i) => i !== index));
-      } catch (error) {
-        console.error('Error deleting gallery image:', error);
-        toast.error('Failed to delete gallery image');
-      }
+      setGalleryUrls(prev => prev.filter((_, i) => i !== index));
     }
   };
 
-  // Replace onSubmit with Firestore logic
-  const onSubmit = async (data: ProductFormData) => {
+  // 2. Update onSubmit to use Firestore and Firebase Storage
+  const onSubmit: import('react-hook-form').SubmitHandler<ProductFormData> = async (data) => {
     setIsSubmitting(true);
     try {
-      const category = data.category as 'cosmetics' | 'hair-extension';
-      let productId = product?.id || uuidv4();
-      let productData: any = {
-        name: data.name,
-        description: data.description,
-        detailed_description: data.detailed_description,
-        original_price: data.original_price ? parseFloat(data.original_price) : undefined,
-        price: data.price ? parseFloat(data.price) : undefined,
-        category: data.category,
-        status: data.status,
-        featured: data.featured,
-        in_stock: data.in_stock,
-        stock_quantity: data.stock_quantity ? parseInt(data.stock_quantity) : undefined,
-        sku: data.sku,
-        weight: data.weight ? parseFloat(data.weight) : undefined,
-        dimensions: data.dimensions,
-        seo_title: data.seo_title,
-        seo_description: data.seo_description,
-        seo_keywords: data.seo_keywords ? data.seo_keywords.split(',').map(k => k.trim()).filter(k => k) : [],
+      const productId = product?.id || uuidv4();
+      // Use mainImageUrl and galleryUrls state
+      if (!mainImageUrl) {
+        toast.error('Please upload a main product image.');
+        setIsSubmitting(false);
+        return;
+      }
+      const now = new Date().toISOString();
+      // Only include variants for hair-extension
+      const productData = {
+        ...data,
+        main_image_url: mainImageUrl,
+        gallery_urls: [...existingGalleryUrls, ...galleryUrls],
+        updated_at: now,
+        created_at: (product as any)?.created_at || now,
+        ...(data.category === 'hair-extension' ? { variants } : {}),
       };
-      if (category === 'cosmetics') {
-        productData = {
-          ...productData,
-          ingredients: data.ingredients,
-          skin_type: data.skin_type,
-          product_benefits: data.product_benefits,
-          spf_level: data.spf_level,
-          volume_size: data.volume_size,
-          dermatologist_tested: data.dermatologist_tested,
-          cruelty_free: data.cruelty_free,
-          organic_natural: data.organic_natural,
-        };
-      } else if (category === 'hair-extension') {
-        productData = {
-          ...productData,
-          hair_type: data.hair_type,
-          hair_texture: data.hair_texture,
-          hair_length: data.hair_length,
-          hair_weight: data.hair_weight,
-          hair_color_shade: data.hair_color_shade,
-          installation_method: data.installation_method,
-          care_instructions: data.care_instructions,
-          quantity_in_set: data.quantity_in_set,
-        };
-      }
-      if (mainImageUrl) {
-        productData.main_image_url = mainImageUrl;
-      }
-      const allGalleryUrls = [...existingGalleryUrls, ...galleryUrls];
-      const finalGalleryUrls = allGalleryUrls.filter(url => !imagesToDelete.includes(url));
-      if (finalGalleryUrls.length > 0) {
-        productData.gallery_urls = finalGalleryUrls;
-      }
-      // Delete images marked for deletion
-      if (imagesToDelete.length > 0) {
-        for (const imageUrl of imagesToDelete) {
-          try {
-            await deleteProductImage(imageUrl, form.getValues('category'));
-          } catch (error) {
-            // Continue with other deletions even if one fails
-          }
-        }
-      }
-      // Firestore logic
+      const category = data.category as 'cosmetics' | 'hair-extension';
+      const collectionName = data.category === 'hair-extension' ? 'hair_extensions' : 'cosmetics';
+
       if (product?.id) {
         // Update existing product
-        const { data: existingProduct, error: selectError } = await supabase.from('Products').select('*').eq('id', String(product.id)).single();
-        if (selectError) {
-          throw selectError;
-        }
-        const { error: updateError } = await supabase.from('Products').update(productData).eq('id', String(product.id));
-        if (updateError) {
-          throw updateError;
-        }
+        await updateDoc(doc(firestore, collectionName, product.id), productData);
       } else {
         // Create new product
-        const { data, error } = await supabase.from('Products').insert([
-          {
-            ...productData,
-            created_at: new Date().toISOString(),
-          },
-        ]).select().single();
-
-        if (error) {
-          throw error;
-        }
-        productId = data.id;
+        await addDoc(collection(firestore, collectionName), productData);
       }
       onSuccess();
     } catch (error) {
       toast.error('Failed to save product');
+      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -810,6 +713,170 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                 </div>
               </div>
 
+              {/* Variants Section */}
+              {watchedCategory === 'hair-extension' && (
+                <div className="col-span-2 mt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <FormLabel className="text-base font-medium">Product Variants</FormLabel>
+                    <Button
+                      type="button"
+                      onClick={addNewVariant}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Variant
+                    </Button>
+                  </div>
+
+                  {variants.length > 0 && (
+                    <div className="space-y-4">
+                      {variants.map((variant, index) => (
+                        <div 
+                          key={variant.id} 
+                          className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+                              selectedVariant === variant.id 
+                              ? 'border-amber-500 bg-amber-50' 
+                              : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                          }`}
+                          onClick={() => handleVariantSelect(variant.id)}
+                        >
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="font-medium text-gray-800 flex items-center gap-2">
+                              <input
+                                type="radio"
+                                name="selectedVariant"
+                                checked={selectedVariant === variant.id}
+                                onChange={() => handleVariantSelect(variant.id)}
+                                className="text-amber-600"
+                              />
+                              Variant {index + 1}
+                            </h4>
+                            <Button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeVariant(index);
+                              }}
+                              variant="destructive"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {/* Length */}
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Length *
+                              </label>
+                              <Input
+                                placeholder="e.g., 18 inches"
+                                value={variant.length === 0 ? '' : variant.length}
+                                onChange={(e) => handleVariantChange(index, 'length', e.target.value)}
+                                className="h-10"
+                              />
+                            </div>
+                            {/* Topper Size (Optional) */}
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Topper Size
+                              </label>
+                              <Input
+                                placeholder="e.g., 6x6, 5x5"
+                                value={variant.topper_size || ''}
+                                onChange={(e) => handleVariantChange(index, 'topper_size', e.target.value)}
+                                className="h-10"
+                              />
+                            </div>
+                            {/* Price */}
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                Price (₹) *
+                              </label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={variant.price === 0 ? '' : variant.price}
+                                onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
+                                className="h-10"
+                              />
+                            </div>
+                          </div>
+                          {/* Color Selection Section - now in a new row */}
+                          <div className="mb-8 mt-6">
+                            <div className="flex items-center gap-3 mb-4">
+                              <FormLabel className="text-base font-medium">Colors:</FormLabel>
+                              <span className="text-sm text-gray-600">
+                                {(variant.colors ?? []).length === 0
+                                  ? 'Select colors'
+                                  : (variant.colors ?? [])
+                                      .map(value => {
+                                        const matched = hairColorOptions.find(option => option.value === value);
+                                        return matched ? matched.name : value;
+                                      })
+                                      .join(', ')}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-3">
+                              {hairColorOptions.map((color) => {
+                                const isSelected = (variant.colors ?? []).includes(color.value);
+                                return (
+                                  <div key={color.value} className="relative">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (isSelected) {
+                                          setVariants(prev => prev.map(v => v.id === variant.id ? { ...v, colors: [...((v.colors ?? []).filter(c => c !== color.value))] } : v));
+                                        } else {
+                                          setVariants(prev => prev.map(v => v.id === variant.id ? { ...v, colors: [...(v.colors ?? []), color.value] } : v));
+                                        }
+                                      }}
+                                      className={`w-12 h-12 rounded-full border-4 transition-all duration-200 ${
+                                        isSelected
+                                          ? 'border-amber-500 scale-110 shadow-lg'
+                                          : 'border-gray-300 hover:border-gray-400'
+                                      }`}
+                                      style={{
+                                        backgroundImage: `url(${color.image})`,
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
+                                      }}
+                                    />
+                                    {isSelected && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setVariants(prev => prev.map(v => v.id === variant.id ? { ...v, colors: [...((v.colors ?? []).filter(c => c !== color.value))] } : v))
+                                        }
+                                        className="absolute -top-2 -right-2 bg-white text-red-600 border border-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                                        title="Remove"
+                                      >
+                                        ×
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {variants.length === 0 && (
+                    <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg">
+                      <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <p className="text-gray-500 mb-2">No variants added yet</p>
+                      <p className="text-sm text-gray-400">Click "Add Variant" to create product variations</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Pricing & Inventory Section */}
               <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
                 <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
@@ -826,7 +893,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                     name="original_price"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-medium">Original Price (₹) *</FormLabel>
+                        <FormLabel className="text-base font-medium">Original Price (₹)</FormLabel>
                         <FormControl>
                           <Input 
                             type="number" 
@@ -917,56 +984,6 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                           />
                         </div>
                       </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Product Details Section */}
-            <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
-              <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="h-5 w-5 text-blue-600" />
-                </div>
-                Product Details
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="weight"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-medium">Weight (oz)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
-                          className="h-11 w-full"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="dimensions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-base font-medium">Dimensions</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="L × W × H" 
-                          className="h-11 w-full"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -1181,324 +1198,6 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                       </FormItem>
                     )}
                   />
-                </div>
-              </div>
-            )}
-
-            {watchedCategory === 'hair-extension' && (
-              <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
-                <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
-                  <div className="p-2 bg-amber-100 rounded-lg">
-                    <Package className="h-5 w-5 text-amber-600" />
-                  </div>
-                  Hair Extension Information
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="hair_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Hair Type</FormLabel>
-                        <FormControl>
-                          <BootstrapDropdown
-                            trigger={
-                              hairTypeOptions.find(opt => opt.value === field.value)?.label || 'Select hair type'
-                            }
-                            items={hairTypeOptions.map(opt => ({
-                              label: opt.label,
-                              onClick: () => field.onChange(opt.value)
-                            }))}
-                            className="h-11 w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="hair_texture"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Hair Texture</FormLabel>
-                        <FormControl>
-                          <BootstrapDropdown
-                            trigger={
-                              hairTextureOptions.find(opt => opt.value === field.value)?.label || 'Select hair texture'
-                            }
-                            items={hairTextureOptions.map(opt => ({
-                              label: opt.label,
-                              onClick: () => field.onChange(opt.value)
-                            }))}
-                            className="h-11 w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="hair_length"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Hair Length</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., 18 inches, 45cm" className="h-11 w-full" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Length in inches or centimeters
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="hair_weight"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Hair Weight</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., 100g, 120g per set" className="h-11 w-full" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Weight in grams
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="hair_color"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Hair Color</FormLabel>
-                        <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger className="w-full h-11">
-                              <SelectValue placeholder="Choose color" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="natural_black">
-                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['natural_black'] }} />
-                                Natural Black
-                              </SelectItem>
-                              <SelectItem value="dark_brown">
-                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['dark_brown'] }} />
-                                Dark Brown
-                              </SelectItem>
-                              <SelectItem value="ombre">
-                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['ombre'] }} />
-                                Ombre
-                              </SelectItem>
-                              <SelectItem value="light_brown">
-                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['light_brown'] }} />
-                                Light Brown
-                              </SelectItem>
-                              <SelectItem value="highlight_27">
-                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['highlight_27'] }} />
-                                Highlight #27
-                              </SelectItem>
-                              <SelectItem value="burgundy">
-                                <span className="inline-block w-5 h-5 rounded-full mr-2 align-middle" style={{ background: hairColorSwatchMap['burgundy'] }} />
-                                Burgundy
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="hair_color_shade"
-                    render={({ field }) => {
-                      // Try to use the input as a color, fallback to gray if invalid
-                      let swatchColor = field.value?.trim() || '#eee';
-                      // Optionally, add validation for hex or CSS color names
-                      return (
-                        <FormItem>
-                          <FormLabel className="text-base font-medium">Custom Color / Shade</FormLabel>
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="inline-block w-6 h-6 rounded-full border"
-                              style={{ background: swatchColor }}
-                              title={swatchColor}
-                            />
-                            <FormControl>
-                              <Input
-                                placeholder="e.g., #2 Dark Brown, #613 Blonde, custom mix"
-                                className="h-11 w-full"
-                                {...field}
-                              />
-                            </FormControl>
-                          </div>
-                          <FormDescription>
-                            Enter a custom color number, shade, or description. If you enter a valid color code (e.g., #613, #FFD700, red), you'll see a preview.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="installation_method"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Installation Method</FormLabel>
-                        <FormControl>
-                          <BootstrapDropdown
-                            trigger={
-                              installationMethodOptions.find(opt => opt.value === field.value)?.label || 'Select installation method'
-                            }
-                            items={installationMethodOptions.map(opt => ({
-                              label: opt.label,
-                              onClick: () => field.onChange(opt.value)
-                            }))}
-                            className="h-11 w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="quantity_in_set"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Quantity in Set</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., 7 pieces, 20 strands" className="h-11 w-full" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Number of pieces or strands
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="mt-6">
-                  <FormField
-                    control={form.control}
-                    name="care_instructions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Care Instructions</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Washing, styling, and maintenance instructions"
-                            className="min-h-[100px] resize-none w-full"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          How to care for and maintain the extensions
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Variant Management Section (replacing hair_length & hair_weight) */}
-            {watchedCategory === 'hair-extension' && (
-              <div className="col-span-2">
-                <Label className="text-base font-medium block mb-3">Hair Variant Options</Label>
-                {variants.map((variant, index) => (
-                  <div
-                    key={variant.id}
-                    className={`grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 p-4 mb-4 border rounded-lg ${
-                      selectedVariant === variant.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                    }`}
-                  >
-                    <div className="mb-2 md:mb-0">
-                      <Label className="block text-sm font-medium mb-1">Weight (gm)</Label>
-                      <Input
-                        className="w-full"
-                        type="number"
-                        value={variant.weight === 0 ? '' : String(variant.weight)}
-                        onChange={e => handleVariantChange(index, 'weight', e.target.value)}
-                        placeholder="Weight (gm)"
-                      />
-                    </div>
-                    <div className="mb-2 md:mb-0">
-                      <Label className="block text-sm font-medium mb-1">Length (inches)</Label>
-                      <Input
-                        className="w-full"
-                        type="number"
-                        value={variant.length === 0 ? '' : String(variant.length)}
-                        onChange={e => handleVariantChange(index, 'length', e.target.value)}
-                        placeholder="Length (inches)"
-                      />
-                    </div>
-                    <div className="mb-2 md:mb-0">
-                      <Label className="block text-sm font-medium mb-1">Price (₹)</Label>
-                      <Input
-                        className="w-full"
-                        type="number"
-                        value={variant.price === 0 ? '' : String(variant.price)}
-                        onChange={e => handleVariantChange(index, 'price', e.target.value)}
-                        placeholder="Price (₹)"
-                      />
-                    </div>
-                    <div className="mb-2 md:mb-0">
-                      <Label className="block text-sm font-medium mb-1">Discount Price</Label>
-                      <TextField
-                        type="number"
-                        value={variant.discount_price === 0 ? '' : String(variant.discount_price)}
-                        onChange={e => handleVariantChange(index, 'discount_price', e.target.value)}
-                        placeholder="Discount Price"
-                        fullWidth
-                      />
-                    </div>
-                    <div className="col-span-1 md:col-span-3 flex flex-col md:flex-row justify-between mt-2 gap-2 md:gap-4">
-                      <Button
-                        variant={selectedVariant === variant.id ? 'default' : 'outline'}
-                        onClick={() => handleVariantSelect(variant)}
-                        className="text-sm w-full md:w-auto"
-                      >
-                        {selectedVariant === variant.id ? 'Selected' : 'Select this Variant'}
-                      </Button>
-                      {variants.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => removeVariant(index)}
-                          className="w-full md:w-auto"
-                        >
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                <div className="mt-2">
-                  <Button
-                    type="button"
-                    onClick={addNewVariant}
-                    className="bg-amber-600 hover:bg-amber-700 text-white"
-                  >
-                    + Add New Variant
-                  </Button>
                 </div>
               </div>
             )}
@@ -1735,4 +1434,4 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
     </DialogContent>
   </Dialog>
   );
-} 
+}
