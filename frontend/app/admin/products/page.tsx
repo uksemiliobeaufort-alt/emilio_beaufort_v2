@@ -1,23 +1,19 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { auth } from '@/lib/auth';
+import { firestore, deleteProductImageFromFirebase } from '@/lib/firebase';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
-  Search, 
-  Plus, 
-  Package,
-  Filter
-} from 'lucide-react';
-import { 
-  getProducts, 
-  deleteProduct, 
-  Product,
-  deleteProductImage 
-} from '@/lib/supabase';
 import { toast } from 'sonner';
+import { Plus, Package, Filter } from 'lucide-react';
+import BootstrapDropdown from '@/components/ui/BootstrapDropdown';
+import ProductCard from './components/ProductCard';
+import ProductFormDialog from './ProductFormDialog';
+import CategorySelectionDialog from './CategorySelectionDialog';
+import { productSchema, ProductFormData } from './productFormTypes';
 import {
   Dialog,
   DialogContent,
@@ -26,144 +22,203 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import BootstrapDropdown from '@/components/ui/BootstrapDropdown';
-import ProductFormDialog from './ProductFormDialog';
-import CategorySelectionDialog from './CategorySelectionDialog';
-import ProductCard from './components/ProductCard';
-import { productSchema, ProductFormData } from './productFormTypes';
 
 const categoryLabels = {
   'cosmetics': 'Cosmetics',
-  'hair-extension': 'Hair Extension'
+  'hair-extension': 'Hair Extensions',
 };
-
 const statusLabels = {
   'draft': 'Draft',
   'published': 'Published',
-  'archived': 'Archived'
+  'archived': 'Archived',
 };
+
+function normalizeProduct(raw: any) {
+  try {
+    const parsed = productSchema.parse(raw);
+    return {
+      ...parsed,
+      price: parsed.price ? Number(parsed.price) : undefined,
+      original_price: parsed.original_price ? Number(parsed.original_price) : undefined,
+      stock_quantity: parsed.stock_quantity ? Number(parsed.stock_quantity) : undefined,
+      weight: parsed.weight ? Number(parsed.weight) : undefined,
+      category: parsed.category === 'cosmetics' ? 'cosmetics' : 'hair-extension',
+      seo_keywords: Array.isArray(parsed.seo_keywords)
+        ? parsed.seo_keywords
+        : typeof parsed.seo_keywords === 'string' && parsed.seo_keywords
+          ? parsed.seo_keywords.split(',').map((k: string) => k.trim()).filter(Boolean)
+          : [],
+      variants: raw.variants || [],
+    };
+  } catch (e) {
+    // Show even if not perfect
+    console.warn('Bypassing schema for product:', raw.id, raw, e);
+    return {
+      ...raw,
+      category: raw.category || 'cosmetics',
+      price: raw.price ? Number(raw.price) : undefined,
+      original_price: raw.original_price ? Number(raw.original_price) : undefined,
+      stock_quantity: raw.stock_quantity ? Number(raw.stock_quantity) : undefined,
+      weight: raw.weight ? Number(raw.weight) : undefined,
+      seo_keywords: Array.isArray(raw.seo_keywords)
+        ? raw.seo_keywords
+        : typeof raw.seo_keywords === 'string' && raw.seo_keywords
+          ? raw.seo_keywords.split(',').map((k: string) => k.trim()).filter(Boolean)
+          : [],
+      variants: raw.variants || [],
+    };
+  }
+}
+
+function productToFormData(product: any): ProductFormData {
+  return {
+    id: product.id || '',
+    name: product.name || '',
+    description: product.description || '',
+    detailed_description: product.detailed_description || '',
+    original_price: product.original_price !== undefined && product.original_price !== null ? String(product.original_price) : '',
+    price: product.price !== undefined && product.price !== null ? String(product.price) : '',
+    category: product.category || 'cosmetics',
+    status: product.status || 'draft',
+    featured: product.featured ?? false,
+    in_stock: product.in_stock ?? false,
+    stock_quantity: product.stock_quantity !== undefined && product.stock_quantity !== null ? String(product.stock_quantity) : '',
+    sku: product.sku || '',
+    weight: product.weight !== undefined && product.weight !== null ? String(product.weight) : '',
+    dimensions: product.dimensions || '',
+    ingredients: product.ingredients || '',
+    skin_type: product.skin_type || '',
+    product_benefits: product.product_benefits || '',
+    spf_level: product.spf_level || '',
+    volume_size: product.volume_size || '',
+    dermatologist_tested: product.dermatologist_tested ?? false,
+    cruelty_free: product.cruelty_free ?? false,
+    organic_natural: product.organic_natural ?? false,
+    hair_type: product.hair_type || '',
+    hair_texture: product.hair_texture || '',
+    hair_length: product.hair_length || '',
+    hair_weight: product.hair_weight || '',
+    hair_color: product.hair_color || '',
+    hair_color_shade: product.hair_color_shade || '',
+    installation_method: product.installation_method || '',
+    care_instructions: product.care_instructions || '',
+    quantity_in_set: product.quantity_in_set || '',
+    seo_title: product.seo_title || '',
+    seo_description: product.seo_description || '',
+    seo_keywords: Array.isArray(product.seo_keywords)
+      ? product.seo_keywords.join(', ')
+      : (product.seo_keywords || ''),
+    main_image_url: product.main_image_url || '',
+    gallery_urls: Array.isArray(product.gallery_urls) ? product.gallery_urls : [],
+    ...(product.variants ? { variants: product.variants } : {}),
+  };
+}
 
 export default function ProductsAdmin() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; product: Product | null }>({
-    open: false,
-    product: null
-  });
-  // Update the productFormDialog state type to allow product: ProductFormData | null
-  const [productFormDialog, setProductFormDialog] = useState<{ open: boolean; product: ProductFormData | null; selectedCategory?: string }>(
-    {
-      open: false,
-      product: null
-    }
-  );
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; product: any | null }>({ open: false, product: null });
+  const [productFormDialog, setProductFormDialog] = useState<{ open: boolean; product: ProductFormData | null; selectedCategory?: string }>({ open: false, product: null });
   const [categorySelectionDialog, setCategorySelectionDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  useEffect(() => {
-    // Check authentication
-    if (!auth.isAdmin()) {
-      router.replace('/admin/login');
-      return;
-    }
-
-    fetchProducts();
-  }, [router]);
-
+  // Fetch products from Firestore
   const fetchProducts = async () => {
-    console.log('Fetching products...');
     setLoading(true);
     try {
-      const products = await getProducts();
-      console.log('Products fetched successfully:', products);
-      setProducts(products);
+      const cosmeticsSnap = await getDocs(collection(firestore, 'cosmetics'));
+      const cosmetics = cosmeticsSnap.docs.map(doc => {
+        const data = doc.data();
+        return { ...data, id: data.id && data.id !== '' ? data.id : doc.id };
+      });
+      const hairSnap = await getDocs(collection(firestore, 'hair_extensions'));
+      const hairExtensions = hairSnap.docs.map(doc => {
+        const data = doc.data();
+        return { ...data, id: data.id && data.id !== '' ? data.id : doc.id };
+      });
+      const allProducts = [...cosmetics, ...hairExtensions]
+        .map(normalizeProduct)
+        .filter((p) => !!p && p.id);
+      // Deduplicate by id
+      const dedupedProducts = allProducts.filter((product, idx, arr) => arr.findIndex(p => p.id === product.id) === idx);
+      // Sort by created_at desc if available
+      dedupedProducts.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+      setProducts(dedupedProducts);
     } catch (error) {
-      console.error('Error fetching products:', error);
       toast.error('Failed to fetch products');
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteClick = (product: Product) => {
-    setDeleteDialog({ open: true, product });
-  };
+  useEffect(() => {
+    if (!auth.isAdmin()) {
+      router.replace('/admin/login');
+      return;
+    }
+    fetchProducts();
+  }, [router]);
 
-  const handleEditClick = (product: Product) => {
-    setProductFormDialog({ open: true, product: productSchema.parse(product ?? {}) });
-  };
-
-  const handleAddClick = () => {
-    setCategorySelectionDialog(true);
-  };
-
-  const handleCategorySelect = (category: 'cosmetics' | 'hair-extension') => {
-    setCategorySelectionDialog(false);
-    setProductFormDialog({ open: true, product: null, selectedCategory: category });
+  // Add/Edit/Delete handlers
+  const handleProductFormSuccess = async () => {
+    setProductFormDialog({ open: false, product: productSchema.parse({}) });
+    await fetchProducts();
   };
 
   const handleDeleteProduct = async () => {
     if (!deleteDialog.product) return;
-    
     setIsProcessing(true);
     try {
       const product = deleteDialog.product;
-
-      // Delete associated images first
+      // Delete images
       if (product.main_image_url) {
-        try {
-          await deleteProductImage(product.main_image_url, product.category);
-        } catch (error) {
-          console.warn('Could not delete main image:', error);
-        }
+        try { await deleteProductImageFromFirebase(product.main_image_url); } catch {}
       }
-
       if (product.gallery_urls && product.gallery_urls.length > 0) {
         for (const imageUrl of product.gallery_urls) {
-          try {
-            await deleteProductImage(imageUrl, product.category);
-          } catch (error) {
-            console.warn('Could not delete gallery image:', error);
-          }
+          try { await deleteProductImageFromFirebase(imageUrl); } catch {}
         }
       }
-
-      // Delete the product
-      await deleteProduct(product.id, product.category);
-      
+      // Delete from Firestore
+      const collectionName = product.category === 'hair-extension' ? 'hair_extensions' : 'cosmetics';
+      if (!product.id) {
+        toast.error('Product ID is missing. Cannot delete.');
+        setIsProcessing(false);
+        return;
+      }
+      await deleteDoc(doc(firestore, collectionName, product.id));
       await fetchProducts();
       setDeleteDialog({ open: false, product: null });
       toast.success('Product deleted successfully');
     } catch (error) {
-      console.error('Error deleting product:', error);
       toast.error('Failed to delete product');
+      console.error(error);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleProductFormSuccess = () => {
-    setProductFormDialog({ open: false, product: productSchema.parse({}) });
-    fetchProducts();
-  };
+  // Filtering
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      const matchesSearch =
+        !searchTerm ||
+        product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory =
+        categoryFilter === 'all' || product.category === categoryFilter;
+      const matchesStatus =
+        statusFilter === 'all' || product.status === statusFilter;
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  }, [products, searchTerm, categoryFilter, statusFilter]);
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = 
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
-    const matchesStatus = statusFilter === 'all' || product.status === statusFilter;
-
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
-
-  // Add loading state UI
+  // UI
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50/50">
@@ -177,7 +232,6 @@ export default function ProductsAdmin() {
     );
   }
 
-  // Add empty state UI
   if (!loading && (!products || products.length === 0)) {
     return (
       <div className="min-h-screen bg-gray-50/50">
@@ -186,20 +240,16 @@ export default function ProductsAdmin() {
             <Package className="h-16 w-16 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
             <p className="text-gray-600 mb-6">Get started by creating your first product.</p>
-            <Button onClick={handleAddClick} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => setCategorySelectionDialog(true)} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="h-5 w-5 mr-2" />
               Add Product
             </Button>
           </div>
-          
-          {/* Category Selection Dialog */}
           <CategorySelectionDialog
             open={categorySelectionDialog}
             onClose={() => setCategorySelectionDialog(false)}
-            onCategorySelect={handleCategorySelect}
+            onCategorySelect={cat => setProductFormDialog({ open: true, product: null, selectedCategory: cat })}
           />
-          
-          {/* Product Form Dialog */}
           <ProductFormDialog
             key={productFormDialog.selectedCategory || 'default'}
             open={productFormDialog.open}
@@ -226,7 +276,7 @@ export default function ProductsAdmin() {
           </h1>
           <p className="mt-1 text-gray-500">Manage your product catalog</p>
         </div>
-        <Button onClick={handleAddClick} size="lg" className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={() => setCategorySelectionDialog(true)} size="lg" className="bg-blue-600 hover:bg-blue-700">
           <Plus className="mr-2 h-5 w-5" />
           Add Product
         </Button>
@@ -243,10 +293,12 @@ export default function ProductsAdmin() {
             <Input
               placeholder="Search products..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="pl-10"
             />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2">
+              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+            </span>
           </div>
           <BootstrapDropdown
             trigger={
@@ -279,12 +331,12 @@ export default function ProductsAdmin() {
 
       {/* Product Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredProducts.map((product) => (
+        {filteredProducts.map((product, idx) => (
           <ProductCard
-            key={product.id}
+            key={product.id || idx}
             product={product}
-            onEdit={handleEditClick}
-            onDelete={handleDeleteClick}
+            onEdit={() => setProductFormDialog({ open: true, product: productToFormData(product) })}
+            onDelete={() => setDeleteDialog({ open: true, product })}
           />
         ))}
         {filteredProducts.length === 0 && (
@@ -301,7 +353,7 @@ export default function ProductsAdmin() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialog.open} onOpenChange={(open) => !isProcessing && setDeleteDialog({ open, product: null })}>
+      <Dialog open={deleteDialog.open} onOpenChange={open => !isProcessing && setDeleteDialog({ open, product: null })}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Product</DialogTitle>
@@ -341,7 +393,7 @@ export default function ProductsAdmin() {
       <CategorySelectionDialog
         open={categorySelectionDialog}
         onClose={() => setCategorySelectionDialog(false)}
-                 onCategorySelect={handleCategorySelect}
+        onCategorySelect={cat => setProductFormDialog({ open: true, product: null, selectedCategory: cat })}
       />
     </div>
   );

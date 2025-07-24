@@ -307,7 +307,7 @@ export default function Home() {
               filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6))'
             }}
           >
-            Where luxury meets precision. A curated collection of grooming essentials for the discerning gentleman.
+            Discover the beauty of ethical temple hair and luxury hair extensions—crafted for confidence, trusted by a global community. Your transformation starts here.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -353,7 +353,17 @@ export default function Home() {
               Philosophy & About Us
             </h2>
             <p className="body-premium text-lg sm:text-xl max-w-4xl mx-auto leading-relaxed">
-              Emilio Beaufort is a leading manufacturer and exporter of premium, ethically sourced raw Indian human hair, collected exclusively from verified South Indian temples. Serving both international and domestic clients—including top salons and wholesalers in over 35 countries—we deliver high-volume, single-donor hair bundles and custom wigs that are always unprocessed and natural. We believe hair is deeply personal, and our business is built on clean practices, ethical sourcing, and lasting partnerships. Every bundle is natural, pure, and traceable to a single donor, with no acid washing or steam processing. We stand for quality over quantity, value long-term relationships over quick profits, and are committed to refinement in every detail. Our philosophy centers on timeless elegance, sustainable luxury, and the belief that true sophistication lies in simplicity and integrity.
+              <strong>Emilio Beaufort</strong> is more than a luxury grooming brand—it's a movement built on trust, ethical sourcing, and the timeless beauty of <strong>temple hair</strong>. Our story began with a simple belief: that every person deserves to feel confident, authentic, and empowered by the products they use. 
+              <br /><br />
+              We are proud to be a leading manufacturer and exporter of premium, ethically sourced raw Indian human hair, collected exclusively from verified South Indian temples. Our commitment to <strong>quality</strong> and <strong>integrity</strong> is unwavering—every bundle is natural, pure, and traceable to a single donor, with no acid washing or steam processing. 
+              <br /><br />
+              Serving both international and domestic clients—including top salons and wholesalers in over 35 countries—we deliver high-volume, single-donor hair bundles and custom wigs that are always unprocessed and natural. Our business is built on clean practices, ethical sourcing, and lasting partnerships. 
+              <br /><br />
+              <strong>Our philosophy</strong> centers on timeless elegance, sustainable luxury, and the belief that true sophistication lies in simplicity and integrity. We believe hair is deeply personal, and our mission is to help you express your unique story with confidence. 
+              <br /><br />
+              <strong>Why choose Emilio Beaufort?</strong> Because we value long-term relationships over quick profits, and are committed to refinement in every detail. Our community is at the heart of everything we do—read our <a href='/journal/gallery' className='underline text-premium'><span className='font-bold capitalize'>Hair Extension Blog</span></a> for real transformation stories, tips, and inspiration.
+              <br /><br />
+              Join us and discover the difference of true temple hair and luxury grooming—crafted for you, by people who care.
             </p>
           </motion.div>
 
@@ -761,17 +771,14 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
               Emilio Beaufort Global
             </h2>
             <p className="body-premium text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-8">
-              At Emilio Beaufort Global, we are more than just a luxury grooming brand. We are pioneers in crafting
-              exceptional experiences that transcend traditional boundaries. Our commitment to innovation, sustainability,
-              and unparalleled quality has established us as a global leader in premium grooming solutions. With a presence
-              spanning multiple continents, we continue to redefine excellence in the luxury personal care industry.
+              We’re more than a luxury grooming brand—we’re a global leader in ethical temple hair and hair extensions. Trusted by salons and clients in 35+ countries, we deliver premium, single-donor hair and innovative grooming solutions. Our mission: empower confidence, celebrate culture, and set new standards for quality and sustainability.
             </p>
             <p className="body-premium text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed">
-              We believe in the power of collaboration. Let&apos;s explore how we can create something extraordinary together.
+              Ready to create something extraordinary? Let’s partner for impact and growth—locally and worldwide.
             </p>
           </motion.div>
 

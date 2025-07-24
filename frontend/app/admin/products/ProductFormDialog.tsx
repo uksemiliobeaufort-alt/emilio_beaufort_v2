@@ -226,14 +226,10 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
   ]);
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
 
+  // Update handleVariantChange to always store string values
   const handleVariantChange = (index: number, field: keyof Variant, value: string) => {
     const updated = [...variants];
-    // Only convert to number for numeric fields
-    if (field === 'weight' || field === 'length' || field === 'price' || field === 'discount_price') {
-      updated[index] = { ...updated[index], [field]: value === '' ? 0 : Number(value) };
-    } else {
-      updated[index] = { ...updated[index], [field]: value };
-    }
+    updated[index] = { ...updated[index], [field]: value };
     setVariants(updated);
   };
 
@@ -275,156 +271,73 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
     setVariants(updated);
   };
 
-  // Reset form when product or selectedCategory changes
-  useEffect(() => {
+  // Remove all useEffect hooks that reset form or set image state, and replace with the following:
+
+useEffect(() => {
+  if (open) {
     if (product) {
-      const typedProduct = product as ProductFormData;
-      const baseData = {
-        name: typedProduct.name,
-        description: typedProduct.description || '',
-        detailed_description: typedProduct.detailed_description || '',
-        original_price: typedProduct.original_price || '',
-        price: typedProduct.price || '',
-        category: typedProduct.category,
-        status: typedProduct.status,
-        featured: typedProduct.featured,
-        in_stock: typedProduct.in_stock,
-        stock_quantity: typedProduct.stock_quantity || '',
-        sku: typedProduct.sku || '',
-        weight: typedProduct.weight || '',
-        dimensions: typedProduct.dimensions || '',
-        seo_title: typedProduct.seo_title || '',
-        seo_description: typedProduct.seo_description || '',
-        seo_keywords: typedProduct.seo_keywords || '',
-      };
-        
-      // Add category-specific fields
-      if (isCosmeticsProduct(typedProduct)) {
-        form.reset({
-          ...baseData,
-          // Cosmetics fields
-          ingredients: (typedProduct as any).ingredients || '',
-          skin_type: (typedProduct as any).skin_type || '',
-          product_benefits: (typedProduct as any).product_benefits || '',
-          spf_level: (typedProduct as any).spf_level || '',
-          volume_size: (typedProduct as any).volume_size || '',
-          dermatologist_tested: (typedProduct as any).dermatologist_tested || false,
-          cruelty_free: (typedProduct as any).cruelty_free || false,
-          organic_natural: (typedProduct as any).organic_natural || false,
-          // Hair extension fields (empty)
-          hair_type: '',
-          hair_texture: '',
-          hair_length: '',
-          hair_weight: '',
-          hair_color_shade: '',
-          installation_method: '',
-          care_instructions: '',
-          quantity_in_set: '',
-        } as ProductFormData);
-      } else if (isHairExtensionsProduct(typedProduct)) {
-        const heProduct = typedProduct as ProductFormData;
-        form.reset({
-          ...baseData,
-          // Cosmetics fields (empty)
-          ingredients: '',
-          skin_type: '',
-          product_benefits: '',
-          spf_level: '',
-          volume_size: '',
-          dermatologist_tested: false,
-          cruelty_free: false,
-          organic_natural: false,
-          // Hair extension fields
-          hair_type: heProduct.hair_type || '',
-          hair_texture: heProduct.hair_texture || '',
-          hair_length: heProduct.hair_length || '',
-          hair_weight: heProduct.hair_weight || '',
-          hair_color_shade: heProduct.hair_color_shade || '',
-          installation_method: heProduct.installation_method || '',
-          care_instructions: heProduct.care_instructions || '',
-          quantity_in_set: heProduct.quantity_in_set || '',
-        } as ProductFormData);
-      } else {
-        // fallback: reset all fields to empty/false to avoid 'never' type
-        form.reset({
-          ...baseData,
-          ingredients: '',
-          skin_type: '',
-          product_benefits: '',
-          spf_level: '',
-          volume_size: '',
-          dermatologist_tested: false,
-          cruelty_free: false,
-          organic_natural: false,
-          hair_type: '',
-          hair_texture: '',
-          hair_length: '',
-          hair_weight: '',
-          hair_color_shade: '',
-          installation_method: '',
-          care_instructions: '',
-          quantity_in_set: '',
-        } as ProductFormData);
-      }
-      setMainImageUrl(product?.main_image_url || '');
-      setExistingGalleryUrls(product?.gallery_urls || []);
+      // Editing: prefill all fields from product
+      form.reset({
+        ...product,
+        main_image_url: product.main_image_url || '',
+        gallery_urls: product.gallery_urls || [],
+      });
+      setMainImageUrl(product.main_image_url || '');
+      setExistingGalleryUrls(product.gallery_urls || []);
       setGalleryUrls([]);
       setImagesToDelete([]);
+      // Prefill variants for hair-extension
+      if (product.category === 'hair-extension' && Array.isArray((product as any).variants)) {
+        setVariants(
+          (product as any).variants.map((v: any) => ({
+            ...v,
+            length: v.length !== undefined && v.length !== null ? String(v.length) : '',
+            price: v.price !== undefined && v.price !== null ? String(v.price) : '',
+            discount_price: v.discount_price !== undefined && v.discount_price !== null ? String(v.discount_price) : '',
+            topper_size: v.topper_size || '',
+            product_id: v.product_id || '',
+            colors: Array.isArray(v.colors) ? v.colors : [],
+            id: v.id || uuidv4(),
+          }))
+        );
+      } else {
+        setVariants([
+          {
+            id: uuidv4(),
+            product_id: '',
+            weight: 0,
+            length: 0,
+            price: 0,
+            discount_price: 0,
+            colors: [],
+          },
+        ]);
+      }
     } else if (selectedCategory) {
       // New product: use selectedCategory as initial value
       form.reset({
-        name: '',
-        description: '',
-        detailed_description: '',
-        original_price: '',
-        price: '',
-        category: (selectedCategory as 'cosmetics' | 'hair-extension') || 'hair-extension', // <-- always use selectedCategory
-        status: 'draft',
-        featured: false,
-        in_stock: true,
-        stock_quantity: '',
-        sku: '',
-        weight: '',
-        dimensions: '',
-        // Cosmetics fields
-        ingredients: '',
-        skin_type: '',
-        product_benefits: '',
-        spf_level: '',
-        volume_size: '',
-        dermatologist_tested: false,
-        cruelty_free: false,
-        organic_natural: false,
-        // Hair extension fields
-        hair_type: '',
-        hair_texture: '',
-        hair_length: '',
-        hair_weight: '',
-        hair_color_shade: '',
-        installation_method: '',
-        care_instructions: '',
-        quantity_in_set: '',
-        seo_title: '',
-        seo_description: '',
-        seo_keywords: '',
+        ...productSchema.parse({}),
+        category: selectedCategory as 'cosmetics' | 'hair-extension',
       });
+      setVariants([
+        {
+          id: uuidv4(),
+          product_id: '',
+          weight: 0,
+          length: 0,
+          price: 0,
+          discount_price: 0,
+          colors: [],
+        },
+      ]);
       setMainImageUrl('');
       setExistingGalleryUrls([]);
       setGalleryUrls([]);
       setImagesToDelete([]);
     }
-  }, [product, selectedCategory, form]);
-
-  // useEffect to initialize form values when editing a product
-  useEffect(() => {
-    if (product) {
-      reset({
-        ...product,
-        main_image_url: product.main_image_url || '',
-        // ...other fields as needed
-      });
-    }
-  }, [product, reset]); // reset comes from useForm
+  }
+  // eslint-disable-next-line
+}, [open, product, selectedCategory]);
 
   // On edit: initialize all image states from product prop
   useEffect(() => {
@@ -774,7 +687,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                               </label>
                               <Input
                                 placeholder="e.g., 18 inches"
-                                value={variant.length === 0 ? '' : variant.length}
+                                value={variant.length}
                                 onChange={(e) => handleVariantChange(index, 'length', e.target.value)}
                                 className="h-10"
                               />
@@ -800,7 +713,7 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                                 type="number"
                                 step="0.01"
                                 placeholder="0.00"
-                                value={variant.price === 0 ? '' : variant.price}
+                                value={variant.price}
                                 onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
                                 className="h-10"
                               />
@@ -887,30 +800,6 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                 </h3>
                 
                 <div className="space-y-6">
-                  {/* Original Price - Full Width */}
-                  <FormField
-                    control={form.control}
-                    name="original_price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">Original Price (₹)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01" 
-                            placeholder="0.00" 
-                            className="h-11 w-full"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription className="text-sm text-gray-500">
-                          The regular price of the product in INR (₹)
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   {/* Discounted Price and Stock Quantity - Two Columns */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
@@ -950,6 +839,8 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
                           {...field} 
                         />
                         </FormControl>
+                        {/* Add an invisible FormDescription for alignment */}
+                        <FormDescription className="invisible select-none">placeholder</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

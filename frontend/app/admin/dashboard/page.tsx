@@ -298,28 +298,12 @@ export default function AdminDashboard() {
       const postsSnapshot = await getDocs(collection(firestore, 'blog_posts'));
       const postsCount = postsSnapshot.size;
 
-      // Fetch products count from Supabase
-      let totalProductsCount = 0;
-      try {
-        const products = await getProducts();
-        totalProductsCount = products.length;
-        console.log('Fetched products count:', totalProductsCount);
-      } catch (error) {
-        console.error('Error fetching products count:', error);
-        // Fallback to direct table queries if getProducts fails
-        try {
-          const [cosmeticsResult, hairExtensionsResult] = await Promise.all([
-            supabase.from('cosmetics').select('*', { count: 'exact', head: true }),
-            supabase.from('hair_extensions').select('*', { count: 'exact', head: true })
-          ]);
-          const cosmeticsCount = cosmeticsResult.count || 0;
-          const hairExtensionsCount = hairExtensionsResult.count || 0;
-          totalProductsCount = cosmeticsCount + hairExtensionsCount;
-          console.log('Fetched products count (fallback):', totalProductsCount);
-        } catch (fallbackError) {
-          console.error('Error in fallback product count:', fallbackError);
-        }
-      }
+      // Fetch products count from Firebase (cosmetics + hair_extensions)
+      const [cosmeticsSnapshot, hairExtensionsSnapshot] = await Promise.all([
+        getDocs(collection(firestore, 'cosmetics')),
+        getDocs(collection(firestore, 'hair_extensions')),
+      ]);
+      const totalProductsCount = cosmeticsSnapshot.size + hairExtensionsSnapshot.size;
 
       setStats({
         totalProducts: totalProductsCount,

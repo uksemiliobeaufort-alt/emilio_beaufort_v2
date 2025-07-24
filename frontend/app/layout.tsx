@@ -18,13 +18,36 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfa
 const faviconUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/favicon.ico`;
 
 export const metadata = {
-  title: "Emilio Beaufort - Luxury Grooming",
-  description: "Emilio Beaufort - Luxury grooming products and philosophy by Emilio Beaufort.",
+  title: "Emilio Beaufort | Luxury Temple Hair Extensions & Grooming",
+  description: "Discover Emilio Beaufort's luxury temple hair extensions and grooming products. Learn what is temple hair, explore our hair extension blog, and shop premium hair from India.",
+  keywords: "temple hair, hair extension, emilio beaufort, temple hair blog, what is temple hair, luxury grooming, indian hair extensions, premium hair, hair extension blog, luxury hair care",
   icons: {
     icon: faviconUrl,
     shortcut: faviconUrl,
     apple: faviconUrl,
   },
+  openGraph: {
+    title: "Emilio Beaufort | Luxury Temple Hair Extensions & Grooming",
+    description: "Discover Emilio Beaufort's luxury temple hair extensions and grooming products. Learn what is temple hair, explore our hair extension blog, and shop premium hair from India.",
+    url: "https://emiliobeaufort.com/",
+    type: "website",
+    images: [
+      {
+        url: faviconUrl,
+        width: 512,
+        height: 512,
+        alt: "Emilio Beaufort Logo"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Emilio Beaufort | Luxury Temple Hair Extensions & Grooming",
+    description: "Discover Emilio Beaufort's luxury temple hair extensions and grooming products. Learn what is temple hair, explore our hair extension blog, and shop premium hair from India.",
+    images: [faviconUrl],
+    creator: "@emiliobeaufort"
+  },
+  robots: "index, follow"
 };
 
 export default function RootLayout({

@@ -58,22 +58,22 @@ export const uploadProductImageToFirebase = async (
 // Delete product image from Firebase Storage
 export const deleteProductImageFromFirebase = async (imageUrl: string): Promise<void> => {
   try {
-    // Extract the path from the Firebase URL
     const url = new URL(imageUrl);
-    const pathMatch = url.pathname.match(/\/o\/(.+)\?/);
-    
-    if (!pathMatch) {
-      throw new Error('Invalid Firebase URL format');
-    }
-    
-    const imagePath = decodeURIComponent(pathMatch[1]);
+    const oIndex = url.pathname.indexOf('/o/');
+    if (oIndex === -1) throw new Error('Invalid Firebase URL format');
+    let imagePath = url.pathname.substring(oIndex + 3);
+    imagePath = decodeURIComponent(imagePath.split('?')[0]);
     const imageRef = ref(storage, imagePath);
-    
+
     console.log(`Deleting image from Firebase: ${imagePath}`);
     await deleteObject(imageRef);
     console.log('Image deleted successfully');
-    
-  } catch (error) {
+  } catch (error: any) {
+    // Ignore 'object-not-found' error
+    if (error.code === 'storage/object-not-found') {
+      console.warn('Image not found in Firebase Storage, skipping delete.');
+      return;
+    }
     console.error('Error deleting image from Firebase:', error);
     throw error;
   }

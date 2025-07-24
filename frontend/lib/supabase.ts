@@ -220,6 +220,9 @@ export interface HairExtensions {
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string[];
+
+  // Add this for Firestore variant support
+  variants?: any[];
 }
 
 // Union type for all products

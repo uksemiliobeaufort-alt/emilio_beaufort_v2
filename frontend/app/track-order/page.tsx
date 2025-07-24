@@ -14,7 +14,7 @@ export default function TrackOrderPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-premium relative">
-      <div className="bg-gradient-to-br from-[#B7A16C] via-[#fffbe6] to-black p-1 rounded-3xl shadow-2xl w-full max-w-md">
+      <div className="bg-gradient-to-br from-[#B7A16C] via-[#fffbe6] to-black p-1 rounded-3xl shadow-2xl w-full max-w-xl">
         <div className="bg-white rounded-2xl p-8 w-full">
           <h1 className="text-3xl font-bold mb-6 text-premium text-center">Track Your Order</h1>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -56,7 +56,7 @@ export default function TrackOrderPage() {
       {/* Centered Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-gradient-to-br from-[#B7A16C] via-[#fffbe6] to-black p-1 rounded-2xl shadow-2xl max-w-md w-full">
+          <div className="bg-gradient-to-br from-[#B7A16C] via-[#fffbe6] to-black p-1 rounded-2xl shadow-2xl w-full max-w-xl">
             <div className="bg-white rounded-xl p-8 flex flex-col items-center">
               <h2 className="text-xl font-bold mb-4 text-black text-center">Invalid Tracking ID</h2>
               <p className="text-gray-700 text-center mb-4">
@@ -73,6 +73,7 @@ export default function TrackOrderPage() {
           </div>
         </div>
       )}
+
     </div>
   );
 } 

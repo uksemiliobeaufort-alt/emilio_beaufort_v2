@@ -20,14 +20,27 @@ const categoryLabels = {
   'hair-extension': 'Hair Extensions'
 };
 
-const formatPrice = (price?: number) => {
-  if (!price) return 'N/A';
-  return `₹${price.toLocaleString('en-IN')}`;
+const formatPrice = (price?: number | string) => {
+  if (price === undefined || price === null || price === "") return 'N/A';
+  const num = typeof price === 'string' ? Number(price) : price;
+  if (isNaN(num)) return 'N/A';
+  return `₹${num.toLocaleString('en-IN')}`;
 };
 
+const isEmpty = (val: unknown) => val === undefined || val === null || val === '';
+
 export default function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
+  // Determine which price to show
+  let displayPrice: number | string | undefined = product.price;
+  let displayOriginalPrice: number | string | undefined = product.original_price;
+  const hasVariants = Array.isArray((product as any).variants) && (product as any).variants.length > 0;
+  if (isEmpty(displayPrice) && hasVariants) {
+    displayPrice = (product as any).variants[0]?.price;
+    displayOriginalPrice = (product as any).variants[0]?.original_price || (product as any).variants[0]?.price;
+  }
+
   return (
-    <div className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-gray-300">
+    <div className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-gray-300 h-full flex flex-col">
       {/* Image Section */}
       <div className="aspect-square relative bg-gray-100 overflow-hidden">
         {product.main_image_url ? (
@@ -56,7 +69,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
       </div>
 
       {/* Content Section */}
-      <div className="p-4 space-y-4">
+      <div className="p-4 flex flex-col flex-1">
         <div className="space-y-2">
           <h3 className="font-semibold text-lg line-clamp-1 text-gray-900">
             {product.name}
@@ -66,27 +79,25 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
           </p>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mt-2">
           <div>
             <Badge variant="outline" className="text-sm">
               {categoryLabels[product.category]}
             </Badge>
           </div>
           <div className="text-right">
-            {product.price ? (
-              // Product has a discounted price
+            {displayPrice && displayOriginalPrice && displayOriginalPrice !== displayPrice ? (
               <div>
                 <div className="text-lg font-semibold text-green-600">
-                  {formatPrice(product.price)}
+                  {formatPrice(displayPrice)}
                 </div>
                 <div className="text-sm text-gray-500 line-through">
-                  {formatPrice(product.original_price)}
+                  {formatPrice(displayOriginalPrice)}
                 </div>
               </div>
             ) : (
-              // Product only has original price
               <div className="text-lg font-semibold text-gray-900">
-                {formatPrice(product.original_price)}
+                {formatPrice(displayPrice)}
               </div>
             )}
           </div>
@@ -94,7 +105,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
 
         {/* Stock Status */}
         {product.stock_quantity !== undefined && product.stock_quantity !== null && (
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-sm mt-2">
             <span className="text-gray-600">
               Stock: {product.stock_quantity}
             </span>
@@ -104,8 +115,9 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
           </div>
         )}
 
+        <div className="flex-1" />
         {/* Actions */}
-        <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
+        <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-2 mt-4">
           <Button
             variant="outline"
             size="sm"
