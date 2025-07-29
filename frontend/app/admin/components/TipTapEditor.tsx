@@ -56,6 +56,8 @@ export interface TipTapEditorHandle {
 }
 
 const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File, url: string) => void }) => {
+  if (!editor) return null;
+  
   const [isUploading, setIsUploading] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
@@ -99,21 +101,21 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
         return;
       }
 
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Only image files are allowed');
-        return;
-      }
-
       setIsUploading(true);
       try {
-        const localUrl = URL.createObjectURL(file);
-        editor.chain().focus().setImage({ src: localUrl }).run();
-        onAddImage(file, localUrl);
-        toast.success('Image added (will upload on save)');
-      } catch (error: any) {
-        console.error('Image add failed:', error);
-        toast.error(error.message || 'Failed to add image');
+        // Create a blob URL for immediate preview
+        const blobUrl = URL.createObjectURL(file);
+        
+        // Insert image into editor
+        editor.chain().focus().setImage({ src: blobUrl }).run();
+        
+        // Call the onAddImage callback
+        onAddImage(file, blobUrl);
+        
+        toast.success('Image added successfully');
+      } catch (error) {
+        console.error('Error adding image:', error);
+        toast.error('Failed to add image');
       } finally {
         setIsUploading(false);
       }
@@ -128,262 +130,202 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
     }
   };
 
-  if (!editor) {
-    return null;
-  }
-
-  // Primary actions (always visible)
-  const primaryActions = [
-    {
-      label: 'Bold',
-      icon: <Bold className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleBold().run(),
-      isActive: editor.isActive('bold'), can: editor.can().chain().focus().toggleBold().run(), type: 'button'
-    },
-    {
-      label: 'Italic',
-      icon: <Italic className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleItalic().run(),
-      isActive: editor.isActive('italic'), can: editor.can().chain().focus().toggleItalic().run(), type: 'button'
-    },
-    {
-      label: 'Underline',
-      icon: <UnderlineIcon className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleUnderline().run(),
-      isActive: editor.isActive('underline'), can: editor.can().chain().focus().toggleUnderline().run(), type: 'button'
-    },
-    {
-      label: 'Font Color',
-      icon: <Palette className="h-4 w-4" />, onClick: () => setColorPickerOpen((v) => !v),
-      isActive: false, can: true, isColor: true, type: 'button'
-    },
-    {
-      label: 'Link',
-      icon: <LinkIcon className="h-4 w-4" />, onClick: () => setLinkDialogOpen(true),
-      isActive: editor.isActive('link'), can: true, type: 'button'
-    },
-    {
-      label: 'Image',
-      icon: <ImageIcon className="h-4 w-4" />, onClick: addImage,
-      isActive: false, can: !isUploading, type: 'button'
-    },
-  ];
-
-  // Secondary actions (in popover)
-  const secondaryActions = [
-    {
-      label: 'H1',
-      icon: <Heading1 className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
-      isActive: editor.isActive('heading', { level: 1 }), can: editor.can().chain().focus().toggleHeading({ level: 1 }).run()
-    },
-    {
-      label: 'H2',
-      icon: <Heading2 className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
-      isActive: editor.isActive('heading', { level: 2 }), can: editor.can().chain().focus().toggleHeading({ level: 2 }).run()
-    },
-    {
-      label: 'H3',
-      icon: <Heading3 className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
-      isActive: editor.isActive('heading', { level: 3 }), can: editor.can().chain().focus().toggleHeading({ level: 3 }).run()
-    },
-    {
-      label: 'Strike',
-      icon: <Strikethrough className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleStrike().run(),
-      isActive: editor.isActive('strike'), can: editor.can().chain().focus().toggleStrike().run()
-    },
-    {
-      label: 'Highlight',
-      icon: <Highlighter className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleHighlight().run(),
-      isActive: editor.isActive('highlight'), can: editor.can().chain().focus().toggleHighlight().run()
-    },
-    {
-      label: 'Align Left',
-      icon: <AlignLeft className="h-4 w-4" />, onClick: () => editor.chain().focus().setTextAlign('left').run(),
-      isActive: editor.isActive({ textAlign: 'left' }), can: true
-    },
-    {
-      label: 'Align Center',
-      icon: <AlignCenter className="h-4 w-4" />, onClick: () => editor.chain().focus().setTextAlign('center').run(),
-      isActive: editor.isActive({ textAlign: 'center' }), can: true
-    },
-    {
-      label: 'Align Right',
-      icon: <AlignRight className="h-4 w-4" />, onClick: () => editor.chain().focus().setTextAlign('right').run(),
-      isActive: editor.isActive({ textAlign: 'right' }), can: true
-    },
-    {
-      label: 'Align Justify',
-      icon: <AlignJustify className="h-4 w-4" />, onClick: () => editor.chain().focus().setTextAlign('justify').run(),
-      isActive: editor.isActive({ textAlign: 'justify' }), can: true
-    },
-    {
-      label: 'Bullet List',
-      icon: <List className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleBulletList().run(),
-      isActive: editor.isActive('bulletList'), can: editor.can().chain().focus().toggleBulletList().run()
-    },
-    {
-      label: 'Ordered List',
-      icon: <ListOrdered className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleOrderedList().run(),
-      isActive: editor.isActive('orderedList'), can: editor.can().chain().focus().toggleOrderedList().run()
-    },
-    {
-      label: 'Blockquote',
-      icon: <Quote className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleBlockquote().run(),
-      isActive: editor.isActive('blockquote'), can: true
-    },
-    {
-      label: 'Code',
-      icon: <Code className="h-4 w-4" />, onClick: () => editor.chain().focus().toggleCodeBlock().run(),
-      isActive: editor.isActive('codeBlock'), can: true
-    },
-    {
-      label: 'Font Color',
-      icon: <Palette className="h-4 w-4" />, onClick: (e: any) => {
-        setColorAnchor(e.currentTarget);
-        setColorPickerOpen(true);
-      },
-      isActive: false, can: true, isColor: true
-    },
-  ];
-
   return (
-    <div className="border-b border-gray-200 bg-white p-4 rounded-t-lg flex flex-wrap gap-2 items-center relative">
-      {/* Primary actions */}
-      {primaryActions.map((action, idx) => (
-        <div key={action.label} className="relative">
+    <div className="border-b bg-gray-50 p-2 flex flex-wrap gap-1 items-center">
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          className={editor.isActive('bold') ? 'bg-blue-100' : ''}
+        >
+          <Bold className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          className={editor.isActive('italic') ? 'bg-blue-100' : ''}
+        >
+          <Italic className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          className={editor.isActive('underline') ? 'bg-blue-100' : ''}
+        >
+          <UnderlineIcon className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          className={editor.isActive('strike') ? 'bg-blue-100' : ''}
+        >
+          <Strikethrough className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          className={editor.isActive('heading', { level: 1 }) ? 'bg-blue-100' : ''}
+        >
+          <Heading1 className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          className={editor.isActive('heading', { level: 2 }) ? 'bg-blue-100' : ''}
+        >
+          <Heading2 className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          className={editor.isActive('heading', { level: 3 }) ? 'bg-blue-100' : ''}
+        >
+          <Heading3 className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          className={editor.isActive('bulletList') ? 'bg-blue-100' : ''}
+        >
+          <List className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          className={editor.isActive('orderedList') ? 'bg-blue-100' : ''}
+        >
+          <ListOrdered className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          className={editor.isActive('blockquote') ? 'bg-blue-100' : ''}
+        >
+          <Quote className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          className={editor.isActive('codeBlock') ? 'bg-blue-100' : ''}
+        >
+          <Code className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          className={editor.isActive({ textAlign: 'left' }) ? 'bg-blue-100' : ''}
+        >
+          <AlignLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          className={editor.isActive({ textAlign: 'center' }) ? 'bg-blue-100' : ''}
+        >
+          <AlignCenter className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          className={editor.isActive({ textAlign: 'right' }) ? 'bg-blue-100' : ''}
+        >
+          <AlignRight className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+          className={editor.isActive({ textAlign: 'justify' }) ? 'bg-blue-100' : ''}
+        >
+          <AlignJustify className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="flex gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={addImage}
+          disabled={isUploading}
+        >
+          <ImageIcon className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setLinkDialogOpen(true)}
+        >
+          <LinkIcon className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => editor.chain().focus().toggleHighlight().run()}
+          className={editor.isActive('highlight') ? 'bg-blue-100' : ''}
+        >
+          <Highlighter className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Color Picker */}
+      <Popover open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
+        <PopoverTrigger asChild>
           <Button
-            type={action.type === 'submit' || action.type === 'reset' ? action.type : 'button'}
-            variant={action.isActive ? 'default' : 'ghost'}
             size="sm"
-            onClick={action.isColor ? () => setColorPickerOpen((v) => !v) : action.onClick}
-            disabled={!action.can}
-            aria-label={action.label}
+            variant="ghost"
+            onClick={() => setColorPickerOpen(!colorPickerOpen)}
           >
-            {action.icon}
+            <Palette className="h-4 w-4" />
           </Button>
-          {/* Color picker popover for Font Color */}
-          {action.isColor && colorPickerOpen && (
-            <div className="absolute left-1/2 top-full mt-2 -translate-x-1/2 z-50 bg-white p-3 rounded-lg shadow-lg flex flex-col items-center gap-2 border">
-              <div className="flex gap-1 mb-2">
-                {presetColors.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    className="w-6 h-6 rounded-full border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-                    style={{ backgroundColor: color }}
-                    onClick={() => {
-                      setSelectedColor(color);
-                      editor.chain().focus().setColor(color).run();
-                      setColorPickerOpen(false);
-                    }}
-                  />
-                ))}
-              </div>
-              <input
-                type="color"
-                value={selectedColor}
-                onChange={e => {
-                  setSelectedColor(e.target.value);
-                  editor.chain().focus().setColor(e.target.value).run();
+        </PopoverTrigger>
+        <PopoverContent className="w-48">
+          <div className="grid grid-cols-5 gap-2">
+            {presetColors.map((color) => (
+              <button
+                key={color}
+                className="w-6 h-6 rounded border-2 border-gray-300 hover:border-gray-400"
+                style={{ backgroundColor: color }}
+                onClick={() => {
+                  editor.chain().focus().setColor(color).run();
                   setColorPickerOpen(false);
                 }}
-                className="w-8 h-8 border-none bg-transparent cursor-pointer shadow"
-                style={{ boxShadow: 'none' }}
-                autoFocus
               />
-            </div>
-          )}
-        </div>
-      ))}
-      {/* More menu for secondary actions */}
-      <div className="relative">
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label="More formatting options"
-          onClick={() => setPopoverOpen((v) => !v)}
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-        {popoverOpen && (
-          <div
-            ref={popoverRef}
-            className="absolute left-0 mt-2 z-50 bg-white border rounded-lg shadow-lg p-4 grid grid-cols-2 gap-2 min-w-[320px] max-w-md"
-          >
-            {secondaryActions.map((action) => (
-              <Button
-                key={action.label}
-                variant={action.isActive ? 'default' : 'ghost'}
-                size="sm"
-                onClick={(e) => { 
-                  if (action.isColor) {
-                    action.onClick(e);
-                  } else {
-                    action.onClick(e);
-                    setPopoverOpen(false);
-                  }
-                }}
-                disabled={!action.can}
-                aria-label={action.label}
-                className={`flex flex-row items-center gap-2 justify-start w-full px-2 py-2 text-left
-                  ${action.isActive ? 'bg-gray-200 text-black' : 'text-gray-800'}
-                  ${!action.can ? 'text-gray-400 cursor-not-allowed' : ''}
-                  hover:bg-gray-100 hover:text-black`}
-              >
-                {action.icon}
-                <span className="text-sm ml-2 whitespace-nowrap">{action.label}</span>
-                {/* Color picker popover */}
-                {action.isColor && colorPickerOpen && (
-                  <input
-                    type="color"
-                    value={selectedColor}
-                    onChange={e => {
-                      setSelectedColor(e.target.value);
-                      editor.chain().focus().setColor(e.target.value).run();
-                      setColorPickerOpen(false);
-                      setPopoverOpen(false);
-                    }}
-                    className="ml-2 w-6 h-6 border-none bg-transparent cursor-pointer"
-                    style={{ boxShadow: 'none' }}
-                    autoFocus
-                  />
-                )}
-              </Button>
             ))}
           </div>
-        )}
-      </div>
-      {/* Link Dialog */}
-      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Link</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Enter URL"
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  setLink();
-                }
-              }}
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={setLink}>
-                Add Link
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
 
 const TipTapEditor = forwardRef<TipTapEditorHandle, TipTapEditorProps>(({ content, onChange, placeholder, onImagesChange }, ref) => {
   const [images, setImages] = useState<{ file: File, url: string }[]>([]);
+  const [isEditorReady, setIsEditorReady] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -430,7 +372,12 @@ const TipTapEditor = forwardRef<TipTapEditorHandle, TipTapEditorProps>(({ conten
     ],
     content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      try {
+        onChange(editor.getHTML());
+      } catch (error) {
+        console.error('Error in editor onUpdate:', error);
+        setHasError(true);
+      }
     },
     editorProps: {
       attributes: {
@@ -440,26 +387,63 @@ const TipTapEditor = forwardRef<TipTapEditorHandle, TipTapEditorProps>(({ conten
   });
 
   useEffect(() => {
+    if (editor) {
+      setIsEditorReady(true);
+      setHasError(false);
+    }
+  }, [editor]);
+
+  useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+      try {
+        editor.commands.setContent(content);
+      } catch (error) {
+        console.error('Error setting editor content:', error);
+        setHasError(true);
+      }
     }
   }, [content, editor]);
 
   // Expose imperative handle for parent to get images and HTML
   useImperativeHandle(ref, () => ({
-    getImages: () => images.map(img => img.file),
-    getHTML: () => editor?.getHTML() || '',
-  }), [images, editor]);
+    getImages: () => images?.map(img => img.file) || [],
+    getHTML: () => {
+      try {
+        return isEditorReady && editor ? editor.getHTML() : '';
+      } catch (error) {
+        console.error('Error getting HTML from editor:', error);
+        return '';
+      }
+    },
+  }), [images, editor, isEditorReady]);
 
   // When an image is added, update the images state
   const handleAddImage = (file: File, url: string) => {
-    setImages(prev => [...prev, { file, url }]);
-    if (onImagesChange) onImagesChange(images.map(img => img.file).concat(file));
+    setImages(prev => {
+      const newImages = [...prev, { file, url }];
+      if (onImagesChange) onImagesChange(newImages.map(img => img.file));
+      return newImages;
+    });
   };
+
+  if (hasError) {
+    return (
+      <div className="border rounded-lg overflow-hidden">
+        <div className="min-h-[180px] flex items-center justify-center text-red-500">
+          Error loading editor. Please refresh the page.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="border rounded-lg overflow-hidden">
-      <MenuBar editor={editor} onAddImage={handleAddImage} />
+      {isEditorReady && editor && <MenuBar editor={editor} onAddImage={handleAddImage} />}
+      {!isEditorReady && (
+        <div className="min-h-[180px] flex items-center justify-center text-gray-500">
+          Loading editor...
+        </div>
+      )}
       <EditorContent 
         editor={editor} 
         className="min-h-[180px] max-h-[300px] p-4 focus:outline-none resize-none"
@@ -629,4 +613,5 @@ const TipTapEditor = forwardRef<TipTapEditorHandle, TipTapEditorProps>(({ conten
     </div>
   );
 });
+
 export default TipTapEditor; 

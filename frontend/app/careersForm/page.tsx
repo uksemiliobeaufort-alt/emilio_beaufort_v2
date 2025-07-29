@@ -16,19 +16,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { uploadCareerResume, saveCareerApplication } from "@/lib/supabase";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { firestore } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from "sonner";
 import { Briefcase } from "lucide-react";
 import { UploadCloud } from "lucide-react";
 
 const formSchema = z.object({
-  fullName: z.string().min(2, "Full name must be at least 2 characters"),
+  fullName: z.string().min(2, "Full name is required and must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
-  portfolio: z
-    .string()
-    .url("Please enter a valid URL")
-    .optional()
-    .or(z.literal("")),
+  github: z.string().url("Please enter a valid GitHub URL").min(2, "GitHub URL is required"),
+  linkedin: z.string().url("Please enter a valid LinkedIn URL").min(2, "LinkedIn URL is required"),
+  portfolio: z.string().url("Please enter a valid Portfolio URL").optional().or(z.literal("")),
   resume: z.any().refine((file) => file instanceof File && file.size > 0, {
     message: "Resume is required",
   }),
@@ -37,6 +37,8 @@ const formSchema = z.object({
     .min(10, "Cover letter must be at least 10 characters")
     .optional()
     .or(z.literal("")),
+  hearAbout: z.string().min(2, "Please select or enter how you heard about this job"),
+  hearAboutOther: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -45,13 +47,21 @@ function CareersFormContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resumeName, setResumeName] = useState("");
   const [jobTitle, setJobTitle] = useState("");
+  const [jobId, setJobId] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [parsingResume, setParsingResume] = useState(false);
+
+  const [parsingError, setParsingError] = useState("");
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [hearAbout, setHearAbout] = useState("");
+  const [showOther, setShowOther] = useState(false);
 
   useEffect(() => {
     const title = searchParams?.get("jobTitle");
+    const id = searchParams?.get("jobId");
     if (title) setJobTitle(decodeURIComponent(title));
+    if (id) setJobId(id);
   }, [searchParams]);
 
   const form = useForm<FormData>({
@@ -59,29 +69,79 @@ function CareersFormContent() {
     defaultValues: {
       fullName: "",
       email: "",
+      github: "",
+      linkedin: "",
       portfolio: "",
       resume: "",
       coverLetter: "",
+      hearAbout: "",
+      hearAboutOther: "",
     },
   });
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
+      // Check if job is still accepting applications
+      if (jobId) {
+        const { checkJobAvailability } = await import('@/lib/api');
+        const { firestore } = await import('@/lib/firebase');
+        const { doc, getDoc } = await import('firebase/firestore');
+        
+        // Get job details to check seats available
+        const jobDoc = await getDoc(doc(firestore, 'job_posts', jobId));
+        if (jobDoc.exists()) {
+          const jobData = jobDoc.data();
+          const availability = await checkJobAvailability(jobId, jobData.seats_available);
+          
+          if (!availability.isAvailable) {
+            const errorMessage = jobData.is_closed 
+              ? "This position is no longer accepting applications. The job has been closed."
+              : "This position is no longer accepting applications. All seats have been filled.";
+            toast.error(errorMessage);
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+      
       const resumeFile = data.resume;
-      const resumeUrl = await uploadCareerResume(resumeFile, data.fullName);
-      await saveCareerApplication({
+      // 1. Create Firestore doc first (without resumeUrl)
+      const docRef = await addDoc(collection(firestore, 'career_applications'), {
         fullName: data.fullName,
         email: data.email,
+        github: data.github,
+        linkedin: data.linkedin,
         portfolio: data.portfolio || '',
         coverLetter: data.coverLetter || '',
         jobTitle: jobTitle || '',
-        resumeUrl
+        jobId: jobId || '',
+        hearAbout: data.hearAbout === 'Other' ? data.hearAboutOther : data.hearAbout,
+        createdAt: serverTimestamp(),
       });
+      // 2. Upload resume to Storage under 'career_applications/{docId}_{filename}'
+      const storage = getStorage();
+      const storageRef = ref(storage, `career_applications/${docRef.id}_${resumeFile.name}`);
+      await uploadBytes(storageRef, resumeFile);
+      const resumeUrl = await getDownloadURL(storageRef);
+      // 3. Update Firestore doc with resumeUrl
+      await import('firebase/firestore').then(({ updateDoc }) => updateDoc(docRef, { resumeUrl }));
+      
+      // 4. Sync to Google Sheets if available (this would need to be done server-side in production)
+      try {
+        // Note: In production, this should be done server-side for security
+        // For now, we'll just log that the application was created
+        console.log('Application created with ID:', docRef.id);
+      } catch (error) {
+        console.error('Failed to sync to Google Sheets:', error);
+      }
+      
       toast.success("Your application has been submitted!");
       form.reset();
       setResumeName("");
       setIsSuccess(true);
+      setHearAbout("");
+      setShowOther(false);
     } catch (error) {
       toast.error("Submission failed. Please try again.");
       console.error("Error submitting form:", error);
@@ -89,6 +149,46 @@ function CareersFormContent() {
       setIsSubmitting(false);
     }
   };
+
+  // Resume parsing and prefill logic
+  async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>, onChange: (file: File) => void) {
+    const file = e.target.files?.[0];
+    if (file) {
+      setResumeName(file.name);
+      onChange(file);
+      setParsingResume(true);
+      setParsingError("");
+      
+      try {
+        const formData = new FormData();
+        formData.append('resume', file);
+        const response = await fetch('/api/extract-resume-fields', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          
+          if (result.success) {
+            toast.success("Resume uploaded successfully!");
+          } else {
+            setParsingError('Failed to upload resume');
+            toast.error("Failed to upload resume. Please try again.");
+          }
+        } else {
+          const errorData = await response.json();
+          setParsingError(errorData.error || 'Failed to upload resume');
+          toast.error("Failed to upload resume. Please try again.");
+        }
+      } catch (err) {
+        setParsingError("Network error. Please try again.");
+        toast.error("Failed to parse resume. Please fill the form manually.");
+      } finally {
+        setParsingResume(false);
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen py-20 px-2 sm:px-6 bg-gray-50 flex items-center justify-center">
@@ -147,54 +247,7 @@ function CareersFormContent() {
               className="space-y-10 bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-gray-100"
             >
               <div className="space-y-8">
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold text-black">Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold text-black">Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="you@example.com" className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="portfolio"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold text-black">
-                        Portfolio Link <span className="text-gray-400 font-normal">(optional)</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://yourportfolio.com"
-                          className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+                {/* Resume Upload - moved to top */}
                 <FormField
                   control={form.control}
                   name="resume"
@@ -208,21 +261,150 @@ function CareersFormContent() {
                               <UploadCloud className="h-8 w-8 text-gray-400 mb-1" />
                               <span className="font-semibold text-black">Drag & drop or <span className="underline text-gold">click to upload</span></span>
                               <span className="text-gray-500 text-xs">{resumeName || "No file selected."}</span>
+                              {/* {parsingResume && <span className="text-gold text-xs mt-2 animate-pulse">Parsing resume and prefilling fields...</span>}
+                              {parsingError && <span className="text-red-500 text-xs mt-2">{parsingError}</span>} */}
                             </div>
                             <input
                               type="file"
                               accept=".pdf,.doc,.docx"
                               className="hidden"
                               id="resume-upload"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  setResumeName(file.name);
-                                  field.onChange(file);
-                                }
-                              }}
+                              onChange={e => handleResumeUpload(e, field.onChange)}
                             />
                           </label>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+
+                
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-black">Full Name <span className="text-red-500">*</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="Emilio Beaufort" className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-black">Email <span className="text-red-500">*</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="you@example.com" className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="github"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-black">
+                        GitHub URL <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://github.com/yourusername"
+                          className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="linkedin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-black">
+                        LinkedIn URL <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://linkedin.com/in/yourusername"
+                          className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="portfolio"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-black">
+                        Portfolio URL <span className="text-gray-400 font-normal">(optional)</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://yourportfolio.com"
+                          className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Hear About Dropdown - now a standard select */}
+                <FormField
+                  control={form.control}
+                  name="hearAbout"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-semibold text-black">
+                        Where did you hear about this job opening? <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <div>
+                          <select
+                            className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 shadow-sm font-semibold text-black focus:outline-none focus:ring-2 focus:ring-gold transition-all mb-2"
+                            value={hearAbout}
+                            onChange={e => {
+                              const value = e.target.value;
+                              setHearAbout(value);
+                              form.setValue("hearAbout", value);
+                              setShowOther(value === "Other");
+                              
+                            }}
+                          >
+                            <option value="">Select an option</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="Emilio Beaufort Website">Emilio Beaufort Website</option>
+                            <option value="Friend">Friend/Colleague</option>
+                            <option value="Other">Other</option>
+                          </select>
+                          {showOther && (
+                            <Input
+                              className="mt-3 rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md"
+                              placeholder="Please specify..."
+                              {...form.register("hearAboutOther")}
+                            />
+                          )}
                         </div>
                       </FormControl>
                       <FormMessage />

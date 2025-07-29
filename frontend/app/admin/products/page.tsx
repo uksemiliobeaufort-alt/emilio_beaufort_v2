@@ -71,6 +71,16 @@ function normalizeProduct(raw: any) {
 }
 
 function productToFormData(product: any): ProductFormData {
+  // Handle variants for hair extensions
+  let remyVariants: any[] = [];
+  let virginVariants: any[] = [];
+  
+  if (product.category === 'hair-extension' && product.variants) {
+    // Split variants by type
+    remyVariants = product.variants.filter((v: any) => v.type === 'remy' || !v.type);
+    virginVariants = product.variants.filter((v: any) => v.type === 'virgin');
+  }
+
   return {
     id: product.id || '',
     name: product.name || '',
@@ -110,6 +120,9 @@ function productToFormData(product: any): ProductFormData {
       : (product.seo_keywords || ''),
     main_image_url: product.main_image_url || '',
     gallery_urls: Array.isArray(product.gallery_urls) ? product.gallery_urls : [],
+    // Add the new variant structure
+    remyVariants,
+    virginVariants,
     ...(product.variants ? { variants: product.variants } : {}),
   };
 }
@@ -175,15 +188,30 @@ export default function ProductsAdmin() {
     setIsProcessing(true);
     try {
       const product = deleteDialog.product;
-      // Delete images
+      
+      // Delete images with better error handling
       if (product.main_image_url) {
-        try { await deleteProductImageFromFirebase(product.main_image_url); } catch {}
-      }
-      if (product.gallery_urls && product.gallery_urls.length > 0) {
-        for (const imageUrl of product.gallery_urls) {
-          try { await deleteProductImageFromFirebase(imageUrl); } catch {}
+        try {
+          await deleteProductImageFromFirebase(product.main_image_url);
+          console.log('Main image deleted successfully');
+        } catch (imageError) {
+          console.warn('Failed to delete main image:', imageError);
+          // Continue with deletion even if image deletion fails
         }
       }
+      
+      if (product.gallery_urls && product.gallery_urls.length > 0) {
+        for (const imageUrl of product.gallery_urls) {
+          try {
+            await deleteProductImageFromFirebase(imageUrl);
+            console.log('Gallery image deleted successfully');
+          } catch (imageError) {
+            console.warn('Failed to delete gallery image:', imageError);
+            // Continue with deletion even if image deletion fails
+          }
+        }
+      }
+      
       // Delete from Firestore
       const collectionName = product.category === 'hair-extension' ? 'hair_extensions' : 'cosmetics';
       if (!product.id) {
@@ -191,13 +219,14 @@ export default function ProductsAdmin() {
         setIsProcessing(false);
         return;
       }
+      
       await deleteDoc(doc(firestore, collectionName, product.id));
       await fetchProducts();
       setDeleteDialog({ open: false, product: null });
       toast.success('Product deleted successfully');
     } catch (error) {
       toast.error('Failed to delete product');
-      console.error(error);
+      console.error('Delete product error:', error);
     } finally {
       setIsProcessing(false);
     }

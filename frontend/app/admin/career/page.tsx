@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { firestore } from '@/lib/firebase';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ import { Briefcase, Code, Cpu, Users, User } from "lucide-react";
 import JobPostForm from "./JobPostForm";
 
 interface JobPost {
-  id: number;
+  id: string;
   title: string;
   slug: string;
   location: string;
@@ -23,7 +24,11 @@ interface JobPost {
   salary: string;
   department?: string;
   description: string;
-  created_at: string;
+  application_form_link?: string;
+  seats_available?: number;
+  is_closed?: boolean;
+  created_at: string | any; // Firebase Timestamp or string
+  auto_delete_at?: string | any; // Firebase Timestamp or string
 }
 
 export default function AdminCareersPage() {
@@ -33,7 +38,7 @@ export default function AdminCareersPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobPost | null>(null);
-  const [expandedJobId, setExpandedJobId] = useState<number | null>(null);
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
 
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
@@ -47,18 +52,42 @@ export default function AdminCareersPage() {
   }, []);
 
   const fetchJobs = async () => {
-    const { data, error } = await supabase
-      .from("job_posts")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
+    try {
+      const querySnapshot = await getDocs(collection(firestore, 'job_posts'));
+      const jobsData = querySnapshot.docs.map(docSnap => ({ ...(docSnap.data() as Omit<JobPost, 'id'>), id: docSnap.id }));
+      
+      // Filter out expired jobs (auto_delete_at has passed)
+      const currentTime = new Date();
+      const activeJobs = jobsData.filter(job => {
+        if (!job.auto_delete_at) return true; // Keep jobs without auto-delete
+        
+        const deleteTime = job.auto_delete_at.toDate ? job.auto_delete_at.toDate() : new Date(job.auto_delete_at);
+        return deleteTime > currentTime;
+      });
+      
+      // Clean up expired jobs from database
+      const expiredJobs = jobsData.filter(job => {
+        if (!job.auto_delete_at) return false;
+        
+        const deleteTime = job.auto_delete_at.toDate ? job.auto_delete_at.toDate() : new Date(job.auto_delete_at);
+        return deleteTime <= currentTime;
+      });
+      
+      // Delete expired jobs from database
+      for (const expiredJob of expiredJobs) {
+        try {
+          await deleteDoc(doc(firestore, 'job_posts', expiredJob.id));
+          console.log(`Deleted expired job: ${expiredJob.title}`);
+        } catch (error) {
+          console.error(`Failed to delete expired job ${expiredJob.id}:`, error);
+        }
+      }
+      
+      setJobs(activeJobs);
+    } catch (error) {
       console.error(error);
-      toast.error("Failed to load jobs");
-    } else {
-      setJobs(data || []);
+      toast.error('Failed to load jobs');
     }
-
     setLoading(false);
   };
 
@@ -74,13 +103,11 @@ export default function AdminCareersPage() {
 
   const handleCreateOrUpdate = async () => {
     if (!title || !description) {
-      toast.error("Title and description are required");
+      toast.error('Title and description are required');
       return;
     }
-
     setIsProcessing(true);
     const slug = title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-
     const jobData = {
       title,
       slug,
@@ -90,26 +117,20 @@ export default function AdminCareersPage() {
       department,
       description,
     };
-
     try {
       if (selectedJob) {
-        const { error } = await supabase
-          .from("job_posts")
-          .update(jobData)
-          .eq("id", selectedJob.id);
-        if (error) throw error;
-        toast.success("Job updated");
+        await updateDoc(doc(firestore, 'job_posts', selectedJob.id), jobData);
+        toast.success('Job updated');
       } else {
-        const { error } = await supabase.from("job_posts").insert([jobData]);
-        if (error) throw error;
-        toast.success("Job posted");
+        await addDoc(collection(firestore, 'job_posts'), { ...jobData, created_at: Timestamp.now() });
+        toast.success('Job posted');
       }
       resetForm();
       setDialogOpen(false);
       fetchJobs();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save job");
+      toast.error('Failed to save job');
     } finally {
       setIsProcessing(false);
     }
@@ -126,16 +147,36 @@ export default function AdminCareersPage() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (jobId: number) => {
+  const handleDelete = async (jobId: string) => {
     setIsProcessing(true);
     try {
-      const { error } = await supabase.from("job_posts").delete().eq("id", jobId);
-      if (error) throw error;
-      toast.success("Job deleted");
+      await deleteDoc(doc(firestore, 'job_posts', jobId));
+      toast.success('Job deleted');
       fetchJobs();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete job");
+      toast.error('Failed to delete job');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleExtendAutoDelete = async (jobId: string) => {
+    setIsProcessing(true);
+    try {
+      // Extend auto-delete by 7 more days
+      const sevenDaysFromNow = new Date();
+      sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+      
+      await updateDoc(doc(firestore, 'job_posts', jobId), {
+        auto_delete_at: Timestamp.fromDate(sevenDaysFromNow)
+      });
+      
+      toast.success('Auto-delete extended by 7 days');
+      fetchJobs();
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to extend auto-delete');
     } finally {
       setIsProcessing(false);
     }
@@ -185,15 +226,10 @@ export default function AdminCareersPage() {
               const jobData = { ...data, slug };
               try {
                 if (selectedJob) {
-                  const { error } = await supabase
-                    .from("job_posts")
-                    .update(jobData)
-                    .eq("id", selectedJob.id);
-                  if (error) throw error;
+                  await updateDoc(doc(firestore, 'job_posts', selectedJob.id), jobData);
                   toast.success("Job updated");
                 } else {
-                  const { error } = await supabase.from("job_posts").insert([jobData]);
-                  if (error) throw error;
+                  await addDoc(collection(firestore, 'job_posts'), jobData);
                   toast.success("Job posted");
                 }
                 resetForm();
@@ -266,9 +302,10 @@ export default function AdminCareersPage() {
                 {job.location && <span>{job.location}</span>}
                 {job.type && <span>• {job.type}</span>}
                 {job.salary && <span>• Salary: {job.salary}</span>}
+                {job.application_form_link && <span>• External Form</span>}
               </div>
-              {/* View Details Button */}
-              <div className="flex justify-end mt-4">
+              {/* Action Buttons */}
+              <div className="flex justify-between items-center mt-4">
                 <Button
                   variant="outline"
                   size="sm"
@@ -279,9 +316,45 @@ export default function AdminCareersPage() {
                 >
                   View Details
                 </Button>
+                <div className="flex gap-2">
+                  {job.auto_delete_at && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                      onClick={() => handleExtendAutoDelete(job.id)}
+                      disabled={isProcessing}
+                    >
+                      Extend
+                    </Button>
+                  )}
+                  {job.application_form_link && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-orange-500 hover:bg-orange-600 text-white"
+                      onClick={() => window.open(job.application_form_link, '_blank')}
+                    >
+                      Apply Now
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="flex justify-between items-center pt-2 text-xs text-gray-400">
-                <span>{new Date(job.created_at).toLocaleDateString()}</span>
+                <span>
+                  {job.created_at
+                    ? (typeof job.created_at === 'string'
+                        ? new Date(job.created_at).toLocaleDateString()
+                        : (job.created_at && typeof job.created_at === 'object' && 'toDate' in job.created_at
+                            ? job.created_at.toDate().toLocaleDateString()
+                            : ''))
+                    : ''}
+                </span>
+                {job.auto_delete_at && (
+                  <span className="text-orange-600">
+                    Auto-delete: {job.auto_delete_at.toDate ? job.auto_delete_at.toDate().toLocaleDateString() : new Date(job.auto_delete_at).toLocaleDateString()}
+                  </span>
+                )}
               </div>
             </div>
           ))}
@@ -289,22 +362,57 @@ export default function AdminCareersPage() {
       )}
       {selectedJob && expandedJobId === selectedJob.id && (
         <Dialog open={true} onOpenChange={() => { setExpandedJobId(null); setSelectedJob(null); }}>
-          <DialogContent className="w-full max-w-full sm:max-w-xl md:max-w-2xl bg-white rounded-2xl p-0 sm:p-0 overflow-hidden">
-            <DialogHeader className="px-4 pt-6 pb-2 sm:px-8 sm:pt-8">
-              <DialogTitle className="text-2xl font-extrabold mb-1 text-gray-900">{selectedJob.title}</DialogTitle>
-              <div className="flex flex-wrap gap-2 mb-4 text-sm text-gray-600">
-                {selectedJob.department && <span className="flex items-center gap-1">{departmentIcon(selectedJob.department)}{selectedJob.department}</span>}
-                {selectedJob.location && <span className="flex items-center gap-1">{selectedJob.location}</span>}
-                {selectedJob.type && <span className="flex items-center gap-1">{selectedJob.type}</span>}
-                {selectedJob.salary && <span className="flex items-center gap-1">Salary: {selectedJob.salary}</span>}
+          <DialogContent className="max-w-lg w-full bg-white rounded-3xl shadow-2xl p-0 overflow-hidden border border-gray-200 animate-fade-in">
+            <div className="flex flex-col h-full min-h-[350px]">
+              {/* Custom Header Grid */}
+              <div className="flex items-start justify-between px-6 pt-8 pb-2 w-full">
+                <DialogTitle className="text-2xl sm:text-3xl font-extrabold text-premium mb-2 break-words max-w-[80%]">{selectedJob.title}</DialogTitle>
+                {/* Removed custom close button to avoid duplicate '×' icons */}
               </div>
-            </DialogHeader>
-            <div className="px-4 pb-6 pt-2 sm:px-8 sm:pb-8 sm:pt-2 max-h-[80vh] overflow-y-auto">
-              <div className="text-gray-700 text-base mb-6 whitespace-pre-line mt-2">
-                <span dangerouslySetInnerHTML={{ __html: selectedJob.description }} />
+              <div className="flex flex-wrap gap-2 justify-start mb-2 px-6 w-full max-w-full break-all">
+                {selectedJob.department && <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100 break-words max-w-full">{departmentIcon(selectedJob.department)}<span className="ml-1">{selectedJob.department}</span></span>}
+                {selectedJob.location && <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-100 break-words max-w-full">{selectedJob.location}</span>}
+                {selectedJob.type && <span className="inline-flex items-center px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold border border-purple-100 break-words max-w-full">{selectedJob.type}</span>}
+                {selectedJob.salary && <span className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-semibold border border-yellow-100 break-words max-w-full">Salary: {selectedJob.salary}</span>}
+                {selectedJob.application_form_link && <span className="inline-flex items-center px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold border border-orange-100 break-words max-w-full">External Form</span>}
               </div>
-              <div className="flex justify-end mt-8">
-                <Button variant="outline" onClick={() => { setExpandedJobId(null); setSelectedJob(null); }}>Close</Button>
+              <div className="text-xs text-gray-400 mb-2 px-6">
+                {selectedJob.created_at && (typeof selectedJob.created_at === 'string' ? new Date(selectedJob.created_at).toLocaleDateString() : '')}
+              </div>
+              <hr className="my-2 border-gray-200" />
+              {/* Description */}
+              <div className="flex-1 overflow-y-auto px-6 pb-4 pt-2 w-full">
+                <div className="text-gray-800 text-base leading-relaxed whitespace-pre-line break-words break-all max-w-full" style={{minHeight: 80}}>
+                  <span dangerouslySetInnerHTML={{ __html: selectedJob.description }} />
+                </div>
+                {/* Apply button for desktop */}
+                {selectedJob.application_form_link && (
+                  <div className="mt-6 pt-4 border-t border-gray-100">
+                    <button
+                      className="w-full px-6 py-3 font-semibold rounded-full shadow-lg hover:bg-orange-600 border border-orange-500 text-white bg-orange-500 transition-all"
+                      onClick={() => window.open(selectedJob.application_form_link, '_blank')}
+                    >
+                      Apply Now
+                    </button>
+                  </div>
+                )}
+              </div>
+              {/* Sticky Close Button for mobile */}
+              <div className="px-6 pb-6 pt-2 bg-white flex justify-center sticky bottom-0 z-10 border-t border-gray-100 sm:hidden">
+                {selectedJob.application_form_link && (
+                                      <button
+                      className="px-6 py-3 font-semibold rounded-full shadow hover:bg-orange-100 border border-orange-300 text-orange-700 bg-orange-50 mr-2"
+                      onClick={() => window.open(selectedJob.application_form_link, '_blank')}
+                    >
+                      Apply Now
+                    </button>
+                )}
+                <button
+                  className="px-8 py-3 font-semibold rounded-full shadow hover:bg-gray-100 border border-gray-300 text-gray-700 bg-white"
+                  onClick={() => { setExpandedJobId(null); setSelectedJob(null); }}
+                >
+                  Close
+                </button>
               </div>
             </div>
           </DialogContent>

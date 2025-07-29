@@ -1,7 +1,7 @@
 // const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 import { supabase } from './supabaseClient';
-import { getProducts as getSupabaseProducts, Product as SupabaseProduct } from './supabase';
+import { getProducts as getSupabaseProducts, UnifiedProduct as SupabaseProduct } from './supabase';
 
 export type ProductCategory = 'COSMETICS' | 'HAIR';
 
@@ -48,6 +48,42 @@ export interface CareerApplication {
   coverLetter: string;
   jobTitle?: string;
 }
+
+// Function to check if a job is still accepting applications
+export const checkJobAvailability = async (jobId: string, seatsAvailable?: number, isClosed?: boolean): Promise<{ isAvailable: boolean; applicationsCount: number }> => {
+  try {
+    const { firestore } = await import('@/lib/firebase');
+    const { collection, query, where, getDocs } = await import('firebase/firestore');
+    
+    // If job is manually closed, it's not available
+    if (isClosed) {
+      return { isAvailable: false, applicationsCount: 0 };
+    }
+    
+    // Get applications for this specific job
+    const applicationsQuery = query(
+      collection(firestore, 'career_applications'),
+      where('jobId', '==', jobId)
+    );
+    
+    const applicationsSnapshot = await getDocs(applicationsQuery);
+    const applicationsCount = applicationsSnapshot.size;
+    
+    // If no seats limit is set, job is always available
+    if (!seatsAvailable || seatsAvailable <= 0) {
+      return { isAvailable: true, applicationsCount };
+    }
+    
+    // Check if applications count is less than available seats
+    const isAvailable = applicationsCount < seatsAvailable;
+    
+    return { isAvailable, applicationsCount };
+  } catch (error) {
+    console.error('Error checking job availability:', error);
+    // Default to available if there's an error
+    return { isAvailable: true, applicationsCount: 0 };
+  }
+};
 
 export interface WaitlistSignup {
   email: string;

@@ -1,12 +1,12 @@
-import { Product } from '@/lib/supabase';
+import { UnifiedProduct } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, Eye, Star, ImageIcon } from 'lucide-react';
 
 interface ProductCardProps {
-  product: Product;
-  onEdit: (product: Product) => void;
-  onDelete: (product: Product) => void;
+  product: UnifiedProduct;
+  onEdit: (product: UnifiedProduct) => void;
+  onDelete: (product: UnifiedProduct) => void;
 }
 
 const statusColors = {
@@ -62,7 +62,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
           </div>
         )}
         <Badge 
-          className={`absolute top-2 right-2 ${statusColors[product.status]}`}
+          className={`absolute top-2 right-2 ${statusColors[product.status as keyof typeof statusColors]}`}
         >
           {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
         </Badge>
@@ -82,7 +82,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
         <div className="flex items-center justify-between mt-2">
           <div>
             <Badge variant="outline" className="text-sm">
-              {categoryLabels[product.category]}
+              {categoryLabels[product.category as keyof typeof categoryLabels]}
             </Badge>
           </div>
           <div className="text-right">

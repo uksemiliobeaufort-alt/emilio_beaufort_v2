@@ -1,22 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { firestore } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Briefcase, Brain, Users, User, Globe, HeartHandshake, Search, Loader2, Info, MapPin, BadgeDollarSign, Clock } from "lucide-react";
+import { Briefcase, Brain, Users, User, Globe, HeartHandshake, Search, Loader2, Info, MapPin, BadgeDollarSign, Clock, Users as UsersIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { checkJobAvailability } from "@/lib/api";
 
 interface Job {
-  id: number;
+  id: string; // changed from number to string for Firestore
   title: string;
   location: string;
   type: string;
   salary?: string;
   description: string;
   department?: string;
-  created_at?: string; // Added for date display
+  application_form_link?: string; // External form link
+  seats_available?: number;
+  is_closed?: boolean;
+  created_at?: string | any; // Firebase Timestamp or string
+  auto_delete_at?: string | any; // Firebase Timestamp or string
 }
 
 const DEPARTMENTS = [
@@ -45,19 +51,46 @@ export default function CareersListingPage() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [jobAvailability, setJobAvailability] = useState<Record<string, { isAvailable: boolean; applicationsCount: number }>>({});
   const router = useRouter();
 
   useEffect(() => {
     const fetchJobs = async () => {
-      const { data, error } = await supabase
-        .from("job_posts")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (!error) setJobs(data || []);
+      try {
+        const q = query(collection(firestore, "job_posts"), orderBy("created_at", "desc"));
+        const querySnapshot = await getDocs(q);
+        const jobsData = querySnapshot.docs.map(docSnap => ({ ...(docSnap.data() as Omit<Job, 'id'>), id: docSnap.id }));
+        
+        // Filter out expired jobs (auto_delete_at has passed)
+        const currentTime = new Date();
+        const activeJobs = jobsData.filter(job => {
+          if (!job.auto_delete_at) return true; // Keep jobs without auto-delete
+          
+          const deleteTime = job.auto_delete_at.toDate ? job.auto_delete_at.toDate() : new Date(job.auto_delete_at);
+          return deleteTime > currentTime;
+        });
+        
+        setJobs(activeJobs);
+        
+        // Check availability for each job
+        const availabilityPromises = jobsData.map(async (job) => {
+          const availability = await checkJobAvailability(job.id, job.seats_available, job.is_closed);
+          return { jobId: job.id, ...availability };
+        });
+        
+        const availabilityResults = await Promise.all(availabilityPromises);
+        const availabilityMap = availabilityResults.reduce((acc, result) => {
+          acc[result.jobId] = { isAvailable: result.isAvailable, applicationsCount: result.applicationsCount };
+          return acc;
+        }, {} as Record<string, { isAvailable: boolean; applicationsCount: number }>);
+        
+        setJobAvailability(availabilityMap);
+      } catch (error) {
+        console.error("Failed to fetch jobs from Firestore:", error);
+        setJobs([]);
+      }
       setLoading(false);
     };
-
     fetchJobs();
   }, []);
 
@@ -150,11 +183,18 @@ export default function CareersListingPage() {
                     {job.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4 mr-1 text-gray-400" />{job.location}</span>}
                     {job.type && <span className="flex items-center gap-1"><Clock className="h-4 w-4 mr-1 text-gray-400" />{job.type}</span>}
                     {job.salary && <span className="flex items-center gap-1"><BadgeDollarSign className="h-4 w-4 mr-1 text-gray-400" />{job.salary}</span>}
+                    {job.seats_available && jobAvailability[job.id] && (
+                      <span className={`flex items-center gap-1 ${jobAvailability[job.id].isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                        <UsersIcon className="h-4 w-4 mr-1" />
+                        {jobAvailability[job.id].applicationsCount}/{job.seats_available}
+                      </span>
+                    )}
                   </div>
                   {/* Buttons */}
                   <div className="mt-auto pt-2 flex gap-2">
                     <Button
-                      className="w-1/2 bg-white text-black border border-gray-300 text-lg py-3 rounded-2xl shadow hover:bg-gray-100 hover:shadow-lg transition-all font-bold"
+                      className="w-1/2 bg-white text-black border border-gray-300 text-lg py-3 rounded-2xl shadow transition-all font-bold
+                        hover:bg-black hover:text-white hover:border-black hover:shadow-lg focus:ring-2 focus:ring-black focus:outline-none"
                       variant="outline"
                       onClick={() => {
                         setSelectedJob(job);
@@ -163,16 +203,49 @@ export default function CareersListingPage() {
                     >
                       View Details
                     </Button>
-                    <Link
-                      href={`/careersForm?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title)}`}
-                      className="w-1/2"
-                    >
-                      <Button className="w-full bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold">
-                        Apply
+                    {job.application_form_link ? (
+                      <Button 
+                        className="w-1/2 bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => window.open(job.application_form_link, '_blank')}
+                        disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable)}
+                      >
+                        {job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')}
                       </Button>
-                    </Link>
+                    ) : (
+                      <Link
+                        href={job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? '#' : `/careersForm?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title)}`}
+                        className="w-1/2"
+                        onClick={(e) => {
+                          if (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) {
+                            e.preventDefault();
+                          }
+                        }}
+                      >
+                        <Button 
+                          className="w-full bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                                                  disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable)}
+                      >
+                        {job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')}
+                      </Button>
+                      </Link>
+                    )}
                   </div>
-                  <div className="text-xs text-gray-400 mt-2">{job.created_at ? new Date(job.created_at).toLocaleDateString() : ''}</div>
+                  <div className="text-xs text-gray-400 mt-2">
+                    <div>
+                      {job.created_at
+                        ? (typeof job.created_at === 'string'
+                            ? new Date(job.created_at).toLocaleDateString()
+                            : (job.created_at && typeof job.created_at === 'object' && 'toDate' in job.created_at
+                                ? job.created_at.toDate().toLocaleDateString()
+                                : ''))
+                        : ''}
+                    </div>
+                    {job.auto_delete_at && (
+                      <div className="text-orange-600">
+                        Expires: {job.auto_delete_at.toDate ? job.auto_delete_at.toDate().toLocaleDateString() : new Date(job.auto_delete_at).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -205,41 +278,96 @@ export default function CareersListingPage() {
       </div>
       {/* Job Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl w-full p-0 sm:p-0">
+        <DialogContent className="max-w-xl w-full p-0 rounded-2xl shadow-2xl overflow-hidden flex items-center justify-center">
           {selectedJob && (
-            <div className="flex flex-col h-[80vh] sm:h-[80vh]">
-              <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-10 sm:py-8">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-bold mb-2">{selectedJob.title}</DialogTitle>
-                  <DialogDescription asChild>
-                    <div className="flex flex-wrap gap-2 mb-8">
-                      <span className="flex items-center px-3 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700 border border-gray-200"><MapPin className="h-3.5 w-3.5 mr-1 text-gray-400" />{selectedJob.location}</span>
-                      <span className="flex items-center px-3 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700 border border-gray-200"><Clock className="h-3.5 w-3.5 mr-1 text-gray-400" />{selectedJob.type}</span>
-                      {selectedJob.salary && (
-                        <span className="flex items-center px-3 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700 border border-gray-200"><BadgeDollarSign className="h-3.5 w-3.5 mr-1 text-gray-400" />Salary: {selectedJob.salary}</span>
-                      )}
-                      {selectedJob.department && (
-                        <span className="flex items-center px-3 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700 border border-gray-200">{selectedJob.department}</span>
-                      )}
-                    </div>
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="text-gray-700 text-base mb-6 whitespace-pre-line mt-6">
+            <div className="flex flex-col h-[80vh] w-full bg-white">
+              {/* Header */}
+              <div className="relative flex items-center justify-center px-8 py-8 border-b bg-gradient-to-r from-gray-50 to-white rounded-t-3xl">
+                <div className="relative group w-full flex justify-center">
+                  <DialogTitle asChild>
+                    <h2 className="font-extrabold text-black break-words text-center w-full cursor-pointer text-[30px]">
+                      {selectedJob.title}
+                    </h2>
+                  </DialogTitle>
+                  <div className="absolute left-1/2 top-full z-50 w-max max-w-xs -translate-x-1/2 mt-2 px-4 py-2 rounded-lg bg-black text-white text-base font-semibold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-pre-line text-center">
+                    {selectedJob.title}
+                  </div>
+                </div>
+              </div>
+              {/* Tags */}
+              <div className="flex flex-wrap gap-3 px-8 py-4 bg-gray-100 border-b w-full rounded-b-none">
+                {selectedJob.location && (
+                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
+                    <MapPin className="h-4 w-4 mr-1 text-gray-400" />{selectedJob.location}
+                  </span>
+                )}
+                {selectedJob.type && (
+                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
+                    <Clock className="h-4 w-4 mr-1 text-gray-400" />{selectedJob.type}
+                  </span>
+                )}
+                {selectedJob.salary && (
+                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
+                    <BadgeDollarSign className="h-4 w-4 mr-1 text-gray-400" />{selectedJob.salary}
+                  </span>
+                )}
+                {selectedJob.department && (
+                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
+                    <Briefcase className="h-4 w-4 mr-1 text-gray-400" />{selectedJob.department}
+                  </span>
+                )}
+                {selectedJob.seats_available && jobAvailability[selectedJob.id] && (
+                  <span className={`flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-semibold shadow-sm max-w-full break-words whitespace-normal ${
+                    jobAvailability[selectedJob.id].isAvailable 
+                      ? 'bg-green-50 border-green-200 text-green-700' 
+                      : 'bg-red-50 border-red-200 text-red-700'
+                  }`}>
+                    <UsersIcon className="h-4 w-4 mr-1" />
+                    {jobAvailability[selectedJob.id].applicationsCount}/{selectedJob.seats_available} seats
+                  </span>
+                )}
+
+              </div>
+              {/* Description */}
+              <div className="flex-1 overflow-y-auto px-8 py-8 bg-white rounded-b-2xl">
+                <div className="text-gray-800 text-base leading-relaxed whitespace-pre-line break-words break-all">
                   <span dangerouslySetInnerHTML={{ __html: selectedJob.description }} />
                 </div>
               </div>
-              <div className="flex justify-end gap-2 border-t border-gray-100 bg-white px-6 py-4 sm:px-10">
-                <Link
-                  href={`/careersForm?jobId=${selectedJob.id}&jobTitle=${encodeURIComponent(selectedJob.title)}`}
-                  className="w-1/2"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  <Button className="w-full bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold">
-                    Apply
+              {/* Footer */}
+              <div className="flex justify-center gap-6 border-t bg-gray-50 px-8 py-6 rounded-b-2xl">
+                {selectedJob.application_form_link ? (
+                  <Button 
+                    className="w-32 bg-black text-white text-lg py-3 rounded-xl shadow hover:bg-gray-900 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => {
+                      window.open(selectedJob.application_form_link, '_blank');
+                      setIsDialogOpen(false);
+                    }}
+                    disabled={!!(selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable)}
+                  >
+                    {selectedJob.is_closed ? 'Closed' : (selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable ? 'Full' : 'Apply')}
                   </Button>
-                </Link>
+                ) : (
+                  <Link
+                    href={selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable ? '#' : `/careersForm?jobId=${selectedJob.id}&jobTitle=${encodeURIComponent(selectedJob.title)}`}
+                    onClick={(e) => {
+                      if (selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable) {
+                        e.preventDefault();
+                      } else {
+                        setIsDialogOpen(false);
+                      }
+                    }}
+                  >
+                    <Button 
+                      className="w-32 bg-black text-white text-lg py-3 rounded-xl shadow hover:bg-gray-900 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!!(selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable)}
+                    >
+                      {selectedJob.is_closed ? 'Closed' : (selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable ? 'Full' : 'Apply')}
+                    </Button>
+                  </Link>
+                )}
                 <DialogClose asChild>
-                  <Button variant="outline" className="w-1/2 text-lg py-3 rounded-2xl">
+                  <Button variant="outline" className="w-32 text-lg py-3 rounded-xl">
                     Close
                   </Button>
                 </DialogClose>

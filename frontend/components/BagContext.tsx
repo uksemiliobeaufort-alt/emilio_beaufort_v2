@@ -10,6 +10,8 @@ export interface BagItem {
   imageUrl: string;
   price: number;
   quantity: number;
+  variant?: string;
+  color?: string;
 }
 
 interface BagContextType {

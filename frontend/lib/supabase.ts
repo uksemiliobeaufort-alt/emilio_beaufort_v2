@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
+
+
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
 }
@@ -34,7 +36,7 @@ export const uploadProductImage = async (
   try {
     const bucket = getBucketForCategory(category);
     const fileExt = file.name.split('.').pop();
-    const filePath = fileName 
+    const filePath = fileName
       ? `${fileName}.${fileExt}`
       : `${Math.random().toString(36).slice(2)}_${Date.now()}.${fileExt}`;
 
@@ -79,11 +81,11 @@ export const deleteProductImage = async (
 ): Promise<void> => {
   try {
     const bucket = getBucketForCategory(category);
-    
+
     // Extract file path from URL
     const url = new URL(imageUrl);
     const filePath = url.pathname.split(`${bucket}/`)[1];
-    
+
     if (!filePath) {
       throw new Error('Invalid image URL');
     }
@@ -114,56 +116,47 @@ export async function saveFeedback(data: {
     throw error;
   }
 }
+export interface VariantType {
+  id: string;
+  length: string;
+  topper_size: string;
+  price: number;
+  original_price?: number;
+  colors: { name: string }[];
+  type?: 'remy' | 'virgin';
+}
 
-// Base product interface with common fields
+export interface HairExtensionVariant {
+  id: string;
+  length: string;
+  topper_size?: string;
+  price: string;
+}
+
 export interface BaseProduct {
   id: string;
   name: string;
-  description?: string;
-  detailed_description?: string;
-  price?: number;
-  original_price?: number;
+  category: string;
   status: 'draft' | 'published' | 'archived';
   featured: boolean;
   in_stock: boolean;
-  stock_quantity: number;
-  sku?: string;
-  weight?: number;
-  dimensions?: string;
-  main_image_url?: string;
-  gallery_images?: string[];
-  main_image_base64?: string;
-  gallery_base64?: string[];
-  metadata?: Record<string, any>;
-  seo_title?: string;
-  seo_description?: string;
-  seo_keywords?: string[];
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  updated_by?: string;
+  price?: number;
+  original_price?: number;
+  description?: string;
+  detailed_description?: string;
+  created_at?: string;
+  updated_at?: string;
+  imageUrl?: string;         // for UI compatibility
+  gallery?: string[];        // for UI compatibility
+  isSoldOut?: boolean;       // for UI compatibility
 }
 
-// Cosmetics product interface (includes all fields, hair extension fields will be empty)
-export interface Cosmetics {
-  id: string;
-  name: string;
-  description?: string;
-  detailed_description?: string;
-  price?: number;
-  original_price?: number;
+export interface Cosmetics extends BaseProduct {
   category: 'cosmetics';
-  status: 'draft' | 'published' | 'archived';
-  featured: boolean;
-  in_stock: boolean;
   stock_quantity?: number;
   sku?: string;
   weight?: number;
   dimensions?: string;
-  created_at?: string;
-  updated_at?: string;
-  
-  // Cosmetics specific fields
   ingredients?: string;
   skin_type?: string;
   product_benefits?: string;
@@ -172,37 +165,19 @@ export interface Cosmetics {
   dermatologist_tested?: boolean;
   cruelty_free?: boolean;
   organic_natural?: boolean;
-  
-  // Image fields
   main_image_url?: string;
   gallery_urls?: string[];
-  
-  // SEO fields
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string[];
 }
 
-// Hair Extensions product interface (includes all fields, cosmetics fields will be empty)
-export interface HairExtensions {
-  id: string;
-  name: string;
-  description?: string;
-  detailed_description?: string;
-  price?: number;
-  original_price?: number;
+export interface HairExtensionProduct extends BaseProduct {
   category: 'hair-extension';
-  status: 'draft' | 'published' | 'archived';
-  featured: boolean;
-  in_stock: boolean;
   stock_quantity?: number;
   sku?: string;
   weight?: number;
   dimensions?: string;
-  created_at?: string;
-  updated_at?: string;
-  
-  // Hair extension specific fields
   hair_type?: string;
   hair_texture?: string;
   hair_length?: string;
@@ -211,33 +186,33 @@ export interface HairExtensions {
   installation_method?: string;
   care_instructions?: string;
   quantity_in_set?: string;
-  
-  // Image fields
+  hair_variants?: HairExtensionVariant[];
+  variants?: VariantType[];
+  remyVariants?: VariantType[];
+  virginVariants?: VariantType[];
   main_image_url?: string;
   gallery_urls?: string[];
-  
-  // SEO fields
+  colors?: { id: string; color: string }[];
   seo_title?: string;
   seo_description?: string;
   seo_keywords?: string[];
-
-  // Add this for Firestore variant support
-  variants?: any[];
 }
 
 // Union type for all products
-export type Product = Cosmetics | HairExtensions;
+export type UnifiedProduct = Cosmetics | HairExtensionProduct;
+
 
 // Type guards
-export function isCosmeticsProduct(product: Product): product is Cosmetics {
+export function isCosmeticsProduct(product: UnifiedProduct): product is Cosmetics {
   return product.category === 'cosmetics';
 }
 
-export function isHairExtensionsProduct(product: Product): product is HairExtensions {
+export function isHairExtensionsProduct(product: UnifiedProduct): product is HairExtensionProduct {
   return product.category === 'hair-extension';
 }
 
-export const getProducts = async (): Promise<Product[]> => {
+export const getProducts = async (): Promise<UnifiedProduct[]> => {
+
   console.log('Starting getProducts...');
   // Try to use admin operations first (bypasses RLS)
   try {
@@ -249,7 +224,7 @@ export const getProducts = async (): Promise<Product[]> => {
     return products.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   } catch (adminError) {
     console.warn('Admin operations not available, using regular client:', adminError);
-    
+
     console.log('Fetching cosmetics products...');
     // Get cosmetics products
     const { data: cosmeticsData, error: cosmeticsError } = await supabase
@@ -287,7 +262,7 @@ export const getProducts = async (): Promise<Product[]> => {
       category: 'hair-extension' as const
     }));
 
-    const allProducts: Product[] = [
+    const allProducts: UnifiedProduct[] = [
       ...cosmeticsWithCategory,
       ...hairExtensionsWithCategory
     ];
@@ -296,60 +271,93 @@ export const getProducts = async (): Promise<Product[]> => {
 
     // Sort by created_at descending
     allProducts.sort((a, b) => {
-      const dateA = new Date(a.created_at || new Date()).getTime();
-      const dateB = new Date(b.created_at || new Date()).getTime();
+      const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
       return dateB - dateA;
     });
-
     return allProducts;
   }
 };
-
-export const getProduct = async (id: string, category: 'cosmetics' | 'hair-extension'): Promise<Product | null> => {
+{/*Includes Variants and Colors*/ }
+export const getProduct = async (
+  id: string,
+  category: 'cosmetics' | 'hair-extension'
+): Promise<UnifiedProduct | null> => {
   const tableName = category === 'cosmetics' ? 'cosmetics' : 'hair_extensions';
-  
-  const { data, error } = await supabase
+
+  const { data: productData, error: productError } = await supabase
     .from(tableName)
     .select('*')
     .eq('id', id)
     .single();
 
-  if (error) {
-    throw error;
+  if (productError) {
+    throw productError;
   }
 
-  return data ? { ...data, category } : null;
+  if (!productData) return null;
+
+  //  If it's a hair extension, fetch its variants and colors
+  if (category === 'hair-extension') {
+    const [variantRes, colorRes] = await Promise.all([
+      supabase
+        .from('hair_extension_variants')
+        .select('*')
+        .eq('hair_extension_id', id),
+      supabase
+        .from('hair_extension_colors')
+        .select('*')
+        .eq('hair_extension_id', id),
+    ]);
+
+    if (variantRes.error) throw variantRes.error;
+    if (colorRes.error) throw colorRes.error;
+
+    return {
+      ...productData,
+      category,
+      hair_variants: variantRes.data ?? [],  //  match HairExtensions interface
+      colors: colorRes.data ?? [],
+    };
+  }
+
+  // For cosmetics, return as-is
+  return {
+    ...productData,
+    category,
+  };
 };
+
 
 // Helper function to generate a unique SKU
 const generateUniqueSKU = async (category: 'cosmetics' | 'hair-extension', productName: string): Promise<string> => {
   const prefix = category === 'cosmetics' ? 'COS' : 'HE';
   const timestamp = Date.now().toString().slice(-6); // Last 6 digits of timestamp
   const namePrefix = productName.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'PRD';
-  
+
   return `${prefix}-${namePrefix}-${timestamp}`;
 };
 
-export const createProduct = async (productData: any): Promise<Product> => {
+export const createProduct = async (productData: any): Promise<UnifiedProduct> => {
   console.log('Creating product with data:', productData);
-  
+
   // Try to use admin operations first (bypasses RLS)
   try {
     const { adminOperations } = await import('./supabase-admin');
     return await adminOperations.createProduct(productData);
   } catch (adminError) {
     console.warn('Admin operations not available, using regular client:', adminError);
-    
+
     const { category, ...cleanedProductData } = productData;
-    
+
     // Handle empty SKU - generate unique SKU or set to null
     if (!cleanedProductData.sku || cleanedProductData.sku.trim() === '') {
       cleanedProductData.sku = await generateUniqueSKU(category, cleanedProductData.name || 'Product');
     }
-    
+
     // Determine which table to use based on category
     const tableName = category === 'cosmetics' ? 'cosmetics' : 'hair_extensions';
-    
+
     console.log('Saving to table:', tableName);
     console.log('Product data:', cleanedProductData);
 
@@ -368,10 +376,10 @@ export const createProduct = async (productData: any): Promise<Product> => {
   }
 };
 
-export const updateProduct = async (id: string, productData: any, category: 'cosmetics' | 'hair-extension'): Promise<Product> => {
+export const updateProduct = async (id: string, productData: any, category: 'cosmetics' | 'hair-extension'): Promise<UnifiedProduct> => {
   console.log('Starting product update:', { id, category });
   console.log('Update data:', productData);
-  
+
   // Try to use admin operations first (bypasses RLS)
   try {
     console.log('Attempting admin operations update...');
@@ -381,14 +389,14 @@ export const updateProduct = async (id: string, productData: any, category: 'cos
     return result;
   } catch (adminError) {
     console.warn('Admin operations not available, using regular client:', adminError);
-    
+
     const { category: _, ...cleanedProductData } = productData;
-    
+
     // Handle empty SKU during update - generate unique SKU if being set to empty
     if (cleanedProductData.hasOwnProperty('sku') && (!cleanedProductData.sku || cleanedProductData.sku.trim() === '')) {
       cleanedProductData.sku = await generateUniqueSKU(category, cleanedProductData.name || 'Product');
     }
-    
+
     // Determine which table to use based on category
     const tableName = category === 'cosmetics' ? 'cosmetics' : 'hair_extensions';
     console.log('Using table:', tableName);
@@ -399,7 +407,7 @@ export const updateProduct = async (id: string, productData: any, category: 'cos
         delete cleanedProductData[key];
       }
     });
-    
+
     console.log('Cleaned product data:', cleanedProductData);
 
     // Update directly in the appropriate table (all fields, some will be empty)
@@ -638,7 +646,7 @@ export interface DailyStats {
 // Get daily traffic data with debug logging
 export const getDailyTraffic = async (days: number = 7): Promise<DailyStats[]> => {
   console.log('Fetching daily traffic for last', days, 'days'); // Debug log
-  
+
   const now = new Date();
   const startDate = new Date(now.setDate(now.getDate() - days));
 
@@ -696,7 +704,7 @@ export const subscribeToPageViews = (callback: (payload: any) => void) => {
       callback
     )
     .subscribe();
-}; 
+};
 
 export const getPartnerImageUrl = (partnerName: string, imageName?: string) => {
   // Special case for Aurélina London

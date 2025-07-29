@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import { getImageUrl, getProducts, Product as SupabaseProduct } from "@/lib/supabase";
+import { getImageUrl, getProducts, UnifiedProduct as SupabaseProduct } from "@/lib/supabase";
 import Link from "next/link";
 import { ProductCard } from '@/components/ui/ProductCard';
 import { useRouter } from 'next/navigation';

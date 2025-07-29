@@ -21,7 +21,10 @@ export const productCardUtils = {
 
   // Format price consistently across all components
   formatPrice: (price: number): string => {
-    return `₹${price.toLocaleString('en-IN')}`;
+    console.log('formatPrice input:', price, typeof price);
+    const formatted = `₹${price.toLocaleString('en-IN')}`;
+    console.log('formatPrice output:', formatted);
+    return formatted;
   },
 
   // Truncate product name for cards (2 lines worth)
@@ -39,18 +42,38 @@ export const productCardUtils = {
 
   // Get display price with discount logic
   getDisplayPrice: (product: any, detailedProduct: any) => {
-    const hasDiscount = detailedProduct?.original_price && 
-                       detailedProduct.original_price > 0 && 
-                       product.price > 0 && 
-                       product.price < detailedProduct.original_price;
+    // Get prices from Firebase data or fallback to product data
+    const originalPrice = Number(detailedProduct?.original_price || product.price || 0);
+    const discountedPrice = Number(detailedProduct?.price || product.price || 0);
     
-    const displayPrice = hasDiscount ? product.price : (detailedProduct?.original_price || product.price);
+    console.log('Price debugging:', {
+      productPrice: product.price,
+      detailedProductPrice: detailedProduct?.price,
+      detailedProductOriginalPrice: detailedProduct?.original_price,
+      originalPrice,
+      discountedPrice
+    });
+    
+    // If discounted price exists and is less than original, show discounted
+    // Otherwise show original price
+    const displayPrice = (discountedPrice > 0 && discountedPrice < originalPrice) 
+      ? discountedPrice 
+      : originalPrice;
+    
+    const hasDiscount = discountedPrice > 0 && discountedPrice < originalPrice;
+    
+    console.log('Final price calculation:', {
+      displayPrice,
+      hasDiscount,
+      originalPrice,
+      savings: hasDiscount ? originalPrice - discountedPrice : 0
+    });
     
     return {
       displayPrice,
       hasDiscount,
-      originalPrice: detailedProduct?.original_price,
-      savings: hasDiscount ? detailedProduct.original_price - product.price : 0
+      originalPrice,
+      savings: hasDiscount ? originalPrice - discountedPrice : 0
     };
   }
 }; 

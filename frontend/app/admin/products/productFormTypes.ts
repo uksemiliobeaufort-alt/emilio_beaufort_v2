@@ -37,6 +37,8 @@ export const productSchema = z.object({
   seo_keywords: z.string().default(''),
   main_image_url: z.string().default(''),
   gallery_urls: z.array(z.string()).default([]),
+  remyVariants: z.array(z.any()).optional(),
+  virginVariants: z.array(z.any()).optional(),
 });
 
 export type ProductFormData = z.infer<typeof productSchema>; 

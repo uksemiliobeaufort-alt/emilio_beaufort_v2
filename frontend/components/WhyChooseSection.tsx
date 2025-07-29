@@ -69,35 +69,38 @@ export default function WhyChooseSection() {
         {/* Grid layout for 7 cards - 2 columns with last card centered */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {cards.slice(0, 6).map((card, idx) => (
-            <div
-              key={card.title}
-              className="relative bg-white rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:border-[#B7A16C]"
-            >
-              {/* Badge for the third card */}
-              {card.badge && (
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#B7A16C] text-xs font-semibold text-black px-4 py-1 rounded-full shadow z-10">
-                  {card.badge}
+            <div key={card.title} className="bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] p-[2px] rounded-2xl">
+              <div
+                className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:shadow-[0_8px_32px_0_rgba(183,161,108,0.25),0_1.5px_8px_0_rgba(0,0,0,0.10)] hover:scale-105 hover:-translate-y-1"
+              >
+                {/* Badge for the third card */}
+                {card.badge && (
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#B7A16C] text-xs font-semibold text-black px-4 py-1 rounded-full shadow z-10">
+                    {card.badge}
+                  </div>
+                )}
+                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-4 shadow">
+                  {card.icon}
                 </div>
-              )}
-              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-4 shadow">
-                {card.icon}
+                <span className="font-extrabold text-xl text-black mb-2">{card.title}</span>
+                <span className="text-gray-700">{card.text}</span>
               </div>
-              <span className="font-extrabold text-xl text-black mb-2">{card.title}</span>
-              <span className="text-gray-700">{card.text}</span>
             </div>
           ))}
         </div>
-        
+
         {/* 7th card centered */}
         <div className="flex justify-center mt-8">
-          <div
-            className="relative bg-white rounded-2xl shadow-lg border border-gray-200 p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:border-[#B7A16C] max-w-md"
-          >
-            <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-4 shadow">
-              {cards[6].icon}
+          <div className="bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] p-[2px] rounded-2xl w-full md:w-1/2">
+            <div
+              className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:shadow-[0_8px_32px_0_rgba(183,161,108,0.25),0_1.5px_8px_0_rgba(0,0,0,0.10)] hover:scale-105 hover:-translate-y-1 w-full"
+            >
+              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-4 shadow">
+                {cards[6].icon}
+              </div>
+              <span className="font-extrabold text-xl text-black mb-2">{cards[6].title}</span>
+              <span className="text-gray-700">{cards[6].text}</span>
             </div>
-            <span className="font-extrabold text-xl text-black mb-2">{cards[6].title}</span>
-            <span className="text-gray-700">{cards[6].text}</span>
           </div>
         </div>
       </div>

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Product } from "@/lib/api";
-import { Product as SupabaseProduct, getProducts } from "@/lib/supabase";
+import { getProducts } from "@/lib/supabase";
+import { getHairExtensionsFromFirebase } from "@/lib/firebase";
 import { productCardUtils } from "@/lib/utils";
 import { ImageIcon } from "lucide-react";
 import { useState, useEffect } from 'react';
@@ -13,15 +14,27 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onViewDetails }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
-  const [detailedProduct, setDetailedProduct] = useState<SupabaseProduct | null>(null);
+  const [detailedProduct, setDetailedProduct] = useState<any>(null);
 
   // Fetch detailed product information for price logic
   useEffect(() => {
     const fetchDetailedProduct = async () => {
       try {
-        const products = await getProducts();
-        const fullProduct = products.find(p => p.id === product.id);
-        setDetailedProduct(fullProduct || null);
+        // Check if it's a hair extension product
+        const category = product.category?.toLowerCase();
+        if (category === "hair" || category === "hair-extension") {
+          // Fetch from Firebase for hair extensions
+          console.log("Fetching hair product from Firebase for card:", product.id);
+          const allHairProducts = await getHairExtensionsFromFirebase();
+          const hairProduct = allHairProducts.find(p => p.id === product.id);
+          console.log("Found hair product in Firebase for card:", hairProduct);
+          setDetailedProduct(hairProduct || null);
+        } else {
+          // Fetch from Supabase for cosmetics
+          const products = await getProducts();
+          const fullProduct = products.find(p => p.id === product.id);
+          setDetailedProduct(fullProduct || null);
+        }
       } catch (error) {
         console.error('Failed to fetch detailed product:', error);
         setDetailedProduct(null);
@@ -35,15 +48,53 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
     onViewDetails?.(product);
   };
 
-  // Use shared price logic
-  const priceInfo = productCardUtils.getDisplayPrice(product, detailedProduct);
-  
+  // Determine default variant and price for hair extension products
+  const getDefaultVariantPrice = () => {
+    if (!detailedProduct || !detailedProduct.variants) {
+      return productCardUtils.getDisplayPrice(product, detailedProduct);
+    }
+
+    const allVariants = detailedProduct.variants;
+    const virginVariants = allVariants.filter((v: any) => v.type === 'virgin');
+    const remyVariants = allVariants.filter((v: any) => v.type === 'remy');
+
+    let defaultVariant;
+    if (virginVariants.length > 0) {
+      // Always prioritize virgin hair variants for pricing
+      defaultVariant = virginVariants[0];
+    } else if (remyVariants.length > 0) {
+      // Only use remy if no virgin variants exist
+      defaultVariant = remyVariants[0];
+    } else if (allVariants.length > 0) {
+      // Fallback to first available variant
+      defaultVariant = allVariants[0];
+    }
+
+    if (defaultVariant) {
+      // Use the default variant's price with enhanced logic
+      const variantPriceInfo = productCardUtils.getDisplayPrice(
+        { ...product, price: defaultVariant.price, original_price: defaultVariant.original_price },
+        { ...detailedProduct, price: defaultVariant.price, original_price: defaultVariant.original_price }
+      );
+      
+      return variantPriceInfo;
+    }
+
+    // Fallback to original price logic
+    return productCardUtils.getDisplayPrice(product, detailedProduct);
+  };
+
+  // Use default variant price logic for hair products, original logic for others
+  const priceInfo = product.category?.toLowerCase() === "hair" || product.category?.toLowerCase() === "hair-extension" 
+    ? getDefaultVariantPrice() 
+    : productCardUtils.getDisplayPrice(product, detailedProduct);
+
   // Use shared text truncation
   const truncatedName = productCardUtils.truncateProductName(product.name);
   const truncatedDescription = product.description ? productCardUtils.truncateProductDescription(product.description) : '';
 
   return (
-    <Card 
+    <Card
       className="group relative bg-white hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-gray-200 hover:border-gray-300 cursor-pointer overflow-hidden rounded-2xl h-full flex flex-col"
       onClick={handleViewDetails}
     >
@@ -68,8 +119,14 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
           )}
           {/* Sale Badge */}
           {priceInfo.hasDiscount && (
-            <div className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
-              SALE
+            <div className={`absolute top-4 left-4 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse ${
+              priceInfo.isSignificantDiscount 
+                ? 'bg-gradient-to-r from-red-500 to-red-600' 
+                : priceInfo.isModerateDiscount 
+                ? 'bg-gradient-to-r from-orange-500 to-orange-600'
+                : 'bg-gradient-to-r from-green-500 to-green-600'
+            }`}>
+              {productCardUtils.formatDiscountPercentage(priceInfo.discountPercentage)}
             </div>
           )}
         </div>
@@ -108,20 +165,24 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
                 )}
               </div>
               {priceInfo.hasDiscount && priceInfo.savings > 0 && (
-                <div className={`text-xs text-red-600 font-semibold ${productCardUtils.textWrapClasses} w-full`}>
-                  Save {productCardUtils.formatPrice(priceInfo.savings)}
+                <div className={`text-xs font-semibold ${productCardUtils.textWrapClasses} w-full ${
+                  priceInfo.isSignificantDiscount 
+                    ? 'text-red-600' 
+                    : priceInfo.isModerateDiscount 
+                    ? 'text-orange-600'
+                    : 'text-green-600'
+                }`}>
+                  Save {productCardUtils.formatPrice(priceInfo.savings)} ({priceInfo.discountPercentage}% off)
                 </div>
               )}
             </div>
 
             {/* Status Indicator */}
             <div className="flex items-center justify-between pt-2 border-t border-gray-100 w-full">
-              <div className={`flex items-center gap-2 text-xs font-medium ${
-                product.isSoldOut ? 'text-red-600' : 'text-green-600'
-              } flex-shrink-0`}>
-                <div className={`w-2 h-2 rounded-full ${
-                  product.isSoldOut ? 'bg-red-500' : 'bg-green-500'
-                }`}></div>
+              <div className={`flex items-center gap-2 text-xs font-medium ${product.isSoldOut ? 'text-red-600' : 'text-green-600'
+                } flex-shrink-0`}>
+                <div className={`w-2 h-2 rounded-full ${product.isSoldOut ? 'bg-red-500' : 'bg-green-500'
+                  }`}></div>
                 <span className={`${productCardUtils.textWrapClasses}`}>
                   {product.isSoldOut ? 'Out of Stock' : 'In Stock'}
                 </span>
@@ -135,20 +196,33 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
       </CardContent>
     </Card>
   );
-} 
+}
 
 // New: ProductListItem for mobile list view
 export function ProductListItem({ product, onViewDetails }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
-  const [detailedProduct, setDetailedProduct] = useState<SupabaseProduct | null>(null);
+  const [detailedProduct, setDetailedProduct] = useState<any>(null);
 
   useEffect(() => {
     const fetchDetailedProduct = async () => {
       try {
-        const products = await getProducts();
-        const fullProduct = products.find(p => p.id === product.id);
-        setDetailedProduct(fullProduct || null);
+        // Check if it's a hair extension product
+        const category = product.category?.toLowerCase();
+        if (category === "hair" || category === "hair-extension") {
+          // Fetch from Firebase for hair extensions
+          console.log("Fetching hair product from Firebase for list item:", product.id);
+          const allHairProducts = await getHairExtensionsFromFirebase();
+          const hairProduct = allHairProducts.find(p => p.id === product.id);
+          console.log("Found hair product in Firebase for list item:", hairProduct);
+          setDetailedProduct(hairProduct || null);
+        } else {
+          // Fetch from Supabase for cosmetics
+          const products = await getProducts();
+          const fullProduct = products.find(p => p.id === product.id);
+          setDetailedProduct(fullProduct || null);
+        }
       } catch (error) {
+        console.error('Failed to fetch detailed product for list item:', error);
         setDetailedProduct(null);
       }
     };
@@ -159,7 +233,46 @@ export function ProductListItem({ product, onViewDetails }: ProductCardProps) {
     onViewDetails?.(product);
   };
 
-  const priceInfo = productCardUtils.getDisplayPrice(product, detailedProduct);
+  // Determine default variant and price for hair extension products (same logic as ProductCard)
+  const getDefaultVariantPrice = () => {
+    if (!detailedProduct || !detailedProduct.variants) {
+      return productCardUtils.getDisplayPrice(product, detailedProduct);
+    }
+
+    const allVariants = detailedProduct.variants;
+    const virginVariants = allVariants.filter((v: any) => v.type === 'virgin');
+    const remyVariants = allVariants.filter((v: any) => v.type === 'remy');
+
+    let defaultVariant;
+    if (virginVariants.length > 0) {
+      // Always prioritize virgin hair variants for pricing
+      defaultVariant = virginVariants[0];
+    } else if (remyVariants.length > 0) {
+      // Only use remy if no virgin variants exist
+      defaultVariant = remyVariants[0];
+    } else if (allVariants.length > 0) {
+      // Fallback to first available variant
+      defaultVariant = allVariants[0];
+    }
+
+    if (defaultVariant) {
+      // Use the default variant's price with enhanced logic
+      const variantPriceInfo = productCardUtils.getDisplayPrice(
+        { ...product, price: defaultVariant.price, original_price: defaultVariant.original_price },
+        { ...detailedProduct, price: defaultVariant.price, original_price: defaultVariant.original_price }
+      );
+      
+      return variantPriceInfo;
+    }
+
+    // Fallback to original price logic
+    return productCardUtils.getDisplayPrice(product, detailedProduct);
+  };
+
+  // Use default variant price logic for hair products, original logic for others
+  const priceInfo = product.category?.toLowerCase() === "hair" || product.category?.toLowerCase() === "hair-extension" 
+    ? getDefaultVariantPrice() 
+    : productCardUtils.getDisplayPrice(product, detailedProduct);
   const truncatedName = productCardUtils.truncateProductName(product.name);
   const truncatedDescription = product.description ? productCardUtils.truncateProductDescription(product.description) : '';
 

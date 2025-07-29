@@ -2,7 +2,7 @@
 import { Label } from "@/components/ui/label";
 import { v4 as uuidv4 } from 'uuid';
 import TextField from '@mui/material/TextField';
-
+import { Button } from "@/components/ui/button";
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { supabase } from '@/lib/supabase';
+
+
 import {
   Select,
   SelectTrigger,
@@ -22,7 +23,6 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -49,18 +49,11 @@ import {
   Waves,
   Plus
 } from 'lucide-react';
-import { uploadProductImage, uploadMultipleImages, deleteProductImage, } from '@/lib/supabase';
-import { 
-  createProduct, 
-  updateProduct, 
-  // Product, // Removed Product import
-  
-} from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Resolver } from 'react-hook-form';
 
 // 1. Import Firestore and Storage helpers from lib/firebase.ts
-import { firestore, storage } from '@/lib/firebase';
+import { firestore, storage, deleteProductImageFromFirebase} from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { collection, addDoc, updateDoc, doc, Timestamp } from 'firebase/firestore';
 
@@ -71,11 +64,12 @@ interface Variant {
   id: string;
   product_id: string;
   weight: number;
-  length: number;
-  price: number;
-  discount_price: number | null;
+  length: number | string;
+  price: number | string;
+  discount_price: number | string | null;
   colors?: string[]; // <-- add this
   topper_size?: string; // <-- added
+  type?: 'remy' | 'virgin';
 }
 
 function isCosmeticsProduct(product: ProductFormData): product is ProductFormData {
@@ -195,9 +189,10 @@ async function uploadImage(file: File, path: string): Promise<string> {
 
 // Helper to delete an image by URL
 async function deleteImageByUrl(url: string): Promise<void> {
-  const storageRef = ref(storage, url);
+  const path = new URL(url).pathname.replace(/^\/v0\/b\/[^/]+\/o\//, '').replace(/%2F/g, '/');
+  const storageRef = ref(storage, path);
   await deleteObject(storageRef);
-}
+} 
 
 export default function ProductFormDialog({ open, product, selectedCategory, onClose, onSuccess }: ProductFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -205,6 +200,9 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const [existingGalleryUrls, setExistingGalleryUrls] = useState<string[]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+  const [variantsRemy, setVariantsRemy] = useState<Variant[]>([]);
+  const [variantsVirgin, setVariantsVirgin] = useState<Variant[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
 
   // Correct useForm usage
   const form = useForm<ProductFormData>({
@@ -224,45 +222,74 @@ export default function ProductFormDialog({ open, product, selectedCategory, onC
       colors: [], // <-- initialize
     },
   ]);
-  const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
+  
 
   // Update handleVariantChange to always store string values
-  const handleVariantChange = (index: number, field: keyof Variant, value: string) => {
-    const updated = [...variants];
+ const handleVariantChange = (
+  index: number,
+  field: keyof Variant,
+  value: string,
+  type: 'remy' | 'virgin'
+  ) => {
+  if (type === 'remy') {
+    const updated = [...variantsRemy];
     updated[index] = { ...updated[index], [field]: value };
-    setVariants(updated);
+    setVariantsRemy(updated);
+  } else {
+    const updated = [...variantsVirgin];
+    updated[index] = { ...updated[index], [field]: value };
+    setVariantsVirgin(updated);
+  }
+};
+
+
+  const addNewVariant = (type: 'remy' | 'virgin') => {
+  const newVariant: Variant = {
+    id: uuidv4(),
+    weight: 0,
+    length: 0,
+    price: 0,
+    discount_price: 0,
+    product_id: '',
+    colors: [],
+    type, // add the type to differentiate remy/virgin
   };
 
-  const addNewVariant = () => {
-    setVariants([
-      ...variants,
-      {
-        id: uuidv4(),
-        weight: 0,
-        length: 0,
-        price: 0,
-        discount_price: 0,
-        product_id: '',
-        colors: [], // <-- initialize
-      },
-    ]);
-  };
+  if (type === 'remy') {
+    setVariantsRemy((prev) => [...prev, newVariant]);
+  } else {
+    setVariantsVirgin((prev) => [...prev, newVariant]);
+  }
+};
 
-  const removeVariant = (index: number) => {
-    const updated = [...variants];
+  const removeVariant = (index: number, type: 'remy' | 'virgin') => {
+  if (type === 'remy') {
+    const updated = [...variantsRemy];
     updated.splice(index, 1);
-    setVariants(updated);
-  };
+    setVariantsRemy(updated);
+  } else {
+    const updated = [...variantsVirgin];
+    updated.splice(index, 1);
+    setVariantsVirgin(updated);
+  }
+};
 
-  const handleVariantSelect = (variantId: string) => {
-    setSelectedVariant(variantId);
-    const variant = variants.find(v => v.id === variantId);
-    if (variant) {
-      form.setValue('hair_weight', String(variant.weight));
-      form.setValue('hair_length', String(variant.length));
-      form.setValue('original_price', String(variant.price));
-    }
-  };
+
+  const handleVariantSelect = (variantId: string, type: 'remy' | 'virgin') => {
+  setSelectedVariant(variantId);
+
+  const variant =
+    type === 'remy'
+      ? variantsRemy.find(v => v.id === variantId)
+      : variantsVirgin.find(v => v.id === variantId);
+
+  if (variant) {
+    form.setValue('hair_weight', String(variant.weight));
+    form.setValue('hair_length', String(variant.length));
+    form.setValue('original_price', String(variant.price));
+  }
+};
+
 
   // Add a handler for color selection for a variant:
   const handleVariantColorsChange = (index: number, selectedColors: string[]) => {
@@ -282,14 +309,37 @@ useEffect(() => {
         main_image_url: product.main_image_url || '',
         gallery_urls: product.gallery_urls || [],
       });
+
       setMainImageUrl(product.main_image_url || '');
       setExistingGalleryUrls(product.gallery_urls || []);
       setGalleryUrls([]);
       setImagesToDelete([]);
-      // Prefill variants for hair-extension
-      if (product.category === 'hair-extension' && Array.isArray((product as any).variants)) {
-        setVariants(
-          (product as any).variants.map((v: any) => ({
+
+      if (
+        product.category === 'hair-extension' &&
+        typeof product === 'object' &&
+        'remyVariants' in product &&
+        'virginVariants' in product
+      ) {
+        // Hair extension with both remy and virgin variants
+        const remy = (product as any).remyVariants || [];
+        const virgin = (product as any).virginVariants || [];
+
+        setVariantsRemy(
+          remy.map((v: any) => ({
+            ...v,
+            length: v.length !== undefined && v.length !== null ? String(v.length) : '',
+            price: v.price !== undefined && v.price !== null ? String(v.price) : '',
+            discount_price: v.discount_price !== undefined && v.discount_price !== null ? String(v.discount_price) : '',
+            topper_size: v.topper_size || '',
+            product_id: v.product_id || '',
+            colors: Array.isArray(v.colors) ? v.colors : [],
+            id: v.id || uuidv4(),
+          }))
+        );
+
+        setVariantsVirgin(
+          virgin.map((v: any) => ({
             ...v,
             length: v.length !== undefined && v.length !== null ? String(v.length) : '',
             price: v.price !== undefined && v.price !== null ? String(v.price) : '',
@@ -301,17 +351,32 @@ useEffect(() => {
           }))
         );
       } else {
-        setVariants([
-          {
-            id: uuidv4(),
-            product_id: '',
-            weight: 0,
-            length: 0,
-            price: 0,
-            discount_price: 0,
-            colors: [],
-          },
+        // New fallback for both sections
+        setVariantsRemy([
+        {
+          id: uuidv4(),
+          product_id: '',
+          weight: 0,
+          length: '',
+          price: '',
+          discount_price: '',
+          topper_size: '',
+          colors: [],
+        },
         ]);
+        setVariantsVirgin([
+        {
+          id: uuidv4(),
+          product_id: '',
+          weight: 0,
+          length: '',
+          price: '',
+          discount_price: '',
+          topper_size: '',
+          colors: [],
+        },
+        ]);
+
       }
     } else if (selectedCategory) {
       // New product: use selectedCategory as initial value
@@ -319,17 +384,32 @@ useEffect(() => {
         ...productSchema.parse({}),
         category: selectedCategory as 'cosmetics' | 'hair-extension',
       });
-      setVariants([
+
+      setVariantsRemy([
         {
           id: uuidv4(),
           product_id: '',
           weight: 0,
-          length: 0,
-          price: 0,
-          discount_price: 0,
+          length: '',
+          price: '',
+          discount_price: '',
+          topper_size: '',
           colors: [],
         },
       ]);
+      setVariantsRemy([
+        {
+          id: uuidv4(),
+          product_id: '',
+          weight: 0,
+          length: '',
+          price: '',
+          discount_price: '',
+          topper_size: '',
+          colors: [],
+        },
+      ]);
+
       setMainImageUrl('');
       setExistingGalleryUrls([]);
       setGalleryUrls([]);
@@ -338,6 +418,7 @@ useEffect(() => {
   }
   // eslint-disable-next-line
 }, [open, product, selectedCategory]);
+
 
   // On edit: initialize all image states from product prop
   useEffect(() => {
@@ -413,7 +494,14 @@ useEffect(() => {
         gallery_urls: [...existingGalleryUrls, ...galleryUrls],
         updated_at: now,
         created_at: (product as any)?.created_at || now,
-        ...(data.category === 'hair-extension' ? { variants } : {}),
+        ...(data.category === 'hair-extension'
+          ? {
+          variants: [
+           ...variantsRemy.map((v) => ({ ...v, type: 'remy' })),
+           ...variantsVirgin.map((v) => ({ ...v, type: 'virgin' })),
+          ],  
+            }
+        : {}),
       };
       const category = data.category as 'cosmetics' | 'hair-extension';
       const collectionName = data.category === 'hair-extension' ? 'hair_extensions' : 'cosmetics';
@@ -423,7 +511,9 @@ useEffect(() => {
         await updateDoc(doc(firestore, collectionName, product.id), productData);
       } else {
         // Create new product
-        await addDoc(collection(firestore, collectionName), productData);
+        const docRef = await addDoc(collection(firestore, collectionName), productData);
+        const newId = docRef.id;
+
       }
       onSuccess();
     } catch (error) {
@@ -434,7 +524,7 @@ useEffect(() => {
     }
   };
 
-  const watchedCategory = form.watch('category');
+  const watchedCategory = form.watch('category'); 
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -633,162 +723,328 @@ useEffect(() => {
                     <FormLabel className="text-base font-medium">Product Variants</FormLabel>
                     <Button
                       type="button"
-                      onClick={addNewVariant}
+                      onClick={() => addNewVariant('remy')}
                       variant="outline"
                       size="sm"
                       className="flex items-center gap-2"
                     >
                       <Plus className="h-4 w-4" />
-                      Add Variant
+                      Add Remy Variant
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => addNewVariant('virgin')}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Virgin Variant
                     </Button>
                   </div>
+                  {/* Remy Hair Section */}
+<div className="mb-8">
+  <h3 className="text-lg font-semibold text-gray-800 mb-4">Remy Hair Variants</h3>
+  {variantsRemy.length > 0 ? (
+    <div className="space-y-4">
+      {variantsRemy.map((variant, index) => (
+        <div 
+          key={variant.id} 
+          className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+              selectedVariant === variant.id 
+              ? 'border-amber-500 bg-amber-50' 
+              : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+          }`}
+          onClick={() => handleVariantSelect(variant.id, 'remy')}
 
-                  {variants.length > 0 && (
-                    <div className="space-y-4">
-                      {variants.map((variant, index) => (
-                        <div 
-                          key={variant.id} 
-                          className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
-                              selectedVariant === variant.id 
-                              ? 'border-amber-500 bg-amber-50' 
-                              : 'border-gray-200 bg-gray-50 hover:border-gray-300'
-                          }`}
-                          onClick={() => handleVariantSelect(variant.id)}
-                        >
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="font-medium text-gray-800 flex items-center gap-2">
-                              <input
-                                type="radio"
-                                name="selectedVariant"
-                                checked={selectedVariant === variant.id}
-                                onChange={() => handleVariantSelect(variant.id)}
-                                className="text-amber-600"
-                              />
-                              Variant {index + 1}
-                            </h4>
-                            <Button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeVariant(index);
-                              }}
-                              variant="destructive"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            {/* Length */}
-                            <div>
-                              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Length *
-                              </label>
-                              <Input
-                                placeholder="e.g., 18 inches"
-                                value={variant.length}
-                                onChange={(e) => handleVariantChange(index, 'length', e.target.value)}
-                                className="h-10"
-                              />
-                            </div>
-                            {/* Topper Size (Optional) */}
-                            <div>
-                              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Topper Size
-                              </label>
-                              <Input
-                                placeholder="e.g., 6x6, 5x5"
-                                value={variant.topper_size || ''}
-                                onChange={(e) => handleVariantChange(index, 'topper_size', e.target.value)}
-                                className="h-10"
-                              />
-                            </div>
-                            {/* Price */}
-                            <div>
-                              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Price (₹) *
-                              </label>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                placeholder="0.00"
-                                value={variant.price}
-                                onChange={(e) => handleVariantChange(index, 'price', e.target.value)}
-                                className="h-10"
-                              />
-                            </div>
-                          </div>
-                          {/* Color Selection Section - now in a new row */}
-                          <div className="mb-8 mt-6">
-                            <div className="flex items-center gap-3 mb-4">
-                              <FormLabel className="text-base font-medium">Colors:</FormLabel>
-                              <span className="text-sm text-gray-600">
-                                {(variant.colors ?? []).length === 0
-                                  ? 'Select colors'
-                                  : (variant.colors ?? [])
-                                      .map(value => {
-                                        const matched = hairColorOptions.find(option => option.value === value);
-                                        return matched ? matched.name : value;
-                                      })
-                                      .join(', ')}
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap gap-3">
-                              {hairColorOptions.map((color) => {
-                                const isSelected = (variant.colors ?? []).includes(color.value);
-                                return (
-                                  <div key={color.value} className="relative">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        if (isSelected) {
-                                          setVariants(prev => prev.map(v => v.id === variant.id ? { ...v, colors: [...((v.colors ?? []).filter(c => c !== color.value))] } : v));
-                                        } else {
-                                          setVariants(prev => prev.map(v => v.id === variant.id ? { ...v, colors: [...(v.colors ?? []), color.value] } : v));
-                                        }
-                                      }}
-                                      className={`w-12 h-12 rounded-full border-4 transition-all duration-200 ${
-                                        isSelected
-                                          ? 'border-amber-500 scale-110 shadow-lg'
-                                          : 'border-gray-300 hover:border-gray-400'
-                                      }`}
-                                      style={{
-                                        backgroundImage: `url(${color.image})`,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center',
-                                      }}
-                                    />
-                                    {isSelected && (
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          setVariants(prev => prev.map(v => v.id === variant.id ? { ...v, colors: [...((v.colors ?? []).filter(c => c !== color.value))] } : v))
-                                        }
-                                        className="absolute -top-2 -right-2 bg-white text-red-600 border border-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                                        title="Remove"
-                                      >
-                                        ×
-                                      </button>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {variants.length === 0 && (
-                    <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg">
-                      <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                      <p className="text-gray-500 mb-2">No variants added yet</p>
-                      <p className="text-sm text-gray-400">Click "Add Variant" to create product variations</p>
-                    </div>
-                  )}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-medium text-gray-800 flex items-center gap-2">
+              <input
+                type="radio"
+                name="selectedVariant"
+                checked={selectedVariant === variant.id}
+                onChange={() => setSelectedVariant(variant.id)}
+                className="text-amber-600"
+              />
+              Variant {index + 1}
+            </h4>
+            <Button
+              type="button"
+              onClick={(e) => {
+               e.stopPropagation();
+               removeVariant(index, 'remy');
+              }}
+              variant="destructive"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+            <X className="h-4 w-4" />
+          </Button>
+
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Length *</label>
+              <Input
+               placeholder="e.g., 18 inches"
+               value={variant.length}
+               onChange={(e) =>
+               handleVariantChange(index, 'length', e.target.value, 'remy')
+              }
+              className="h-10"
+             />
+
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Topper Size</label>
+             <Input
+              placeholder="e.g., 6x6, 5x5"
+              value={variant.topper_size || ''}
+              onChange={(e) =>
+              handleVariantChange(index, 'topper_size', e.target.value, 'remy')
+              }
+              className="h-10"
+             />
+
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Price (₹) *</label>
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={variant.price}
+                onChange={(e) =>
+                handleVariantChange(index, 'price', e.target.value, 'remy')
+                }
+                className="h-10"
+              />
+
+            </div>
+          </div>
+          <div className="mb-8 mt-6">
+            <div className="flex items-center gap-3 mb-4">
+              <FormLabel className="text-base font-medium">Colors:</FormLabel>
+              <span className="text-sm text-gray-600">
+                {(variant.colors ?? []).length === 0
+                  ? 'Select colors'
+                  : (variant.colors ?? [])
+                      .map(value => {
+                        const matched = hairColorOptions.find(option => option.value === value);
+                        return matched ? matched.name : value;
+                      })
+                      .join(', ')}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {hairColorOptions.map((color) => {
+                const isSelected = (variant.colors ?? []).includes(color.value);
+                return (
+                  <div key={color.value} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = [...variantsRemy];
+                        const colorArray = variant.colors ?? [];
+                        updated[index].colors = isSelected
+                          ? colorArray.filter(c => c !== color.value)
+                          : [...colorArray, color.value];
+                        setVariantsRemy(updated);
+                      }}
+                      className={`w-12 h-12 rounded-full border-4 transition-all duration-200 ${
+                        isSelected ? 'border-amber-500 scale-110 shadow-lg' : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      style={{
+                        backgroundImage: `url(${color.image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
+                    />
+                    {isSelected && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...variantsRemy];
+                          updated[index].colors = (variant.colors ?? []).filter(c => c !== color.value);
+                          setVariantsRemy(updated);
+                        }}
+                        className="absolute -top-2 -right-2 bg-white text-red-600 border border-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg">
+      <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+      <p className="text-gray-500 mb-2">No Remy variants added yet</p>
+      <p className="text-sm text-gray-400">Click "Add Remy Variant" to create product variations</p>
+    </div>
+  )}
+</div>
+
+{/* Virgin Hair Section */}
+<div className="mb-8">
+  <h3 className="text-lg font-semibold text-gray-800 mb-4">Virgin Hair Variants</h3>
+  {variantsVirgin.length > 0 ? (
+    <div className="space-y-4">
+      {variantsVirgin.map((variant, index) => (
+        <div 
+          key={variant.id} 
+          className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+              selectedVariant === variant.id 
+              ? 'border-amber-500 bg-amber-50' 
+              : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+          }`}
+          onClick={() => handleVariantSelect(variant.id, 'virgin')}
+
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-medium text-gray-800 flex items-center gap-2">
+              <input
+                type="radio"
+                name="selectedVariant"
+                checked={selectedVariant === variant.id}
+                onChange={() => setSelectedVariant(variant.id)}
+                className="text-amber-600"
+              />
+              Variant {index + 1}
+            </h4>
+            <Button
+              type="button"
+              onClick={(e) => {
+              e.stopPropagation();
+              removeVariant(index, 'virgin');
+              }}
+              variant="destructive"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+          </Button>
+
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Length *</label>
+              <Input
+               placeholder="e.g., 18 inches"
+               value={variant.length}
+               onChange={(e) =>
+               handleVariantChange(index, 'length', e.target.value, 'virgin')
+               }
+               className="h-10"
+              />
+
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Topper Size</label>
+              <Input
+              placeholder="e.g., 6x6, 5x5"
+              value={variant.topper_size || ''}
+              onChange={(e) =>
+                handleVariantChange(index, 'topper_size', e.target.value, 'virgin')
+              }
+              className="h-10"
+            />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Price (₹) *</label>
+              <Input
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={variant.price}
+              onChange={(e) =>
+                handleVariantChange(index, 'price', e.target.value, 'virgin')
+              }
+              className="h-10"
+            />
+            </div>
+          </div>
+          <div className="mb-8 mt-6">
+            <div className="flex items-center gap-3 mb-4">
+              <FormLabel className="text-base font-medium">Colors:</FormLabel>
+              <span className="text-sm text-gray-600">
+                {(variant.colors ?? []).length === 0
+                  ? 'Select colors'
+                  : (variant.colors ?? [])
+                      .map(value => {
+                        const matched = hairColorOptions.find(option => option.value === value);
+                        return matched ? matched.name : value;
+                      })
+                      .join(', ')}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {hairColorOptions.map((color) => {
+                const isSelected = (variant.colors ?? []).includes(color.value);
+                return (
+                  <div key={color.value} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = [...variantsVirgin];
+                        const colorArray = variant.colors ?? [];
+                        updated[index].colors = isSelected
+                          ? colorArray.filter(c => c !== color.value)
+                          : [...colorArray, color.value];
+                        setVariantsVirgin(updated);
+                      }}
+                      className={`w-12 h-12 rounded-full border-4 transition-all duration-200 ${
+                        isSelected ? 'border-amber-500 scale-110 shadow-lg' : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      style={{
+                        backgroundImage: `url(${color.image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
+                    />
+                    {isSelected && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...variantsVirgin];
+                          updated[index].colors = (variant.colors ?? []).filter(c => c !== color.value);
+                          setVariantsVirgin(updated);
+                        }}
+                        className="absolute -top-2 -right-2 bg-white text-red-600 border border-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg">
+      <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+      <p className="text-gray-500 mb-2">No Virgin variants added yet</p>
+      <p className="text-sm text-gray-400">Click "Add Virgin Variant" to create product variations</p>
+    </div>
+  )}
+</div>
+
+
                 </div>
-              )}
+              )};  
+
+                  
 
               {/* Pricing & Inventory Section */}
               <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
@@ -1121,7 +1377,7 @@ useEffect(() => {
                           className="absolute -top-2 -right-2 h-8 w-8 p-0 rounded-full shadow-lg"
                           onClick={async () => {
                             try {
-                              await deleteProductImage(mainImageUrl, form.getValues('category'));
+                              await deleteProductImageFromFirebase(mainImageUrl);
                               setMainImageUrl('');
                             } catch (error) {
                               console.error('Error deleting main image:', error);
@@ -1325,4 +1581,4 @@ useEffect(() => {
     </DialogContent>
   </Dialog>
   );
-}
+} 

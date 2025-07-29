@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import path from 'path';
-import fs from 'fs';
 
 export async function GET(req: NextRequest) {
   try {
