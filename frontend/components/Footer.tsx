@@ -74,7 +74,7 @@ export function Footer() {
                       className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm md:text-base py-2 md:py-0 w-full md:w-auto"
                       style={{ minHeight: 44 }}
                     >
-                      <span className="inline-block align-middle mr-2"><MessageCircle size={16} /></span>{link.name}
+                      <span className="inline-block align-middle mr-2"></span>{link.name}
                     </button>
                   ) : (
                     <button
