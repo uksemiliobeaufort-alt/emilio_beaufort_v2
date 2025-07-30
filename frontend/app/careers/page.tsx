@@ -257,7 +257,7 @@ function CareersContent() {
 
         {/* Jobs Grid */}
         {!loading && filteredJobs.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-8">
             {paginatedJobs.map((job) => {
               const availability = jobAvailability[job.id] || { isAvailable: true, applicationsCount: 0 };
               const gradient = DEPARTMENT_GRADIENTS[job.department || 'Default'] || DEPARTMENT_GRADIENTS['Default'];
@@ -265,83 +265,94 @@ function CareersContent() {
               return (
                 <div
                   key={job.id}
-                  className="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-gray-200"
-                  style={{ background: gradient }}
+                  className="relative border border-gray-200 flex flex-col h-full group transition-all duration-300 ring-1 ring-transparent hover:ring-[#B7A16C]/40 sm:rounded-3xl sm:shadow-lg sm:p-8 p-4 rounded-none shadow-none hover:shadow-none sm:hover:shadow-2xl sm:hover:-translate-y-2 sm:hover:scale-[1.03] hover:border-[#B7A16C]"
+                  style={{
+                    boxShadow: '0 8px 32px 0 rgba(17,17,17,0.06)',
+                    background: gradient,
+                  }}
                 >
-                  {/* Share Button */}
+                  {/* Share button - top right */}
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleShare(job); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleShare(job);
+                    }}
                     className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white transition-all"
                   >
                     <Share2 className="h-4 w-4 text-gray-600" />
                   </button>
-
-                  {/* Job Card Content */}
-                  <div
-                    className="p-6 cursor-pointer h-full flex flex-col"
-                    onClick={() => {
-                      setSelectedJob(job);
-                      setIsDialogOpen(true);
-                    }}
-                  >
-                    {/* Department Badge */}
-                    {job.department && (
-                      <div className="mb-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-black/10 text-black">
-                          {job.department}
-                        </span>
+                  
+                  {/* Job Title */}
+                  <div className="text-xl font-bold text-premium mb-2 line-clamp-2 min-h-[2.5em]">{job.title}</div>
+                  {/* Department and tags */}
+                  <div className="flex items-center gap-2 mb-4 text-xs text-gray-500 font-semibold flex-wrap">
+                    {job.department && <span className="flex items-center gap-1"><Briefcase className="h-4 w-4 mr-1 text-gray-400" />{job.department}</span>}
+                    {job.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4 mr-1 text-gray-400" />{job.location}</span>}
+                    {job.type && <span className="flex items-center gap-1"><Clock className="h-4 w-4 mr-1 text-gray-400" />{job.type}</span>}
+                    {job.salary && <span className="flex items-center gap-1"><BadgeDollarSign className="h-4 w-4 mr-1 text-gray-400" />{job.salary}</span>}
+                    {job.seats_available && jobAvailability[job.id] && (
+                      <span className={`flex items-center gap-1 ${jobAvailability[job.id].isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                        <UsersIcon className="h-4 w-4 mr-1" />
+                        {jobAvailability[job.id].applicationsCount}/{job.seats_available}
+                      </span>
+                    )}
+                  </div>
+                  {/* Buttons */}
+                  <div className="mt-auto pt-2 flex gap-2">
+                    <Button
+                      className="w-1/2 bg-white text-black border border-gray-300 text-lg py-3 rounded-2xl shadow transition-all font-bold
+                        hover:bg-black hover:text-white hover:border-black hover:shadow-lg focus:ring-2 focus:ring-black focus:outline-none"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedJob(job);
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      View Details
+                    </Button>
+                    {job.application_form_link ? (
+                      <Button 
+                        className="w-1/2 bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => window.open(job.application_form_link, '_blank')}
+                        disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable)}
+                      >
+                        {job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')}
+                      </Button>
+                    ) : (
+                      <Link
+                        href={job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? '#' : `/careersForm?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title)}`}
+                        className="w-1/2"
+                        onClick={(e) => {
+                          if (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) {
+                            e.preventDefault();
+                          }
+                        }}
+                      >
+                        <Button 
+                          className="w-full bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable)}
+                        >
+                          {job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')}
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-2">
+                    <div>
+                      {job.created_at
+                        ? (typeof job.created_at === 'string'
+                            ? new Date(job.created_at).toLocaleDateString()
+                            : (job.created_at && typeof job.created_at === 'object' && 'toDate' in job.created_at
+                                ? job.created_at.toDate().toLocaleDateString()
+                                : ''))
+                        : ''}
+                    </div>
+                    {job.auto_delete_at && (
+                      <div className="text-orange-600">
+                        Expires: {job.auto_delete_at.toDate ? job.auto_delete_at.toDate().toLocaleDateString() : new Date(job.auto_delete_at).toLocaleDateString()}
                       </div>
                     )}
-
-                    {/* Job Title */}
-                    <h3 className="text-xl font-bold text-black mb-3 line-clamp-2 group-hover:text-gold transition-colors">
-                      {job.title}
-                    </h3>
-
-                    {/* Job Details */}
-                    <div className="space-y-2 mb-4 flex-grow">
-                      {job.location && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span className="truncate">{job.location}</span>
-                        </div>
-                      )}
-                      {job.type && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span>{job.type}</span>
-                        </div>
-                      )}
-                      {job.salary && (
-                        <div className="flex items-center text-sm text-gray-600">
-                          <BadgeDollarSign className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span>{job.salary}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Availability Status */}
-                    <div className="mt-auto">
-                      {availability.isAvailable ? (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-green-600 font-medium">Open for applications</span>
-                          {job.seats_available && (
-                            <span className="text-xs text-gray-500">
-                              {job.seats_available - availability.applicationsCount} seats left
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-red-600 font-medium">Applications closed</span>
-                          {availability.applicationsCount > 0 && (
-                            <span className="text-xs text-gray-500">
-                              {availability.applicationsCount} applications
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
               );
@@ -349,25 +360,25 @@ function CareersContent() {
           </div>
         )}
 
-        {/* Pagination */}
+        {/* Pagination Controls */}
         {!loading && totalPages > 1 && (
-          <div className="flex justify-center items-center space-x-2 mb-8">
+          <div className="flex justify-center items-center gap-4 mt-10">
             <Button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
               variant="outline"
-              size="sm"
+              className="px-6 py-2 rounded-full"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             >
               Previous
             </Button>
-            <span className="text-sm text-gray-600">
+            <span className="text-lg font-semibold">
               Page {currentPage} of {totalPages}
             </span>
             <Button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
               variant="outline"
-              size="sm"
+              className="px-6 py-2 rounded-full"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
             >
               Next
             </Button>

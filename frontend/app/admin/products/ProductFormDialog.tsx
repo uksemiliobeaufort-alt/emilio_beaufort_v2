@@ -1042,7 +1042,7 @@ useEffect(() => {
 
 
                 </div>
-              )};  
+              )}
 
                   
 
@@ -1367,17 +1367,86 @@ useEffect(() => {
                       <FormItem>
                         <FormLabel className="text-base font-medium">Hair Texture</FormLabel>
                         <FormControl>
-                          <BootstrapDropdown
-                            trigger={
-                              hairTextureOptions.find(opt => opt.value === field.value)?.label || 'Select hair texture'
-                            }
-                            items={hairTextureOptions.map(opt => ({
-                              label: opt.label,
-                              onClick: () => field.onChange(opt.value)
-                            }))}
-                            className="h-11 w-full"
-                          />
+        <div className="relative">
+          <div
+            data-hair-texture-trigger
+            className="flex items-center flex-wrap gap-1 min-h-11 px-2 sm:px-3 py-2 border border-gray-300 rounded-md bg-white cursor-pointer hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onClick={() => {
+              const dropdown = document.getElementById('hair-texture-dropdown');
+              if (dropdown) {
+                dropdown.classList.toggle('hidden');
+              }
+            }}
+          >
+            {field.value ? (
+              field.value.split(',').map((texture, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 max-w-full"
+                >
+                  <span className="truncate max-w-[120px] sm:max-w-[150px]">
+                    {hairTextureOptions.find(opt => opt.value === texture.trim())?.label || texture.trim()}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation();
+                      const textures = field.value.split(',').filter(t => t.trim() !== texture.trim());
+                      field.onChange(textures.join(','));
+                    }}
+                    className="ml-1 text-blue-600 hover:text-blue-800 flex-shrink-0"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))
+            ) : (
+              <span className="text-gray-500 text-sm">Select hair textures</span>
+            )}
+            <svg className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+          {/* Dropdown */}
+          <div
+            id="hair-texture-dropdown"
+            className="hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 sm:max-h-60 overflow-auto"
+          >
+            {hairTextureOptions.map(option => {
+              const isSelected = field.value && field.value.split(',').some(t => t.trim() === option.value);
+              return (
+                <div
+                  key={option.value}
+                  className={`px-2 sm:px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center ${
+                    isSelected ? 'bg-blue-50 text-blue-800' : 'text-gray-700'
+                  }`}
+                  onClick={() => {
+                    const currentValues = field.value ? field.value.split(',').map(v => v.trim()) : [];
+                    if (isSelected) {
+                      const newValues = currentValues.filter(v => v !== option.value);
+                      field.onChange(newValues.join(','));
+                    } else {
+                      const newValues = [...currentValues, option.value];
+                      field.onChange(newValues.join(','));
+                    }
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={Boolean(isSelected)}
+                    onChange={() => {}}
+                    className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
+                  />
+                  <span className="text-sm sm:text-base truncate">{option.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
                         </FormControl>
+      <FormDescription className="text-sm text-gray-500">
+        Select one or more hair textures
+      </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

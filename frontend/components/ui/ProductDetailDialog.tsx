@@ -111,6 +111,18 @@ export function ProductDetailDialog({
   const [activeVariantType, setActiveVariantType] = useState<"remy" | "virgin">("virgin");
   const [allVariants, setAllVariants] = useState<VariantType[]>([]);
 
+  // 1. Add state for selected hair textures
+  const [selectedHairTextures, setSelectedHairTextures] = useState<string[]>([]);
+
+  // 2. List of available hair textures
+  const hairTextureOptions = [
+    { value: 'straight', label: 'Straight' },
+    { value: 'body-wave', label: 'Body Wave' },
+    { value: 'loose-wave', label: 'Loose Wave' },
+    { value: 'deep-wave', label: 'Deep Wave' },
+    { value: 'curly', label: 'Curly' },
+    { value: 'kinky-curly', label: 'Kinky Curly' },
+  ];
 
 
   let bagContext;
@@ -801,47 +813,140 @@ export function ProductDetailDialog({
 
                   {detailedProduct && isHairExtensionsProduct(detailedProduct) && (
                     <>
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         <h3 className="text-xl font-bold text-black flex items-center gap-3">
                           <Award className="w-5 h-5 text-gray-600" />
                           Hair Details
                         </h3>
-                        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {detailedProduct.hair_type && (
-                              <div className="flex justify-between py-4 border-b border-gray-100">
-                                <span className="text-sm text-gray-600 font-medium">Hair Type</span>
-                                <span className="text-sm font-bold ml-2">{sanitizeDisplayText(detailedProduct.hair_type).charAt(0).toUpperCase() + sanitizeDisplayText(detailedProduct.hair_type).slice(1)}</span>
+                        <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                          {/* Hair Type Section */}
+                          {detailedProduct.hair_type && (
+                            <div className="mb-8">
+                              <div className="flex items-center justify-between py-4 px-6 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 bg-gradient-to-r from-[#B7A16C] to-[#D4AF37] rounded-lg flex items-center justify-center">
+                                    <Sparkles className="w-4 h-4 text-white" />
+                                  </div>
+                                  <span className="text-sm font-semibold text-gray-700">Hair Type</span>
+                                </div>
+                                <span className="text-sm font-bold text-black bg-white px-4 py-2 rounded-lg border border-gray-200">
+                                  {sanitizeDisplayText(detailedProduct.hair_type).charAt(0).toUpperCase() + sanitizeDisplayText(detailedProduct.hair_type).slice(1)}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Hair Texture Section */}
+                          <div className="mb-8">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                <Award className="w-4 h-4 text-white" />
+                              </div>
+                              <span className="text-sm font-semibold text-gray-700">Hair Texture</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                              {hairTextureOptions.map(option => {
+                                const isSelected = selectedHairTextures.includes(option.value);
+                                return (
+                                  <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedHairTextures(prev =>
+                                        prev.includes(option.value)
+                                          ? prev.filter(t => t !== option.value)
+                                          : [...prev, option.value]
+                                      );
+                                    }}
+                                    className={`px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 w-full min-h-[48px] flex items-center justify-center
+                                      ${isSelected 
+                                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25' 
+                                        : 'bg-white border-gray-200 text-gray-700 hover:border-blue-400 hover:shadow-md'
+                                      }`}
+                                  >
+                                    {option.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {/* Selected textures display */}
+                            {selectedHairTextures.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-4">
+                                {selectedHairTextures.map((texture, idx) => (
+                                  <span key={idx} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300">
+                                    {hairTextureOptions.find(opt => opt.value === texture)?.label || texture}
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedHairTextures(prev => prev.filter(t => t !== texture))}
+                                      className="ml-2 text-blue-600 hover:text-blue-800 font-bold"
+                                    >
+                                      ×
+                                    </button>
+                                  </span>
+                                ))}
                               </div>
                             )}
-                            {detailedProduct.hair_texture && (
-                              <div className="flex justify-between py-4 border-b border-gray-100">
-                                <span className="text-sm text-gray-600 font-medium">Hair Texture</span>
-                                <span className="text-sm font-bold ml-2">{sanitizeDisplayText(detailedProduct.hair_texture).charAt(0).toUpperCase() + sanitizeDisplayText(detailedProduct.hair_texture).slice(1)}</span>
+                          </div>
+
+                          {/* Installation Method Section - Aligned with Hair Texture */}
+                          {detailedProduct.installation_method && (
+                            <div className="mb-8">
+                              <div className="flex items-center gap-3 mb-4">
+                                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                                  <Package className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="text-sm font-semibold text-gray-700">Installation Method</span>
                               </div>
-                            )}
+                              <div className="grid grid-cols-1 gap-3">
+                                <button
+                                  type="button"
+                                  className="px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 w-full min-h-[48px] flex items-center justify-center bg-white border-gray-200 text-gray-700 hover:border-green-400 hover:shadow-md"
+                                >
+                                  {sanitizeDisplayText(detailedProduct.installation_method).charAt(0).toUpperCase() + sanitizeDisplayText(detailedProduct.installation_method).slice(1)}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Additional Details Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {detailedProduct.weight && (
-                              <div className="flex justify-between py-4 border-b border-gray-100">
-                                <span className="text-sm text-gray-600 font-medium">Weight</span>
-                                <span className="text-sm font-bold ml-2">{detailedProduct.weight}g</span>
+                              <div className="flex items-center justify-between py-4 px-6 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                    <Package className="w-4 h-4 text-white" />
+                                  </div>
+                                  <span className="text-sm font-semibold text-gray-700">Weight</span>
+                                </div>
+                                <span className="text-sm font-bold text-black bg-white px-4 py-2 rounded-lg border border-gray-200">
+                                  {detailedProduct.weight}g
+                                </span>
                               </div>
                             )}
                             {detailedProduct.hair_color_shade && (
-                              <div className="flex justify-between py-4 border-b border-gray-100">
-                                <span className="text-sm text-gray-600 font-medium">Color</span>
-                                <span className="text-sm font-bold ml-2">{sanitizeDisplayText(detailedProduct.hair_color_shade).charAt(0).toUpperCase() + sanitizeDisplayText(detailedProduct.hair_color_shade).slice(1)}</span>
+                              <div className="flex items-center justify-between py-4 px-6 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+                                    <Award className="w-4 h-4 text-white" />
+                                  </div>
+                                  <span className="text-sm font-semibold text-gray-700">Color</span>
+                                </div>
+                                <span className="text-sm font-bold text-black bg-white px-4 py-2 rounded-lg border border-gray-200">
+                                  {sanitizeDisplayText(detailedProduct.hair_color_shade).charAt(0).toUpperCase() + sanitizeDisplayText(detailedProduct.hair_color_shade).slice(1)}
+                                </span>
                               </div>
                             )}
                             {detailedProduct.stock_quantity && (
-                              <div className="flex justify-between py-4 border-b border-gray-100">
-                                <span className="text-sm text-gray-600 font-medium">Quantity</span>
-                                <span className="text-sm font-bold ml-2">{detailedProduct.stock_quantity}</span>
-                              </div>
-                            )}
-                            {detailedProduct.installation_method && (
-                              <div className="flex justify-between py-4 border-b border-gray-100">
-                                <span className="text-sm text-gray-600 font-medium">Installation Method</span>
-                                <span className="text-sm font-bold ml-2">{sanitizeDisplayText(detailedProduct.installation_method).charAt(0).toUpperCase() + sanitizeDisplayText(detailedProduct.installation_method).slice(1)}</span>
+                              <div className="flex items-center justify-between py-4 px-6 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                                    <Box className="w-4 h-4 text-white" />
+                                  </div>
+                                  <span className="text-sm font-semibold text-gray-700">Quantity</span>
+                                </div>
+                                <span className="text-sm font-bold text-black bg-white px-4 py-2 rounded-lg border border-gray-200">
+                                  {detailedProduct.stock_quantity}
+                                </span>
                               </div>
                             )}
                           </div>
