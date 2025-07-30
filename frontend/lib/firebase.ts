@@ -297,6 +297,28 @@ export const getCategoryFromFirebaseUrl = (url: string): 'cosmetics' | 'hair-ext
   }
 };
 
+// Helper function to upload job post images to Firebase
+export const uploadJobPostImagesToFirebase = async (
+  files: File[],
+  slug: string
+): Promise<string[]> => {
+  try {
+    const uploadPromises = files.map(async (file, idx) => {
+      const timestamp = Date.now();
+      const fileExtension = file.name.split('.').pop() || 'jpg';
+      const imagePath = `job_posts/${slug}_${timestamp}_${idx}.${fileExtension}`;
+      const imageRef = ref(storage, imagePath);
+      const snapshot = await uploadBytes(imageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    });
+    return await Promise.all(uploadPromises);
+  } catch (error) {
+    console.error('Error uploading job post images:', error);
+    throw error;
+  }
+};
+
 // Helper function to upload blog images to 'blog_posts' folder
 export const uploadBlogImagesToFirebase = async (
   files: File[],

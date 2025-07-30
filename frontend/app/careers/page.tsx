@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { firestore } from "@/lib/firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
@@ -44,7 +44,8 @@ const DEPARTMENT_GRADIENTS: Record<string, string> = {
   'Default': 'linear-gradient(135deg, #f8fafc 0%, #f3f4f6 100%)',
 };
 
-export default function CareersListingPage() {
+// Component that uses useSearchParams
+function CareersContent() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDept, setSelectedDept] = useState("All");
@@ -98,25 +99,22 @@ export default function CareersListingPage() {
     fetchJobs();
   }, []);
 
-  // Handle jobId query parameter to open specific job dialog
+  // Check for jobId in URL params and open dialog if found
   useEffect(() => {
     const jobId = searchParams.get('jobId');
-    if (jobId && jobs.length > 0) {
+    if (jobId) {
       const job = jobs.find(j => j.id === jobId);
       if (job) {
         setSelectedJob(job);
         setIsDialogOpen(true);
-        // Remove the jobId from URL without page reload
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete('jobId');
-        window.history.replaceState({}, '', newUrl.toString());
       }
     }
   }, [searchParams, jobs]);
 
-  const filteredJobs = jobs.filter((job) => {
+  // Filter jobs based on selected department and search
+  const filteredJobs = jobs.filter(job => {
     const matchesDept = selectedDept === "All" || job.department === selectedDept;
-    const matchesSearch =
+    const matchesSearch = !search || 
       job.title.toLowerCase().includes(search.toLowerCase()) ||
       (job.description && job.description.toLowerCase().includes(search.toLowerCase()));
     return matchesDept && matchesSearch;
@@ -238,323 +236,290 @@ export default function CareersListingPage() {
               </button>
             ))}
           </div>
-          {/* Optional: Add a fade effect at the right edge for scroll hint */}
-          <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white/90 to-transparent hidden sm:block" />
         </div>
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-24">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-4" />
-            <span className="text-gray-500 text-lg">Loading job postings...</span>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-gold" />
+            <span className="ml-3 text-gray-600">Loading job opportunities...</span>
           </div>
-        ) : filteredJobs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-gray-500">
-            <Info className="h-12 w-12 mb-4 text-gray-300" />
-            <div className="text-lg font-semibold mb-2">No job openings available right now.</div>
-            <div>Check back soon for new opportunities!</div>
+        )}
+
+        {/* No Jobs Found */}
+        {!loading && filteredJobs.length === 0 && (
+          <div className="text-center py-20">
+            <Briefcase className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No positions found</h3>
+            <p className="text-gray-500">Try adjusting your search criteria or check back later for new opportunities.</p>
           </div>
-        ) : (
-          <>
-            <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-8">
-              {paginatedJobs.map((job) => (
+        )}
+
+        {/* Jobs Grid */}
+        {!loading && filteredJobs.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {paginatedJobs.map((job) => {
+              const availability = jobAvailability[job.id] || { isAvailable: true, applicationsCount: 0 };
+              const gradient = DEPARTMENT_GRADIENTS[job.department || 'Default'] || DEPARTMENT_GRADIENTS['Default'];
+              
+              return (
                 <div
                   key={job.id}
-                  className="relative border border-gray-200 flex flex-col h-full group transition-all duration-300 ring-1 ring-transparent hover:ring-[#B7A16C]/40 sm:rounded-3xl sm:shadow-lg sm:p-8 p-4 rounded-none shadow-none hover:shadow-none sm:hover:shadow-2xl sm:hover:-translate-y-2 sm:hover:scale-[1.03] hover:border-[#B7A16C]"
-                  style={{
-                    boxShadow: '0 8px 32px 0 rgba(17,17,17,0.06)',
-                    background: DEPARTMENT_GRADIENTS[job.department as keyof typeof DEPARTMENT_GRADIENTS] || DEPARTMENT_GRADIENTS['Default'],
-                  }}
+                  className="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-gray-200"
+                  style={{ background: gradient }}
                 >
-                  {/* Share button - top right */}
+                  {/* Share Button */}
                   <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleShare(job);
-                    }}
+                    onClick={(e) => { e.stopPropagation(); handleShare(job); }}
                     className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white transition-all"
                   >
                     <Share2 className="h-4 w-4 text-gray-600" />
                   </button>
-                  
-                  {/* Job Title */}
-                  <div className="text-xl font-bold text-premium mb-2 line-clamp-2 min-h-[2.5em]">{job.title}</div>
-                  {/* Department and tags */}
-                  <div className="flex items-center gap-2 mb-4 text-xs text-gray-500 font-semibold flex-wrap">
-                    {job.department && <span className="flex items-center gap-1"><Briefcase className="h-4 w-4 mr-1 text-gray-400" />{job.department}</span>}
-                    {job.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4 mr-1 text-gray-400" />{job.location}</span>}
-                    {job.type && <span className="flex items-center gap-1"><Clock className="h-4 w-4 mr-1 text-gray-400" />{job.type}</span>}
-                    {job.salary && <span className="flex items-center gap-1"><BadgeDollarSign className="h-4 w-4 mr-1 text-gray-400" />{job.salary}</span>}
-                    {job.seats_available && jobAvailability[job.id] && (
-                      <span className={`flex items-center gap-1 ${jobAvailability[job.id].isAvailable ? 'text-green-600' : 'text-red-600'}`}>
-                        <UsersIcon className="h-4 w-4 mr-1" />
-                        {jobAvailability[job.id].applicationsCount}/{job.seats_available}
-                      </span>
-                    )}
-                  </div>
-                  {/* Buttons */}
-                  <div className="mt-auto pt-2 flex gap-2">
-                    <Button
-                      className="w-1/2 bg-white text-black border border-gray-300 text-lg py-3 rounded-2xl shadow transition-all font-bold
-                        hover:bg-black hover:text-white hover:border-black hover:shadow-lg focus:ring-2 focus:ring-black focus:outline-none"
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedJob(job);
-                        setIsDialogOpen(true);
-                      }}
-                    >
-                      View Details
-                    </Button>
-                    {job.application_form_link ? (
-                      <Button 
-                        className="w-1/2 bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={() => window.open(job.application_form_link, '_blank')}
-                        disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable)}
-                      >
-                        {job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')}
-                      </Button>
-                    ) : (
-                      <Link
-                        href={job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? '#' : `/careersForm?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title)}`}
-                        className="w-1/2"
-                        onClick={(e) => {
-                          if (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) {
-                            e.preventDefault();
-                          }
-                        }}
-                      >
-                        <Button 
-                          className="w-full bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                                                  disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable)}
-                        >
-                          {job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')}
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
-                  <div className="text-xs text-gray-400 mt-2">
-                    <div>
-                      {job.created_at
-                        ? (typeof job.created_at === 'string'
-                            ? new Date(job.created_at).toLocaleDateString()
-                            : (job.created_at && typeof job.created_at === 'object' && 'toDate' in job.created_at
-                                ? job.created_at.toDate().toLocaleDateString()
-                                : ''))
-                        : ''}
-                    </div>
-                    {job.auto_delete_at && (
-                      <div className="text-orange-600">
-                        Expires: {job.auto_delete_at.toDate ? job.auto_delete_at.toDate().toLocaleDateString() : new Date(job.auto_delete_at).toLocaleDateString()}
+
+                  {/* Job Card Content */}
+                  <div
+                    className="p-6 cursor-pointer h-full flex flex-col"
+                    onClick={() => {
+                      setSelectedJob(job);
+                      setIsDialogOpen(true);
+                    }}
+                  >
+                    {/* Department Badge */}
+                    {job.department && (
+                      <div className="mb-4">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-black/10 text-black">
+                          {job.department}
+                        </span>
                       </div>
                     )}
+
+                    {/* Job Title */}
+                    <h3 className="text-xl font-bold text-black mb-3 line-clamp-2 group-hover:text-gold transition-colors">
+                      {job.title}
+                    </h3>
+
+                    {/* Job Details */}
+                    <div className="space-y-2 mb-4 flex-grow">
+                      {job.location && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span className="truncate">{job.location}</span>
+                        </div>
+                      )}
+                      {job.type && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span>{job.type}</span>
+                        </div>
+                      )}
+                      {job.salary && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <BadgeDollarSign className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span>{job.salary}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Availability Status */}
+                    <div className="mt-auto">
+                      {availability.isAvailable ? (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-green-600 font-medium">Open for applications</span>
+                          {job.seats_available && (
+                            <span className="text-xs text-gray-500">
+                              {job.seats_available - availability.applicationsCount} seats left
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-red-600 font-medium">Applications closed</span>
+                          {availability.applicationsCount > 0 && (
+                            <span className="text-xs text-gray-500">
+                              {availability.applicationsCount} applications
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-4 mt-10">
-                <Button
-                  variant="outline"
-                  className="px-6 py-2 rounded-full"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                >
-                  Previous
-                </Button>
-                <span className="text-lg font-semibold">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  className="px-6 py-2 rounded-full"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex justify-center items-center space-x-2 mb-8">
+            <Button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              variant="outline"
+              size="sm"
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-gray-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              variant="outline"
+              size="sm"
+            >
+              Next
+            </Button>
+          </div>
         )}
       </div>
-      
-      {/* Share Dialog */}
-      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-        <DialogContent className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Share Job Opening</DialogTitle>
-          </DialogHeader>
-          {jobToShare && (
-            <div className="space-y-4">
-              <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{jobToShare.title}</h3>
-                <p className="text-xs sm:text-sm text-gray-600">{jobToShare.department} • {jobToShare.location}</p>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <span className="text-xs sm:text-sm font-medium text-gray-700">Job URL</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyJobUrl(jobToShare)}
-                    className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
-                  >
-                    <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Copy</span>
-                  </Button>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  <Button
-                    onClick={() => shareOnSocialMedia('twitter', jobToShare)}
-                    className="flex items-center gap-1 sm:gap-2 bg-blue-500 hover:bg-blue-600 text-white text-xs sm:text-sm py-2"
-                  >
-                    <Twitter className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Twitter</span>
-                  </Button>
-                  <Button
-                    onClick={() => shareOnSocialMedia('linkedin', jobToShare)}
-                    className="flex items-center gap-1 sm:gap-2 bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm py-2"
-                  >
-                    <Linkedin className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">LinkedIn</span>
-                  </Button>
-                  <Button
-                    onClick={() => shareOnSocialMedia('facebook', jobToShare)}
-                    className="flex items-center gap-1 sm:gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-2"
-                  >
-                    <Facebook className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Facebook</span>
-                  </Button>
-                  <Button
-                    onClick={() => shareOnSocialMedia('whatsapp', jobToShare)}
-                    className="flex items-center gap-1 sm:gap-2 bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm py-2"
-                  >
-                    <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">WhatsApp</span>
-                  </Button>
-                  <Button
-                    onClick={() => shareOnSocialMedia('email', jobToShare)}
-                    className="flex items-center gap-1 sm:gap-2 bg-gray-600 hover:bg-gray-700 text-white text-xs sm:text-sm py-2 col-span-2"
-                  >
-                    <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="hidden sm:inline">Email</span>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-      
-      {/* Job Details Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-xl w-full p-0 rounded-2xl shadow-2xl overflow-hidden flex items-center justify-center">
-          {selectedJob && (
-            <div className="flex flex-col h-[80vh] w-full bg-white">
-              {/* Header */}
-              <div className="relative flex items-center justify-center px-4 sm:px-8 py-6 sm:py-8 border-b bg-gradient-to-r from-gray-50 to-white rounded-t-3xl">
-                <div className="relative group w-full flex justify-center">
-                  <DialogTitle asChild>
-                    <h2 className="font-extrabold text-black break-words text-center w-full cursor-pointer text-xl sm:text-[30px]">
-                      {selectedJob.title}
-                    </h2>
-                  </DialogTitle>
-                  <div className="absolute left-1/2 top-full z-50 w-max max-w-xs -translate-x-1/2 mt-2 px-4 py-2 rounded-lg bg-black text-white text-base font-semibold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-pre-line text-center">
-                    {selectedJob.title}
-                  </div>
-                </div>
-                {/* Share button in dialog header */}
-                <button
-                  onClick={() => handleShare(selectedJob)}
-                  className="absolute top-2 sm:top-4 right-2 sm:right-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-all"
-                >
-                  <Share2 className="h-4 w-4 text-gray-600" />
-                </button>
-              </div>
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 bg-gray-100 border-b w-full rounded-b-none">
-                {selectedJob.location && (
-                  <span className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
-                    <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400" />{selectedJob.location}
-                  </span>
-                )}
-                {selectedJob.type && (
-                  <span className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
-                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400" />{selectedJob.type}
-                  </span>
-                )}
-                {selectedJob.salary && (
-                  <span className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
-                    <BadgeDollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400" />{selectedJob.salary}
-                  </span>
-                )}
-                {selectedJob.department && (
-                  <span className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
-                    <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400" />{selectedJob.department}
-                  </span>
-                )}
-                {selectedJob.seats_available && jobAvailability[selectedJob.id] && (
-                  <span className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full border text-xs font-semibold shadow-sm max-w-full break-words whitespace-normal ${
-                    jobAvailability[selectedJob.id].isAvailable 
-                      ? 'bg-green-50 border-green-200 text-green-700' 
-                      : 'bg-red-50 border-red-200 text-red-700'
-                  }`}>
-                    <UsersIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    {jobAvailability[selectedJob.id].applicationsCount}/{selectedJob.seats_available} seats
-                  </span>
-                )}
 
+      {/* Job Detail Dialog */}
+      {selectedJob && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-black">
+                {selectedJob.title}
+              </DialogTitle>
+              <DialogDescription className="text-gray-600">
+                {selectedJob.department && `${selectedJob.department} • `}{selectedJob.location}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Job Badges */}
+              <div className="flex flex-wrap gap-2">
+                {selectedJob.type && <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100 break-words max-w-full">{selectedJob.type}</span>}
+                {selectedJob.salary && <span className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-semibold border border-yellow-100 break-words max-w-full">Salary: {selectedJob.salary}</span>}
+                {selectedJob.application_form_link && <span className="inline-flex items-center px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold border border-orange-100 break-words max-w-full">External Form</span>}
               </div>
+              <div className="text-xs text-gray-400 mb-2 px-6">
+                {selectedJob.created_at && (typeof selectedJob.created_at === 'string' ? new Date(selectedJob.created_at).toLocaleDateString() : '')}
+              </div>
+              <hr className="my-2 border-gray-200" />
               {/* Description */}
-              <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8 bg-white rounded-b-2xl">
-                <div className="text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-line break-words break-all">
+              <div className="flex-1 overflow-y-auto px-6 pb-4 pt-2 w-full">
+                <div className="text-gray-800 text-base leading-relaxed whitespace-pre-line break-words break-all max-w-full" style={{minHeight: 80}}>
                   <span dangerouslySetInnerHTML={{ __html: selectedJob.description }} />
                 </div>
-              </div>
-              {/* Footer */}
-              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-6 border-t bg-gray-50 px-4 sm:px-8 py-4 sm:py-6 rounded-b-2xl">
-                {selectedJob.application_form_link ? (
-                  <Button 
-                    className="w-full sm:w-32 bg-black text-white text-base sm:text-lg py-3 rounded-xl shadow hover:bg-gray-900 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => {
-                      window.open(selectedJob.application_form_link, '_blank');
-                      setIsDialogOpen(false);
-                    }}
-                    disabled={!!(selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable)}
-                  >
-                    {selectedJob.is_closed ? 'Closed' : (selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable ? 'Full' : 'Apply')}
-                  </Button>
-                ) : (
-                  <Link
-                    href={selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable ? '#' : `/careersForm?jobId=${selectedJob.id}&jobTitle=${encodeURIComponent(selectedJob.title)}`}
-                    onClick={(e) => {
-                      if (selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable) {
-                        e.preventDefault();
-                      } else {
-                        setIsDialogOpen(false);
-                      }
-                    }}
-                  >
-                    <Button 
-                      className="w-full sm:w-32 bg-black text-white text-base sm:text-lg py-3 rounded-xl shadow hover:bg-gray-900 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={!!(selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable)}
+                {/* Apply button for desktop */}
+                {selectedJob.application_form_link && (
+                  <div className="mt-6 pt-4 border-t border-gray-100">
+                    <button
+                      className="w-full px-6 py-3 font-semibold rounded-full shadow-lg hover:bg-orange-600 border border-orange-500 text-white bg-orange-500 transition-all"
+                      onClick={() => window.open(selectedJob.application_form_link, '_blank')}
                     >
-                      {selectedJob.is_closed ? 'Closed' : (selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable ? 'Full' : 'Apply')}
-                    </Button>
-                  </Link>
+                      Apply Now
+                    </button>
+                  </div>
                 )}
-                <DialogClose asChild>
-                  <Button variant="outline" className="w-full sm:w-32 text-base sm:text-lg py-3 rounded-xl">
-                    Close
-                  </Button>
-                </DialogClose>
+              </div>
+              {/* Sticky Close Button for mobile */}
+              <div className="px-6 pb-6 pt-2 bg-white flex justify-center sticky bottom-0 z-10 border-t border-gray-100 sm:hidden">
+                <Button
+                  onClick={() => setIsDialogOpen(false)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Close
+                </Button>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Share Dialog */}
+      {jobToShare && (
+        <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Share Job Opportunity</DialogTitle>
+              <DialogDescription>
+                Share this position with your network
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Copy URL */}
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={() => copyJobUrl(jobToShare)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy URL
+                </Button>
+              </div>
+
+              {/* Social Media Buttons */}
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() => shareOnSocialMedia('twitter', jobToShare)}
+                  variant="outline"
+                  className="flex items-center justify-center"
+                >
+                  <Twitter className="h-4 w-4 mr-2" />
+                  Twitter
+                </Button>
+                <Button
+                  onClick={() => shareOnSocialMedia('linkedin', jobToShare)}
+                  variant="outline"
+                  className="flex items-center justify-center"
+                >
+                  <Linkedin className="h-4 w-4 mr-2" />
+                  LinkedIn
+                </Button>
+                <Button
+                  onClick={() => shareOnSocialMedia('facebook', jobToShare)}
+                  variant="outline"
+                  className="flex items-center justify-center"
+                >
+                  <Facebook className="h-4 w-4 mr-2" />
+                  Facebook
+                </Button>
+                <Button
+                  onClick={() => shareOnSocialMedia('whatsapp', jobToShare)}
+                  variant="outline"
+                  className="flex items-center justify-center"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  WhatsApp
+                </Button>
+              </div>
+
+              {/* Email Share */}
+              <Button
+                onClick={() => shareOnSocialMedia('email', jobToShare)}
+                variant="outline"
+                className="w-full"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Share via Email
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function CareersListingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 py-12 px-2 sm:px-6 lg:px-8 pt-16 md:pt-20 flex justify-center items-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-gold mx-auto mb-4" />
+          <p className="text-gray-600">Loading careers page...</p>
+        </div>
+      </div>
+    }>
+      <CareersContent />
+    </Suspense>
   );
 }
