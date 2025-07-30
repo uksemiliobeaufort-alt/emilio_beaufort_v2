@@ -9,6 +9,7 @@ A luxury grooming website built with Next.js 14, TypeScript, Tailwind CSS, and s
 - **Animations**: Smooth transitions and micro-interactions with Framer Motion
 - **Forms**: Validated forms with React Hook Form and Zod
 - **API Integration**: Ready to connect with the NestJS backend
+- **Email Notifications**: Automatic email notifications for job applications
 
 ## Tech Stack
 

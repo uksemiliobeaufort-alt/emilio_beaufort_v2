@@ -5,10 +5,11 @@ import { firestore } from "@/lib/firebase";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Briefcase, Brain, Users, User, Globe, HeartHandshake, Search, Loader2, Info, MapPin, BadgeDollarSign, Clock, Users as UsersIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Briefcase, Brain, Users, User, Globe, HeartHandshake, Search, Loader2, Info, MapPin, BadgeDollarSign, Clock, Users as UsersIcon, Share2, Copy, Twitter, Linkedin, Facebook, Mail, Link as LinkIcon, MessageCircle } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { checkJobAvailability } from "@/lib/api";
+import { toast } from "sonner";
 
 interface Job {
   id: string; // changed from number to string for Firestore
@@ -52,7 +53,10 @@ export default function CareersListingPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [jobAvailability, setJobAvailability] = useState<Record<string, { isAvailable: boolean; applicationsCount: number }>>({});
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [jobToShare, setJobToShare] = useState<Job | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -94,6 +98,22 @@ export default function CareersListingPage() {
     fetchJobs();
   }, []);
 
+  // Handle jobId query parameter to open specific job dialog
+  useEffect(() => {
+    const jobId = searchParams.get('jobId');
+    if (jobId && jobs.length > 0) {
+      const job = jobs.find(j => j.id === jobId);
+      if (job) {
+        setSelectedJob(job);
+        setIsDialogOpen(true);
+        // Remove the jobId from URL without page reload
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('jobId');
+        window.history.replaceState({}, '', newUrl.toString());
+      }
+    }
+  }, [searchParams, jobs]);
+
   const filteredJobs = jobs.filter((job) => {
     const matchesDept = selectedDept === "All" || job.department === selectedDept;
     const matchesSearch =
@@ -111,6 +131,75 @@ export default function CareersListingPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedDept, search]);
+
+  // Share functionality
+  const handleShare = (job: Job) => {
+    setJobToShare(job);
+    setShareDialogOpen(true);
+  };
+
+  const getJobUrl = (job: Job) => {
+    const baseUrl = 'https://www.emiliobeaufort.com';
+    return `${baseUrl}/careers?jobId=${job.id}`;
+  };
+
+  const copyJobUrl = async (job: Job) => {
+    const url = getJobUrl(job);
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Job URL copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+      toast.error('Failed to copy URL');
+    }
+  };
+
+  const shareOnSocialMedia = (platform: string, job: Job) => {
+    const url = getJobUrl(job);
+    
+    // Create a cleaner, more professional message
+    const createShareMessage = (job: Job) => {
+      const parts = [];
+      parts.push("🚀 Exciting Career Opportunity at Emilio Beaufort!");
+      parts.push("");
+      parts.push(`Position: ${job.title}`);
+      if (job.department) parts.push(`Department: ${job.department}`);
+      if (job.location) parts.push(`Location: ${job.location}`);
+      if (job.type) parts.push(`Type: ${job.type}`);
+      parts.push("");
+      parts.push("Join our team and help shape the future of luxury grooming! 💼✨");
+      parts.push("");
+      parts.push("Apply now:");
+      return parts.join("\n");
+    };
+    
+    const defaultMessage = createShareMessage(job);
+    
+    let shareUrl = '';
+    switch (platform) {
+      case 'twitter':
+        const twitterMessage = `🚀 Exciting Career Opportunity at Emilio Beaufort: ${job.title}\n\nJoin our team and help shape the future of luxury grooming! 💼✨\n\nApply now: ${url}`;
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterMessage)}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        break;
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(defaultMessage + ' ' + url)}`;
+        break;
+      case 'email':
+        const emailSubject = `Career Opportunity at Emilio Beaufort: ${job.title}`;
+        shareUrl = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(defaultMessage + ' ' + url)}`;
+        break;
+      default:
+        return;
+    }
+    
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-2 sm:px-6 lg:px-8 pt-16 md:pt-20 relative overflow-hidden">
@@ -175,6 +264,18 @@ export default function CareersListingPage() {
                     background: DEPARTMENT_GRADIENTS[job.department as keyof typeof DEPARTMENT_GRADIENTS] || DEPARTMENT_GRADIENTS['Default'],
                   }}
                 >
+                  {/* Share button - top right */}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleShare(job);
+                    }}
+                    className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white transition-all"
+                  >
+                    <Share2 className="h-4 w-4 text-gray-600" />
+                  </button>
+                  
                   {/* Job Title */}
                   <div className="text-xl font-bold text-premium mb-2 line-clamp-2 min-h-[2.5em]">{job.title}</div>
                   {/* Department and tags */}
@@ -224,9 +325,9 @@ export default function CareersListingPage() {
                         <Button 
                           className="w-full bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                                                   disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable)}
-                      >
-                        {job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')}
-                      </Button>
+                        >
+                          {job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')}
+                        </Button>
                       </Link>
                     )}
                   </div>
@@ -276,16 +377,87 @@ export default function CareersListingPage() {
           </>
         )}
       </div>
+      
+      {/* Share Dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Share Job Opening</DialogTitle>
+          </DialogHeader>
+          {jobToShare && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{jobToShare.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-600">{jobToShare.department} • {jobToShare.location}</p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Job URL</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyJobUrl(jobToShare)}
+                    className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                  >
+                    <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Copy</span>
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <Button
+                    onClick={() => shareOnSocialMedia('twitter', jobToShare)}
+                    className="flex items-center gap-1 sm:gap-2 bg-blue-500 hover:bg-blue-600 text-white text-xs sm:text-sm py-2"
+                  >
+                    <Twitter className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Twitter</span>
+                  </Button>
+                  <Button
+                    onClick={() => shareOnSocialMedia('linkedin', jobToShare)}
+                    className="flex items-center gap-1 sm:gap-2 bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm py-2"
+                  >
+                    <Linkedin className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">LinkedIn</span>
+                  </Button>
+                  <Button
+                    onClick={() => shareOnSocialMedia('facebook', jobToShare)}
+                    className="flex items-center gap-1 sm:gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-2"
+                  >
+                    <Facebook className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Facebook</span>
+                  </Button>
+                  <Button
+                    onClick={() => shareOnSocialMedia('whatsapp', jobToShare)}
+                    className="flex items-center gap-1 sm:gap-2 bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm py-2"
+                  >
+                    <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">WhatsApp</span>
+                  </Button>
+                  <Button
+                    onClick={() => shareOnSocialMedia('email', jobToShare)}
+                    className="flex items-center gap-1 sm:gap-2 bg-gray-600 hover:bg-gray-700 text-white text-xs sm:text-sm py-2 col-span-2"
+                  >
+                    <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Email</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
       {/* Job Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-xl w-full p-0 rounded-2xl shadow-2xl overflow-hidden flex items-center justify-center">
           {selectedJob && (
             <div className="flex flex-col h-[80vh] w-full bg-white">
               {/* Header */}
-              <div className="relative flex items-center justify-center px-8 py-8 border-b bg-gradient-to-r from-gray-50 to-white rounded-t-3xl">
+              <div className="relative flex items-center justify-center px-4 sm:px-8 py-6 sm:py-8 border-b bg-gradient-to-r from-gray-50 to-white rounded-t-3xl">
                 <div className="relative group w-full flex justify-center">
                   <DialogTitle asChild>
-                    <h2 className="font-extrabold text-black break-words text-center w-full cursor-pointer text-[30px]">
+                    <h2 className="font-extrabold text-black break-words text-center w-full cursor-pointer text-xl sm:text-[30px]">
                       {selectedJob.title}
                     </h2>
                   </DialogTitle>
@@ -293,52 +465,59 @@ export default function CareersListingPage() {
                     {selectedJob.title}
                   </div>
                 </div>
+                {/* Share button in dialog header */}
+                <button
+                  onClick={() => handleShare(selectedJob)}
+                  className="absolute top-2 sm:top-4 right-2 sm:right-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-all"
+                >
+                  <Share2 className="h-4 w-4 text-gray-600" />
+                </button>
               </div>
               {/* Tags */}
-              <div className="flex flex-wrap gap-3 px-8 py-4 bg-gray-100 border-b w-full rounded-b-none">
+              <div className="flex flex-wrap gap-2 sm:gap-3 px-4 sm:px-8 py-3 sm:py-4 bg-gray-100 border-b w-full rounded-b-none">
                 {selectedJob.location && (
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
-                    <MapPin className="h-4 w-4 mr-1 text-gray-400" />{selectedJob.location}
+                  <span className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
+                    <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400" />{selectedJob.location}
                   </span>
                 )}
                 {selectedJob.type && (
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
-                    <Clock className="h-4 w-4 mr-1 text-gray-400" />{selectedJob.type}
+                  <span className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400" />{selectedJob.type}
                   </span>
                 )}
                 {selectedJob.salary && (
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
-                    <BadgeDollarSign className="h-4 w-4 mr-1 text-gray-400" />{selectedJob.salary}
+                  <span className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
+                    <BadgeDollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400" />{selectedJob.salary}
                   </span>
                 )}
                 {selectedJob.department && (
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
-                    <Briefcase className="h-4 w-4 mr-1 text-gray-400" />{selectedJob.department}
+                  <span className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-white border text-xs font-semibold text-gray-700 shadow-sm max-w-full break-words whitespace-normal">
+                    <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-400" />{selectedJob.department}
                   </span>
                 )}
                 {selectedJob.seats_available && jobAvailability[selectedJob.id] && (
-                  <span className={`flex items-center gap-1 px-3 py-1 rounded-full border text-xs font-semibold shadow-sm max-w-full break-words whitespace-normal ${
+                  <span className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full border text-xs font-semibold shadow-sm max-w-full break-words whitespace-normal ${
                     jobAvailability[selectedJob.id].isAvailable 
                       ? 'bg-green-50 border-green-200 text-green-700' 
                       : 'bg-red-50 border-red-200 text-red-700'
                   }`}>
-                    <UsersIcon className="h-4 w-4 mr-1" />
+                    <UsersIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                     {jobAvailability[selectedJob.id].applicationsCount}/{selectedJob.seats_available} seats
                   </span>
                 )}
 
               </div>
               {/* Description */}
-              <div className="flex-1 overflow-y-auto px-8 py-8 bg-white rounded-b-2xl">
-                <div className="text-gray-800 text-base leading-relaxed whitespace-pre-line break-words break-all">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8 bg-white rounded-b-2xl">
+                <div className="text-gray-800 text-sm sm:text-base leading-relaxed whitespace-pre-line break-words break-all">
                   <span dangerouslySetInnerHTML={{ __html: selectedJob.description }} />
                 </div>
               </div>
               {/* Footer */}
-              <div className="flex justify-center gap-6 border-t bg-gray-50 px-8 py-6 rounded-b-2xl">
+              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-6 border-t bg-gray-50 px-4 sm:px-8 py-4 sm:py-6 rounded-b-2xl">
                 {selectedJob.application_form_link ? (
                   <Button 
-                    className="w-32 bg-black text-white text-lg py-3 rounded-xl shadow hover:bg-gray-900 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-32 bg-black text-white text-base sm:text-lg py-3 rounded-xl shadow hover:bg-gray-900 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => {
                       window.open(selectedJob.application_form_link, '_blank');
                       setIsDialogOpen(false);
@@ -359,7 +538,7 @@ export default function CareersListingPage() {
                     }}
                   >
                     <Button 
-                      className="w-32 bg-black text-white text-lg py-3 rounded-xl shadow hover:bg-gray-900 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full sm:w-32 bg-black text-white text-base sm:text-lg py-3 rounded-xl shadow hover:bg-gray-900 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={!!(selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable)}
                     >
                       {selectedJob.is_closed ? 'Closed' : (selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable ? 'Full' : 'Apply')}
@@ -367,7 +546,7 @@ export default function CareersListingPage() {
                   </Link>
                 )}
                 <DialogClose asChild>
-                  <Button variant="outline" className="w-32 text-lg py-3 rounded-xl">
+                  <Button variant="outline" className="w-full sm:w-32 text-base sm:text-lg py-3 rounded-xl">
                     Close
                   </Button>
                 </DialogClose>

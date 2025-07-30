@@ -72,6 +72,17 @@ interface ProductDetailDialogProps {
   showAddToCartButton?: boolean;
 }
 
+// Helper function to sanitize text for display
+const sanitizeDisplayText = (text: any): string => {
+  if (!text || typeof text !== 'string') return '';
+  
+  // Remove any non-printable characters and encoding artifacts
+  return text
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // Remove control characters
+    .replace(/[^\x20-\x7E]/g, '') // Keep only printable ASCII
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
+};
 
 export function ProductDetailDialog({
   product,
@@ -97,7 +108,7 @@ export function ProductDetailDialog({
   const [showAddedAlert, setShowAddedAlert] = useState(false);
   const [addedCount, setAddedCount] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [activeVariantType, setActiveVariantType] = useState<"remy" | "virgin">("remy");
+  const [activeVariantType, setActiveVariantType] = useState<"remy" | "virgin">("virgin");
   const [allVariants, setAllVariants] = useState<VariantType[]>([]);
 
 
@@ -120,7 +131,7 @@ export function ProductDetailDialog({
     if (!product || product.isSoldOut || !bagContext) return;
 
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-    const price = currentSelectedVariant?.price ?? product.price;
+    const price = selectedVariant?.price ?? product.price;
 
     for (let i = 0; i < quantity; i++) {
       bagContext.addToBag({
@@ -128,7 +139,7 @@ export function ProductDetailDialog({
         name: product.name,
         imageUrl: product.imageUrl,
         price,
-        variant: `${currentSelectedVariant?.length} ${currentSelectedVariant?.topper_size}`,
+        variant: `${selectedVariant?.length} ${selectedVariant?.topper_size}`,
         color: selectedColor?.name,
       });
     }
@@ -140,103 +151,58 @@ export function ProductDetailDialog({
 
   useEffect(() => {
     console.log("🧪 Product received in dialog:", product);
+    
     const fetchDetailedProduct = async () => {
-      if (!product) {
-        console.log("No product provided to dialog");
-        return;
-      }
+      if (!product) return;
 
-      try {
-        // Safely access category with fallback
-        const category = product.category?.toLowerCase() || '';
-        console.log("Product category:", category);
-        
-        if (category === "hair" || category === "hair-extension") {
-          // Use the specific document ID from Firebase for testing
-          const testDocumentId = "TNW6ncPc6cQ81DLntQ4u";
-          console.log("Using test document ID:", testDocumentId);
-          
-          try {
-            console.log("Calling getHairExtensionById...");
-            
-            if (typeof getHairExtensionById !== 'function') {
-              console.error("getHairExtensionById is not a function");
-              setDetailedProduct(null);
-              setAllVariants([]);
-              return;
-            }
-            
-            const hairProduct = await getHairExtensionById(testDocumentId);
-            console.log("Found hair product in Firebase:", hairProduct);
-            
-            if (hairProduct) {
-              console.log("Found hair product in Firebase:", hairProduct);
-              console.log("Product price from Firebase:", (hairProduct as any).price);
-              console.log("Product original_price from Firebase:", (hairProduct as any).original_price);
-              setDetailedProduct(hairProduct as HairExtensionProduct);
-
-              // Firebase data has a single variants array, so we need to split it by type
-              const allVariants = (hairProduct as any).variants || [];
-              console.log("All variants from Firebase:", allVariants);
-              
-              if (Array.isArray(allVariants)) {
-                const remyVariants = allVariants.filter((v: any) => v.type === 'remy' || !v.type);
-                const virginVariants = allVariants.filter((v: any) => v.type === 'virgin');
-
-                console.log("Remy variants:", remyVariants);
-                console.log("Virgin variants:", virginVariants);
-
-                const combinedVariants = [
-                  ...virginVariants.map((v: any) => ({ ...v, type: "virgin" as const })), 
-                  ...remyVariants.map((v: any) => ({ ...v, type: "remy" as const }))
-                ];
-                console.log("Combined variants:", combinedVariants);
-                setAllVariants(combinedVariants);
-              } else {
-                console.log("No variants found or variants is not an array");
-                setAllVariants([]);
-              }
-            } else {
-              console.log("No hair product found in Firebase");
-              setDetailedProduct(null);
-              setAllVariants([]);
-            }
-          } catch (firebaseError) {
-            console.error("Error fetching from Firebase:", firebaseError);
-            setDetailedProduct(null);
-            setAllVariants([]);
-          }
-        } else {
-          console.log("Fetching cosmetics product from Supabase");
-          try {
-            const allProducts = await getProducts();
-            const fullProduct = allProducts.find((p: UnifiedProduct) => p.id === product.id);
-
-            setDetailedProduct(fullProduct || null);
-            setAllVariants((fullProduct as any)?.variants || []);
-          } catch (supabaseError) {
-            console.error("Error fetching from Supabase:", supabaseError);
-            setDetailedProduct(null);
-            setAllVariants([]);
-          }
+      const category = product.category?.toLowerCase();
+      if (category === "hair" || category === "hair-extension") {
+        if (!product.id) {
+          console.error("Product ID is missing. Cannot fetch Firebase data.");
+          return;
         }
-      } catch (error) {
-        console.error("Error fetching detailed product:", error);
-        setDetailedProduct(null);
-        setAllVariants([]);
+        const hairProduct = await getHairExtensionById(product.id);
+        console.log("Fetched from Firebase:", hairProduct);
+        if (hairProduct) {
+          
+          console.log("Fetched hair product from Firebase:", hairProduct);
+          setDetailedProduct(hairProduct as HairExtensionProduct);
+
+          // Handle Firebase data structure - check for both possible structures
+          const remyVariants = (hairProduct as any).remyVariants || [];
+          const virginVariants = (hairProduct as any).virginVariants || [];
+
+          console.log("Remy:", remyVariants);
+          console.log("Virgin:", virginVariants);
+
+          const combinedVariants = [
+            ...remyVariants.map((v: any) => ({ ...v, type: "remy" as const })), 
+            ...virginVariants.map((v: any) => ({ ...v, type: "virgin" as const }))
+          ];
+          setAllVariants(combinedVariants);
+
+        } else {
+          setAllVariants([]);
+        }
+      } else {
+        
+        const allProducts = await getProducts();
+        const fullProduct = allProducts.find((p: UnifiedProduct) => p.id === product.id);
+
+   
+        setDetailedProduct(fullProduct || null);
+        setAllVariants((fullProduct as HairExtensionProduct)?.variants || []);
       }
     };
 
     fetchDetailedProduct();
   }, [product, open]);
 
-
-  // Handle manual tab switching
   useEffect(() => {
     const filtered = allVariants.filter(v => v.type === activeVariantType);
     setVariants(filtered);
     setSelectedVariantIdx(0); // Reset selected variant when tab changes
-  }, [activeVariantType, allVariants]);
+  }, [allVariants, activeVariantType]);
 
 
 
@@ -253,34 +219,68 @@ export function ProductDetailDialog({
     ...(detailedProduct?.gallery_urls || []),
   ].filter(Boolean);
 
-  // Get price info based on selected variant
-  const getSelectedVariantPrice = () => {
-    if (currentSelectedVariant && currentSelectedVariant.price) {
-      // Use the selected variant's pricing
-      const variantPriceInfo = productCardUtils.getDisplayPrice(
-        { 
-          ...product, 
-          price: currentSelectedVariant.price, 
-          original_price: currentSelectedVariant.original_price || currentSelectedVariant.price 
-        },
-        { 
-          ...detailedProduct, 
-          price: currentSelectedVariant.price, 
-          original_price: currentSelectedVariant.original_price || currentSelectedVariant.price 
-        }
-      );
-      return variantPriceInfo;
-    }
-    
-    // Fallback to product-level pricing
-    return productCardUtils.getDisplayPrice(product, detailedProduct);
-  };
-
   // Filter variants based on active type (no useEffect needed)
   const currentVariants = allVariants.filter(v => v.type === activeVariantType);
   const currentSelectedVariant = currentVariants[selectedVariantIdx] || currentVariants[0] || ({} as VariantType);
 
+  // Selected variant or fallback to empty object
+  const selectedVariant =
+    variants[selectedVariantIdx] !== undefined
+      ? variants[selectedVariantIdx]
+      : ({} as VariantType);
+
+  // Get price info based on selected variant
+  const getSelectedVariantPrice = () => {
+    try {
+      if (!product) {
+        console.warn("No product provided to getSelectedVariantPrice");
+        return {
+          displayPrice: 0,
+          hasDiscount: false,
+          originalPrice: 0,
+          savings: 0
+        };
+      }
+
+      if (selectedVariant && selectedVariant.price) {
+        // Use the selected variant's pricing
+        const variantPriceInfo = productCardUtils.getDisplayPrice(
+          { 
+            ...product, 
+            price: selectedVariant.price, 
+            original_price: selectedVariant.original_price || selectedVariant.price 
+          },
+          { 
+            ...detailedProduct, 
+            price: selectedVariant.price, 
+            original_price: selectedVariant.original_price || selectedVariant.price 
+          }
+        );
+        return variantPriceInfo;
+      }
+      
+      // Fallback to product-level pricing
+      return productCardUtils.getDisplayPrice(product, detailedProduct);
+    } catch (error) {
+      console.error("Error in getSelectedVariantPrice:", error);
+      // Return a safe fallback
+      return {
+        displayPrice: product?.price || 0,
+        hasDiscount: false,
+        originalPrice: product?.price || 0,
+        savings: 0
+      };
+    }
+  };
+
   const selectedVariantPriceInfo = getSelectedVariantPrice();
+  
+  console.log("Price debugging:", {
+    selectedVariant,
+    selectedVariantPriceInfo,
+    product: product?.price,
+    detailedProduct: detailedProduct?.price
+  });
 
   // Create a typed Map for color lookup:
   const colorMap: Record<string, typeof hairColorOptions[0]> = {};
@@ -291,7 +291,7 @@ export function ProductDetailDialog({
 
   // Map colors with fallback images
   const mappedColors: ColorType[] =
-    currentSelectedVariant?.colors?.map((c) => {
+    selectedVariant?.colors?.map((c) => {
       if (!c.name) return { ...c, image: "", value: "" };
       const key = c.name.trim().toLowerCase();
       const matched = colorMap[key];
@@ -310,15 +310,14 @@ export function ProductDetailDialog({
   const handleAddToBag = () => {
     if (product.isSoldOut || !bagContext) return;
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-    // Use the selected variant's display price (which includes discount logic)
-    const price = selectedVariantPriceInfo.displayPrice;
+    const price = selectedVariant?.price ?? product.price;
     for (let i = 0; i < quantity; i++) {
       bagContext.addToBag({
         id: product.id,
         name: product.name,
         imageUrl: product.imageUrl,
         price,
-        variant: `${currentSelectedVariant?.length} ${currentSelectedVariant?.topper_size}`,
+        variant: `${selectedVariant?.length} ${selectedVariant?.topper_size}`,
         color: selectedColor?.name,
       });
     }
@@ -566,11 +565,11 @@ export function ProductDetailDialog({
                             <p className="text-sm font-medium text-gray-700 mb-2">
                               LENGTH:{" "}
                               <span className="font-semibold">
-                                {currentSelectedVariant?.length} Inch{"\u00A0\u00A0"}{currentSelectedVariant?.topper_size}
+                                {selectedVariant?.length} Inch{"\u00A0\u00A0"}{selectedVariant?.topper_size}
                               </span>
                             </p>
                             <div className="flex flex-wrap gap-2">
-                              {currentVariants.map((variant, idx) => (
+                              {variants.map((variant, idx) => (
                                 <button
                                   type="button"
                                   key={variant.id}
@@ -648,7 +647,7 @@ export function ProductDetailDialog({
                       </h3>
                       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                         {(() => {
-                          const desc = detailedProduct?.detailed_description || product.description || '';
+                          const desc = sanitizeDisplayText(detailedProduct?.detailed_description) || sanitizeDisplayText(product.description) || '';
                           const words = desc.split(' ');
                           const shouldTruncate = words.length > 40; // Roughly 3-4 lines worth of text
                           const truncatedText = words.slice(0, 40).join(' ');
@@ -810,45 +809,39 @@ export function ProductDetailDialog({
                         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {detailedProduct.hair_type && (
-                              <div className="flex justify-between py-3 border-b border-gray-100">
+                              <div className="flex justify-between py-4 border-b border-gray-100">
                                 <span className="text-sm text-gray-600 font-medium">Hair Type</span>
-                                <span className="text-sm font-bold">{detailedProduct.hair_type}</span>
+                                <span className="text-sm font-bold ml-2">{sanitizeDisplayText(detailedProduct.hair_type).charAt(0).toUpperCase() + sanitizeDisplayText(detailedProduct.hair_type).slice(1)}</span>
                               </div>
                             )}
                             {detailedProduct.hair_texture && (
-                              <div className="flex justify-between py-3 border-b border-gray-100">
+                              <div className="flex justify-between py-4 border-b border-gray-100">
                                 <span className="text-sm text-gray-600 font-medium">Hair Texture</span>
-                                <span className="text-sm font-bold">{detailedProduct.hair_texture}</span>
-                              </div>
-                            )}
-                            {detailedProduct.hair_length && (
-                              <div className="flex justify-between py-3 border-b border-gray-100">
-                                <span className="text-sm text-gray-600 font-medium">Hair Length</span>
-                                <span className="text-sm font-bold">{detailedProduct.hair_length}</span>
+                                <span className="text-sm font-bold ml-2">{sanitizeDisplayText(detailedProduct.hair_texture).charAt(0).toUpperCase() + sanitizeDisplayText(detailedProduct.hair_texture).slice(1)}</span>
                               </div>
                             )}
                             {detailedProduct.weight && (
-                              <div className="flex justify-between py-3 border-b border-gray-100">
+                              <div className="flex justify-between py-4 border-b border-gray-100">
                                 <span className="text-sm text-gray-600 font-medium">Weight</span>
-                                <span className="text-sm font-bold">{detailedProduct.weight}g</span>
+                                <span className="text-sm font-bold ml-2">{detailedProduct.weight}g</span>
                               </div>
                             )}
                             {detailedProduct.hair_color_shade && (
-                              <div className="flex justify-between py-3 border-b border-gray-100">
+                              <div className="flex justify-between py-4 border-b border-gray-100">
                                 <span className="text-sm text-gray-600 font-medium">Color</span>
-                                <span className="text-sm font-bold">{detailedProduct.hair_color_shade}</span>
+                                <span className="text-sm font-bold ml-2">{sanitizeDisplayText(detailedProduct.hair_color_shade).charAt(0).toUpperCase() + sanitizeDisplayText(detailedProduct.hair_color_shade).slice(1)}</span>
                               </div>
                             )}
                             {detailedProduct.stock_quantity && (
-                              <div className="flex justify-between py-3 border-b border-gray-100">
+                              <div className="flex justify-between py-4 border-b border-gray-100">
                                 <span className="text-sm text-gray-600 font-medium">Quantity</span>
-                                <span className="text-sm font-bold">{detailedProduct.stock_quantity}</span>
+                                <span className="text-sm font-bold ml-2">{detailedProduct.stock_quantity}</span>
                               </div>
                             )}
                             {detailedProduct.installation_method && (
-                              <div className="flex justify-between py-3 border-b border-gray-100">
+                              <div className="flex justify-between py-4 border-b border-gray-100">
                                 <span className="text-sm text-gray-600 font-medium">Installation Method</span>
-                                <span className="text-sm font-bold">{detailedProduct.installation_method}</span>
+                                <span className="text-sm font-bold ml-2">{sanitizeDisplayText(detailedProduct.installation_method).charAt(0).toUpperCase() + sanitizeDisplayText(detailedProduct.installation_method).slice(1)}</span>
                               </div>
                             )}
                           </div>
@@ -863,7 +856,7 @@ export function ProductDetailDialog({
                           </h3>
                           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                             {(() => {
-                              const care = detailedProduct.care_instructions || '';
+                              const care = sanitizeDisplayText(detailedProduct.care_instructions) || '';
                               const words = care.split(' ');
                               const shouldTruncate = words.length > 40; // Roughly 3-4 lines worth of text
                               const truncatedText = words.slice(0, 40).join(' ');

@@ -42,39 +42,49 @@ export const productCardUtils = {
 
   // Get display price with discount logic
   getDisplayPrice: (product: any, detailedProduct: any) => {
-    // Get prices from Firebase data or fallback to product data
-    const originalPrice = Number(detailedProduct?.original_price || product.price || 0);
-    const discountedPrice = Number(detailedProduct?.price || product.price || 0);
-    
-    console.log('Price debugging:', {
-      productPrice: product.price,
-      detailedProductPrice: detailedProduct?.price,
-      detailedProductOriginalPrice: detailedProduct?.original_price,
-      originalPrice,
-      discountedPrice
-    });
-    
-    // If discounted price exists and is less than original, show discounted
-    // Otherwise show original price
-    const displayPrice = (discountedPrice > 0 && discountedPrice < originalPrice) 
-      ? discountedPrice 
-      : originalPrice;
-    
-    const hasDiscount = discountedPrice > 0 && discountedPrice < originalPrice;
-    
-    console.log('Final price calculation:', {
-      displayPrice,
-      hasDiscount,
-      originalPrice,
-      savings: hasDiscount ? originalPrice - discountedPrice : 0
-    });
-    
-    return {
-      displayPrice,
-      hasDiscount,
-      originalPrice,
-      savings: hasDiscount ? originalPrice - discountedPrice : 0
-    };
+    try {
+      // Get prices from Firebase data or fallback to product data
+      const originalPrice = Number(detailedProduct?.original_price || product?.price || 0);
+      const discountedPrice = Number(detailedProduct?.price || product?.price || 0);
+      
+      console.log('Price debugging:', {
+        productPrice: product?.price,
+        detailedProductPrice: detailedProduct?.price,
+        detailedProductOriginalPrice: detailedProduct?.original_price,
+        originalPrice,
+        discountedPrice
+      });
+      
+      // If discounted price exists and is less than original, show discounted
+      // Otherwise show original price
+      const displayPrice = (discountedPrice > 0 && discountedPrice < originalPrice) 
+        ? discountedPrice 
+        : originalPrice;
+      
+      const hasDiscount = discountedPrice > 0 && discountedPrice < originalPrice;
+      
+      console.log('Final price calculation:', {
+        displayPrice,
+        hasDiscount,
+        originalPrice,
+        savings: hasDiscount ? originalPrice - discountedPrice : 0
+      });
+      
+      return {
+        displayPrice,
+        hasDiscount,
+        originalPrice,
+        savings: hasDiscount ? originalPrice - discountedPrice : 0
+      };
+    } catch (error) {
+      console.error("Error in getDisplayPrice:", error);
+      return {
+        displayPrice: 0,
+        hasDiscount: false,
+        originalPrice: 0,
+        savings: 0
+      };
+    }
   }
 }; 
 

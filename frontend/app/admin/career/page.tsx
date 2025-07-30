@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Pencil, Trash2, UploadCloud } from "lucide-react";
+import { Loader2, Pencil, Trash2, UploadCloud, Share2, Copy, Twitter, Linkedin, Facebook, Link as LinkIcon, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import TipTapEditor from "@/app/admin/components/TipTapEditor";
 import { Info, PlusCircle } from "lucide-react";
@@ -39,6 +39,8 @@ export default function AdminCareersPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobPost | null>(null);
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [jobToShare, setJobToShare] = useState<JobPost | null>(null);
 
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
@@ -182,6 +184,52 @@ export default function AdminCareersPage() {
     }
   };
 
+  const handleShare = (job: JobPost) => {
+    setJobToShare(job);
+    setShareDialogOpen(true);
+  };
+
+  const getJobUrl = (job: JobPost) => {
+    const baseUrl = 'https://www.emiliobeaufort.com';
+    return `${baseUrl}/careers?jobId=${job.id}`;
+  };
+
+  const copyJobUrl = async (job: JobPost) => {
+    const url = getJobUrl(job);
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Job URL copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+      toast.error('Failed to copy URL');
+    }
+  };
+
+  const shareOnSocialMedia = (platform: string, job: JobPost) => {
+    const url = getJobUrl(job);
+    const defaultMessage = `🚀 Exciting Career Opportunity at Emilio Beaufort!\n\n${job.title}\n${job.department ? `Department: ${job.department}` : ''}\n${job.location ? `Location: ${job.location}` : ''}\n${job.type ? `Type: ${job.type}` : ''}\n\nJoin the Emilio Beaufort team and help shape the future of luxury grooming! 💼✨\n\nApply now:`;
+    
+    let shareUrl = '';
+    switch (platform) {
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`🚀 Exciting Career Opportunity at Emilio Beaufort: ${job.title}\n\nJoin the Emilio Beaufort team and help shape the future of luxury grooming! 💼✨\n\nApply now: ${url}`)}`;
+        break;
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        break;
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(defaultMessage + ' ' + url)}`;
+        break;
+      default:
+        return;
+    }
+    
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+  };
+
   return (
     <div className="space-y-6 bg-gray-50 min-h-screen p-4 sm:p-8">
       <div className="flex justify-between items-center mb-4">
@@ -247,6 +295,68 @@ export default function AdminCareersPage() {
           />
         </DialogContent>
       </Dialog>
+      {/* Share Dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Share Job Opening</DialogTitle>
+          </DialogHeader>
+          {jobToShare && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{jobToShare.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-600">{jobToShare.department} • {jobToShare.location}</p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-xs sm:text-sm font-medium text-gray-700">Job URL</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyJobUrl(jobToShare)}
+                    className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
+                  >
+                    <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Copy</span>
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <Button
+                    onClick={() => shareOnSocialMedia('twitter', jobToShare)}
+                    className="flex items-center gap-1 sm:gap-2 bg-blue-500 hover:bg-blue-600 text-white text-xs sm:text-sm py-2 sm:py-2"
+                  >
+                    <Twitter className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Twitter</span>
+                  </Button>
+                  <Button
+                    onClick={() => shareOnSocialMedia('linkedin', jobToShare)}
+                    className="flex items-center gap-1 sm:gap-2 bg-blue-700 hover:bg-blue-800 text-white text-xs sm:text-sm py-2 sm:py-2"
+                  >
+                    <Linkedin className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">LinkedIn</span>
+                  </Button>
+                  <Button
+                    onClick={() => shareOnSocialMedia('facebook', jobToShare)}
+                    className="flex items-center gap-1 sm:gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-2 sm:py-2"
+                  >
+                    <Facebook className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">Facebook</span>
+                  </Button>
+                  <Button
+                    onClick={() => shareOnSocialMedia('whatsapp', jobToShare)}
+                    className="flex items-center gap-1 sm:gap-2 bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm py-2 sm:py-2 col-span-2 sm:col-span-3"
+                  >
+                    <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden sm:inline">WhatsApp</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       {/* Job List */}
       {loading ? (
         <div className="text-center py-10">
@@ -269,43 +379,46 @@ export default function AdminCareersPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {jobs.map((job) => (
             <div
               key={job.id}
-              className="relative border rounded-2xl p-6 shadow-md bg-white group transition-all hover:shadow-xl hover:-translate-y-1"
+              className="relative border rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-md bg-white group transition-all hover:shadow-xl hover:-translate-y-1"
             >
               {/* Action buttons top right */}
-              <div className="absolute top-4 right-4 flex gap-2">
-                <Button size="icon" variant="ghost" onClick={() => handleEdit(job)}>
-                  <Pencil className="h-4 w-4" />
+              <div className="absolute top-2 sm:top-4 right-2 sm:right-4 flex gap-1 sm:gap-2">
+                <Button size="icon" variant="ghost" onClick={() => handleEdit(job)} className="h-8 w-8 sm:h-9 sm:w-9">
+                  <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
-                <Button size="icon" variant="destructive" onClick={() => handleDelete(job.id)}>
-                  <Trash2 className="h-4 w-4" />
+                <Button size="icon" variant="ghost" onClick={() => handleShare(job)} className="h-8 w-8 sm:h-9 sm:w-9">
+                  <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button size="icon" variant="destructive" onClick={() => handleDelete(job.id)} className="h-8 w-8 sm:h-9 sm:w-9">
+                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
               {/* Job Icon and Title */}
-              <div className="flex items-center gap-3 mb-2">
-                <div className="bg-gray-100 rounded-full p-2">
-                  <UploadCloud className="h-6 w-6 text-gray-400" />
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 pr-16 sm:pr-20">
+                <div className="bg-gray-100 rounded-full p-1.5 sm:p-2">
+                  <UploadCloud className="h-4 w-4 sm:h-6 sm:w-6 text-gray-400" />
                 </div>
-                <h3 className="font-bold text-xl text-gray-900">{job.title}</h3>
+                <h3 className="font-bold text-lg sm:text-xl text-gray-900 line-clamp-2">{job.title}</h3>
               </div>
               {/* Department display */}
               {job.department && (
-                <div className="flex items-center gap-2 mb-1 text-sm text-gray-600">
+                <div className="flex items-center gap-2 mb-1 text-xs sm:text-sm text-gray-600">
                   {departmentIcon(job.department)}
-                  <span>{job.department}</span>
+                  <span className="line-clamp-1">{job.department}</span>
                 </div>
               )}
-              <div className="text-sm text-gray-500 mb-4 flex flex-wrap gap-2">
-                {job.location && <span>{job.location}</span>}
+              <div className="text-xs sm:text-sm text-gray-500 mb-4 flex flex-wrap gap-1 sm:gap-2">
+                {job.location && <span className="line-clamp-1">{job.location}</span>}
                 {job.type && <span>• {job.type}</span>}
                 {job.salary && <span>• Salary: {job.salary}</span>}
                 {job.application_form_link && <span>• External Form</span>}
               </div>
               {/* Action Buttons */}
-              <div className="flex justify-between items-center mt-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mt-4">
                 <Button
                   variant="outline"
                   size="sm"
@@ -313,15 +426,16 @@ export default function AdminCareersPage() {
                     setSelectedJob(job);
                     setExpandedJobId(job.id); // for dialog open
                   }}
+                  className="w-full sm:w-auto text-xs sm:text-sm"
                 >
                   View Details
                 </Button>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                   {job.auto_delete_at && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                      className="text-orange-600 border-orange-300 hover:bg-orange-50 text-xs sm:text-sm flex-1 sm:flex-none"
                       onClick={() => handleExtendAutoDelete(job.id)}
                       disabled={isProcessing}
                     >
@@ -332,7 +446,7 @@ export default function AdminCareersPage() {
                     <Button
                       variant="default"
                       size="sm"
-                      className="bg-orange-500 hover:bg-orange-600 text-white"
+                      className="bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm flex-1 sm:flex-none"
                       onClick={() => window.open(job.application_form_link, '_blank')}
                     >
                       Apply Now
@@ -341,7 +455,7 @@ export default function AdminCareersPage() {
                 </div>
               </div>
               <div className="flex justify-between items-center pt-2 text-xs text-gray-400">
-                <span>
+                <span className="text-xs">
                   {job.created_at
                     ? (typeof job.created_at === 'string'
                         ? new Date(job.created_at).toLocaleDateString()
@@ -351,7 +465,7 @@ export default function AdminCareersPage() {
                     : ''}
                 </span>
                 {job.auto_delete_at && (
-                  <span className="text-orange-600">
+                  <span className="text-orange-600 text-xs">
                     Auto-delete: {job.auto_delete_at.toDate ? job.auto_delete_at.toDate().toLocaleDateString() : new Date(job.auto_delete_at).toLocaleDateString()}
                   </span>
                 )}

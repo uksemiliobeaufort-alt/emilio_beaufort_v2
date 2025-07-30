@@ -127,7 +127,47 @@ function CareersFormContent() {
       // 3. Update Firestore doc with resumeUrl
       await import('firebase/firestore').then(({ updateDoc }) => updateDoc(docRef, { resumeUrl }));
       
-      // 4. Sync to Google Sheets if available (this would need to be done server-side in production)
+      // 4. Send email notifications
+      try {
+        const emailData = {
+          applicantName: data.fullName,
+          applicantEmail: data.email,
+          jobTitle: jobTitle || '',
+          jobId: jobId || docRef.id,
+          githubUrl: data.github,
+          linkedinUrl: data.linkedin,
+          portfolioUrl: data.portfolio || undefined,
+          coverLetter: data.coverLetter || undefined,
+          hearAbout: data.hearAbout === 'Other' ? data.hearAboutOther : data.hearAbout,
+          resumeUrl: resumeUrl,
+        };
+
+        const emailResponse = await fetch('/api/send-job-application-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailData),
+        });
+
+        if (emailResponse.ok) {
+          const emailResult = await emailResponse.json();
+          console.log('📧 Email sending result:', emailResult);
+          
+          if (emailResult.applicantEmailSent) {
+            toast.success("Application submitted! Check your email for confirmation.");
+          } else {
+            toast.success("Application submitted successfully!");
+          }
+        } else {
+          console.error('Failed to send email notifications');
+        }
+      } catch (error) {
+        console.error('Failed to send email notifications:', error);
+        // Don't fail the application submission if email fails
+      }
+
+      // 5. Sync to Google Sheets if available (this would need to be done server-side in production)
       try {
         // Note: In production, this should be done server-side for security
         // For now, we'll just log that the application was created
@@ -136,7 +176,6 @@ function CareersFormContent() {
         console.error('Failed to sync to Google Sheets:', error);
       }
       
-      toast.success("Your application has been submitted!");
       form.reset();
       setResumeName("");
       setIsSuccess(true);

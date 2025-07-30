@@ -1349,6 +1349,66 @@ useEffect(() => {
               </div>
             )}
 
+            {/* Hair Extension Specific Fields */}
+            {watchedCategory === 'hair-extension' && (
+              <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
+                <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">
+                  <div className="p-2 bg-amber-100 rounded-lg">
+                    <Waves className="h-5 w-5 text-amber-600" />
+                  </div>
+                  Hair Extension Information
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="hair_texture"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Hair Texture</FormLabel>
+                        <FormControl>
+                          <BootstrapDropdown
+                            trigger={
+                              hairTextureOptions.find(opt => opt.value === field.value)?.label || 'Select hair texture'
+                            }
+                            items={hairTextureOptions.map(opt => ({
+                              label: opt.label,
+                              onClick: () => field.onChange(opt.value)
+                            }))}
+                            className="h-11 w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="installation_method"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-medium">Installation Method</FormLabel>
+                        <FormControl>
+                          <BootstrapDropdown
+                            trigger={
+                              installationMethodOptions.find(opt => opt.value === field.value)?.label || 'Select installation method'
+                            }
+                            items={installationMethodOptions.map(opt => ({
+                              label: opt.label,
+                              onClick: () => field.onChange(opt.value)
+                            }))}
+                            className="h-11 w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Images Section */}
             <div className="bg-white rounded-xl border border-gray-200 p-2 sm:p-4 md:p-8">
               <h3 className="text-lg md:text-xl font-semibold flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-gray-800">

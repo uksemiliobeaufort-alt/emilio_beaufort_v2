@@ -30,13 +30,30 @@ const formatPrice = (price?: number | string) => {
 const isEmpty = (val: unknown) => val === undefined || val === null || val === '';
 
 export default function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
-  // Determine which price to show
+  // Determine which price to show - prioritize virgin hair variants
   let displayPrice: number | string | undefined = product.price;
   let displayOriginalPrice: number | string | undefined = product.original_price;
+  
   const hasVariants = Array.isArray((product as any).variants) && (product as any).variants.length > 0;
-  if (isEmpty(displayPrice) && hasVariants) {
-    displayPrice = (product as any).variants[0]?.price;
-    displayOriginalPrice = (product as any).variants[0]?.original_price || (product as any).variants[0]?.price;
+  const hasRemyVariants = Array.isArray((product as any).remyVariants) && (product as any).remyVariants.length > 0;
+  const hasVirginVariants = Array.isArray((product as any).virginVariants) && (product as any).virginVariants.length > 0;
+  
+  if (isEmpty(displayPrice) && (hasVariants || hasRemyVariants || hasVirginVariants)) {
+    // First try to get virgin hair variant
+    if (hasVirginVariants) {
+      displayPrice = (product as any).virginVariants[0]?.price;
+      displayOriginalPrice = (product as any).virginVariants[0]?.original_price || (product as any).virginVariants[0]?.price;
+    }
+    // If no virgin variants, try remy variants
+    else if (hasRemyVariants) {
+      displayPrice = (product as any).remyVariants[0]?.price;
+      displayOriginalPrice = (product as any).remyVariants[0]?.original_price || (product as any).remyVariants[0]?.price;
+    }
+    // Fall back to general variants
+    else if (hasVariants) {
+      displayPrice = (product as any).variants[0]?.price;
+      displayOriginalPrice = (product as any).variants[0]?.original_price || (product as any).variants[0]?.price;
+    }
   }
 
   return (
