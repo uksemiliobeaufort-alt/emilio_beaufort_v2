@@ -157,8 +157,13 @@ export const auth = {
       auth.user = authenticatedUser;
       AdminSession.create(authenticatedUser);
       
-      // Update last login timestamp
-      await auth.updateLastLogin();
+      // Update last login timestamp (non-blocking)
+      try {
+        await auth.updateLastLogin();
+      } catch (error) {
+        console.warn('⚠️ Last login update failed, but login continues:', error);
+        // Don't fail the login if last login update fails
+      }
       
       console.log('🎉 Login successful for:', authenticatedUser.email);
       return authenticatedUser;
@@ -293,14 +298,67 @@ export const auth = {
   // Real-time function to list admin users
   listAdminUsers: async () => {
     try {
-      const { data, error } = await supabase.rpc('list_admin_users');
-      if (error) {
-        console.error('❌ Error listing admin users:', error);
+      console.log('🔄 listAdminUsers called');
+      
+      // Check if Supabase client is available
+      if (!supabase) {
+        console.warn('⚠️ Supabase client not available for listing admin users');
         return [];
       }
-      return data || [];
+
+      // Check if Supabase client is properly initialized
+      if (!supabase.auth || !supabase.from) {
+        console.warn('⚠️ Supabase client not properly initialized');
+        return [];
+      }
+
+      console.log('🔄 Fetching admin users...');
+
+      // Try RPC function first
+      try {
+        console.log('🔄 Attempting RPC call...');
+        const { data, error } = await supabase.rpc('list_admin_users');
+        
+        if (error) {
+          console.error('❌ RPC function error:', error);
+          throw error; // Fall through to direct query
+        }
+        
+        if (data) {
+          console.log('✅ Admin users fetched successfully via RPC');
+          return data;
+        }
+      } catch (rpcError) {
+        console.warn('⚠️ RPC function failed, trying direct query:', rpcError);
+        
+        // Fallback: Direct query using Supabase client
+        try {
+          console.log('🔄 Attempting direct query...');
+          const { data: adminUsers, error: queryError } = await supabase
+            .from('admin_user')
+            .select('id, email, role, is_active, first_name, last_name, department, created_at, last_login')
+            .order('created_at');
+
+          if (queryError) {
+            console.error('❌ Direct query error:', queryError);
+            return [];
+          }
+
+          if (adminUsers) {
+            console.log('✅ Admin users fetched successfully via direct query');
+            return adminUsers;
+          }
+        } catch (directQueryError) {
+          console.error('❌ Direct query exception:', directQueryError);
+          return [];
+        }
+      }
+
+      console.log('⚠️ No admin users found or all methods failed');
+      return [];
     } catch (error) {
       console.error('💥 Error in listAdminUsers:', error);
+      // Return empty array instead of throwing error
       return [];
     }
   },
@@ -394,18 +452,53 @@ export const auth = {
   updateLastLogin: async (): Promise<void> => {
     try {
       if (!auth.user?.email) {
+        console.log('⚠️ No user email available for last login update');
         return;
       }
 
-      const { error } = await supabase.rpc('update_admin_last_login', {
-        user_email: auth.user.email
-      });
+      // Check if Supabase client is available
+      if (!supabase) {
+        console.warn('⚠️ Supabase client not available for last login update');
+        return;
+      }
 
-      if (error) {
-        console.error('❌ Error updating last login:', error);
+      console.log('🔄 Updating last login for:', auth.user.email);
+
+      // Try RPC function first
+      try {
+        const { error } = await supabase.rpc('update_admin_last_login', {
+          user_email: auth.user.email
+        });
+
+        if (error) {
+          console.error('❌ RPC function error:', error);
+          throw error; // Fall through to direct update
+        } else {
+          console.log('✅ Last login updated successfully via RPC');
+          return;
+        }
+      } catch (rpcError) {
+        console.warn('⚠️ RPC function failed, trying direct update:', rpcError);
+        
+        // Fallback: Direct update using SQL
+        const { error: updateError } = await supabase
+          .from('admin_user')
+          .update({ 
+            last_login: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('email', auth.user.email);
+
+        if (updateError) {
+          console.error('❌ Direct update error:', updateError);
+          console.log('⚠️ Last login update failed, but login continues');
+        } else {
+          console.log('✅ Last login updated successfully via direct update');
+        }
       }
     } catch (error) {
       console.error('💥 Error in updateLastLogin:', error);
+      console.log('⚠️ Last login update failed due to exception, but login continues');
     }
   }
 };

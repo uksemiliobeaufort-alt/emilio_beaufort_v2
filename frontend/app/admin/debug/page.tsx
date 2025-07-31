@@ -24,14 +24,30 @@ export default function AdminDebug() {
 
   const loadData = async () => {
     try {
-      const [users, emails] = await Promise.all([
+      const [users, emails] = await Promise.allSettled([
         auth.listAdminUsers(),
         auth.getActiveAdminEmails()
       ]);
-      setAdminUsers(users);
-      setActiveEmails(emails);
+      
+      // Handle users result
+      if (users.status === 'fulfilled') {
+        setAdminUsers(users.value);
+      } else {
+        console.error('Failed to load admin users:', users.reason);
+        setAdminUsers([]);
+      }
+      
+      // Handle emails result
+      if (emails.status === 'fulfilled') {
+        setActiveEmails(emails.value);
+      } else {
+        console.error('Failed to load admin emails:', emails.reason);
+        setActiveEmails([]);
+      }
     } catch (error) {
       console.error('Failed to load data:', error);
+      setAdminUsers([]);
+      setActiveEmails([]);
     }
   };
 
