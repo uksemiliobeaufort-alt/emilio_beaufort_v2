@@ -22,6 +22,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import PermissionGuard from '@/components/PermissionGuard';
 
 const categoryLabels = {
   'cosmetics': 'Cosmetics',
@@ -128,6 +129,25 @@ function productToFormData(product: any): ProductFormData {
 }
 
 export default function ProductsAdmin() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; product: any | null }>({ open: false, product: null });
+  const [productFormDialog, setProductFormDialog] = useState<{ open: boolean; product: ProductFormData | null; selectedCategory?: string }>({ open: false, product: null });
+  const [categorySelectionDialog, setCategorySelectionDialog] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  return (
+    <PermissionGuard requiredPermission="manage_products">
+      <ProductsAdminContent />
+    </PermissionGuard>
+  );
+}
+
+function ProductsAdminContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);

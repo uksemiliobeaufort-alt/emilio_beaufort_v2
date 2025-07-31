@@ -383,59 +383,102 @@ export default function AdminCareersPage() {
           {jobs.map((job) => (
             <div
               key={job.id}
-              className="relative border rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-md bg-white group transition-all hover:shadow-xl hover:-translate-y-1"
+              className="relative border rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-md bg-white group transition-all hover:shadow-xl hover:-translate-y-1 hover:border-gray-300"
             >
               {/* Action buttons top right */}
-              <div className="absolute top-2 sm:top-4 right-2 sm:right-4 flex gap-1 sm:gap-2">
-                <Button size="icon" variant="ghost" onClick={() => handleEdit(job)} className="h-8 w-8 sm:h-9 sm:w-9">
+              <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex gap-1 sm:gap-2 z-10">
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={() => handleEdit(job)} 
+                  className="h-8 w-8 sm:h-9 sm:w-9 bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm"
+                >
                   <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
-                <Button size="icon" variant="ghost" onClick={() => handleShare(job)} className="h-8 w-8 sm:h-9 sm:w-9">
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={() => handleShare(job)} 
+                  className="h-8 w-8 sm:h-9 sm:w-9 bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm"
+                >
                   <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
-                <Button size="icon" variant="destructive" onClick={() => handleDelete(job.id)} className="h-8 w-8 sm:h-9 sm:w-9">
+                <Button 
+                  size="icon" 
+                  variant="destructive" 
+                  onClick={() => handleDelete(job.id)} 
+                  className="h-8 w-8 sm:h-9 sm:w-9 shadow-sm"
+                >
                   <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
-              {/* Job Icon and Title */}
-              <div className="flex items-center gap-2 sm:gap-3 mb-2 pr-16 sm:pr-20">
-                <div className="bg-gray-100 rounded-full p-1.5 sm:p-2">
-                  <UploadCloud className="h-4 w-4 sm:h-6 sm:w-6 text-gray-400" />
+              
+              {/* Job Header with Icon and Title */}
+              <div className="flex items-start gap-3 mb-3 pr-24 sm:pr-28">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-full p-2 sm:p-2.5 flex-shrink-0">
+                  <UploadCloud className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
-                <h3 className="font-bold text-lg sm:text-xl text-gray-900 line-clamp-2">{job.title}</h3>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg sm:text-xl text-gray-900 line-clamp-2 leading-tight">{job.title}</h3>
+                </div>
               </div>
-              {/* Department display */}
+              {/* Department and Job Details */}
               {job.department && (
-                <div className="flex items-center gap-2 mb-1 text-xs sm:text-sm text-gray-600">
-                  {departmentIcon(job.department)}
-                  <span className="line-clamp-1">{job.department}</span>
+                <div className="flex items-center gap-2 mb-3 text-xs sm:text-sm">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100">
+                    {departmentIcon(job.department)}
+                    <span className="font-medium">{job.department}</span>
+                  </div>
                 </div>
               )}
-              <div className="text-xs sm:text-sm text-gray-500 mb-4 flex flex-wrap gap-1 sm:gap-2">
-                {job.location && <span className="line-clamp-1">{job.location}</span>}
-                {job.type && <span>• {job.type}</span>}
-                {job.salary && <span>• Salary: {job.salary}</span>}
-                {job.application_form_link && <span>• External Form</span>}
+              
+              {/* Job Details Grid */}
+              <div className="space-y-2 mb-4">
+                {job.location && (
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                    <span className="font-medium">{job.location}</span>
+                  </div>
+                )}
+                {job.type && (
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                    <span className="font-medium">{job.type}</span>
+                  </div>
+                )}
+                {job.salary && (
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                    <span className="font-medium">Salary: {job.salary}</span>
+                  </div>
+                )}
+                {job.application_form_link && (
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-orange-600">
+                    <div className="w-1.5 h-1.5 bg-orange-400 rounded-full"></div>
+                    <span className="font-medium">External Form Available</span>
+                  </div>
+                )}
               </div>
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mt-4">
+              <div className="flex flex-col gap-3 mt-4">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setSelectedJob(job);
-                    setExpandedJobId(job.id); // for dialog open
+                    setExpandedJobId(job.id);
                   }}
-                  className="w-full sm:w-auto text-xs sm:text-sm"
+                  className="w-full text-xs sm:text-sm border-gray-300 hover:border-gray-400 hover:bg-gray-50"
                 >
                   View Details
                 </Button>
-                <div className="flex gap-2 w-full sm:w-auto">
+                
+                <div className="flex gap-2">
                   {job.auto_delete_at && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-orange-600 border-orange-300 hover:bg-orange-50 text-xs sm:text-sm flex-1 sm:flex-none"
+                      className="flex-1 text-orange-600 border-orange-300 hover:bg-orange-50 text-xs sm:text-sm"
                       onClick={() => handleExtendAutoDelete(job.id)}
                       disabled={isProcessing}
                     >
@@ -446,7 +489,7 @@ export default function AdminCareersPage() {
                     <Button
                       variant="default"
                       size="sm"
-                      className="bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm flex-1 sm:flex-none"
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs sm:text-sm shadow-sm"
                       onClick={() => window.open(job.application_form_link, '_blank')}
                     >
                       Apply Now
@@ -454,20 +497,27 @@ export default function AdminCareersPage() {
                   )}
                 </div>
               </div>
-              <div className="flex justify-between items-center pt-2 text-xs text-gray-400">
-                <span className="text-xs">
-                  {job.created_at
-                    ? (typeof job.created_at === 'string'
-                        ? new Date(job.created_at).toLocaleDateString()
-                        : (job.created_at && typeof job.created_at === 'object' && 'toDate' in job.created_at
-                            ? job.created_at.toDate().toLocaleDateString()
-                            : ''))
-                    : ''}
-                </span>
-                {job.auto_delete_at && (
-                  <span className="text-orange-600 text-xs">
-                    Auto-delete: {job.auto_delete_at.toDate ? job.auto_delete_at.toDate().toLocaleDateString() : new Date(job.auto_delete_at).toLocaleDateString()}
+              {/* Date Information */}
+              <div className="flex justify-between items-center pt-3 mt-3 border-t border-gray-100">
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                  <span>
+                    {job.created_at
+                      ? (typeof job.created_at === 'string'
+                          ? new Date(job.created_at).toLocaleDateString()
+                          : (job.created_at && typeof job.created_at === 'object' && 'toDate' in job.created_at
+                              ? job.created_at.toDate().toLocaleDateString()
+                              : ''))
+                      : ''}
                   </span>
+                </div>
+                {job.auto_delete_at && (
+                  <div className="flex items-center gap-1 text-xs text-orange-600">
+                    <div className="w-1 h-1 bg-orange-400 rounded-full"></div>
+                    <span className="font-medium">
+                      Auto-delete: {job.auto_delete_at.toDate ? job.auto_delete_at.toDate().toLocaleDateString() : new Date(job.auto_delete_at).toLocaleDateString()}
+                    </span>
+                  </div>
                 )}
               </div>
             </div>

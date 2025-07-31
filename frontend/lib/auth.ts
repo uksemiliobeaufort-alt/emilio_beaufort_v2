@@ -26,6 +26,11 @@ console.log('✅ Supabase client initialized successfully');
 export interface AuthUser {
   id: string;
   email: string;
+  role: string;
+  first_name?: string;
+  last_name?: string;
+  department?: string;
+  permissions?: Record<string, boolean>;
   created_at: string;
   last_login?: string;
 }
@@ -96,9 +101,9 @@ export const auth = {
       }
       
       // Verify credentials using our database function (real-time check)
-      console.log('🔍 Calling verify_admin_password RPC...');
+      console.log('🔍 Calling verify_admin_password_plain_text RPC...');
       const { data: isValidPassword, error: verifyError } = await supabase
-        .rpc('verify_admin_password', {
+        .rpc('verify_admin_password_plain_text', {
           user_email: normalizedEmail,
           user_password: password
         });
@@ -121,8 +126,9 @@ export const auth = {
       // Get admin user details (real-time fetch)
       const { data: adminUser, error: adminError } = await supabase
         .from('admin_user')
-        .select('id, email, created_at, password')
+        .select('id, email, role, first_name, last_name, department, permissions, created_at, is_active')
         .eq('email', normalizedEmail)
+        .eq('is_active', true)
         .single();
 
       if (adminError || !adminUser) {
@@ -136,15 +142,23 @@ export const auth = {
       // Skipping last login update
 
       const authenticatedUser: AuthUser = {
-        id: adminUser.id.toString(), // Convert to string since your ID is int8
+        id: adminUser.id,
         email: adminUser.email,
+        role: adminUser.role,
+        first_name: adminUser.first_name,
+        last_name: adminUser.last_name,
+        department: adminUser.department,
+        permissions: adminUser.permissions || {},
         created_at: adminUser.created_at,
-        last_login: new Date().toISOString() // Keep for compatibility
+        last_login: new Date().toISOString()
       };
 
       // Set user and create session
       auth.user = authenticatedUser;
       AdminSession.create(authenticatedUser);
+      
+      // Update last login timestamp
+      await auth.updateLastLogin();
       
       console.log('🎉 Login successful for:', authenticatedUser.email);
       return authenticatedUser;
@@ -209,16 +223,22 @@ export const auth = {
         // Verify user still exists (real-time check)
         const { data: adminUser, error: adminError } = await supabase
           .from('admin_user')
-          .select('id, email, created_at, password')
+          .select('id, email, role, first_name, last_name, department, permissions, created_at, is_active')
           .eq('email', storedUser.email)
+          .eq('is_active', true)
           .single();
 
         if (!adminError && adminUser) {
           auth.user = {
-            id: adminUser.id.toString(), // Convert to string since your ID is int8
+            id: adminUser.id,
             email: adminUser.email,
+            role: adminUser.role,
+            first_name: adminUser.first_name,
+            last_name: adminUser.last_name,
+            department: adminUser.department,
+            permissions: adminUser.permissions || {},
             created_at: adminUser.created_at,
-            last_login: undefined // This field doesn't exist in your table
+            last_login: undefined
           };
           console.log('✅ Auth initialized from session');
           return;
@@ -323,6 +343,69 @@ export const auth = {
     } catch (error) {
       console.error('💥 Error in addAdminUser:', error);
       return false;
+    }
+  },
+
+
+
+
+
+  // Function to check if user has permission
+  hasPermission: async (permission: string): Promise<boolean> => {
+    try {
+      if (!auth.user?.email) {
+        return false;
+      }
+
+      const { data: hasPermission, error } = await supabase.rpc('check_admin_permission', {
+        user_email: auth.user.email,
+        required_permission: permission
+      });
+
+      if (error) {
+        console.error('❌ Error checking permission:', error);
+        return false;
+      }
+
+      return !!hasPermission;
+    } catch (error) {
+      console.error('💥 Error in hasPermission:', error);
+      return false;
+    }
+  },
+
+  // Function to get user role
+  getUserRole: (): string => {
+    return auth.user?.role || 'viewer';
+  },
+
+  // Function to check if user is super admin
+  isSuperAdmin: (): boolean => {
+    return auth.user?.role === 'super_admin';
+  },
+
+  // Function to check if user is admin or higher
+  isAdminOrHigher: (): boolean => {
+    const role = auth.user?.role;
+    return role === 'super_admin' || role === 'admin';
+  },
+
+  // Function to update last login
+  updateLastLogin: async (): Promise<void> => {
+    try {
+      if (!auth.user?.email) {
+        return;
+      }
+
+      const { error } = await supabase.rpc('update_admin_last_login', {
+        user_email: auth.user.email
+      });
+
+      if (error) {
+        console.error('❌ Error updating last login:', error);
+      }
+    } catch (error) {
+      console.error('💥 Error in updateLastLogin:', error);
     }
   }
 };

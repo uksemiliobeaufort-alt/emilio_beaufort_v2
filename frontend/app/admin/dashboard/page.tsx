@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { auth, AuthUser } from '@/lib/auth';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import PermissionGuard from '@/components/PermissionGuard';
 import {
   Package,
   FileText,
@@ -427,7 +428,8 @@ export default function AdminDashboard() {
       icon: Package,
       bgColor: "bg-blue-50",
       iconColor: "text-blue-600",
-      href: "/admin/products"
+      href: "/admin/products",
+      permission: "manage_products"
     },
     {
       title: "Blog Posts",
@@ -435,7 +437,8 @@ export default function AdminDashboard() {
       icon: FileText,
       bgColor: "bg-purple-50",
       iconColor: "text-purple-600",
-      href: "/admin/blogs"
+      href: "/admin/blogs",
+      permission: "manage_blog"
     },
     {
       title: "Partnership Inquiries",
@@ -443,7 +446,8 @@ export default function AdminDashboard() {
       icon: Users,
       bgColor: "bg-green-50",
       iconColor: "text-green-600",
-      href: "/admin/partnerships"
+      href: "/admin/partnerships",
+      permission: "manage_partnerships"
     }
   ];
 
@@ -452,13 +456,15 @@ export default function AdminDashboard() {
       title: "Add New Product",
       icon: Package,
       href: "/admin/products",
-      description: "Create a new product listing"
+      description: "Create a new product listing",
+      permission: "manage_products"
     },
     {
       title: "Create Blog Post",
       icon: FileText,
       href: "/admin/blogs",
-      description: "Write a new blog article"
+      description: "Write a new blog article",
+      permission: "manage_blog"
     },
     {
       title: "View Website",
@@ -692,7 +698,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 gap-4">
               {quickActions.map((action, index) => (
                 <Link 
-                  key={index} 
+                  key={index}
                   href={action.href}
                   target={action.external ? "_blank" : undefined}
                   rel={action.external ? "noopener noreferrer" : undefined}

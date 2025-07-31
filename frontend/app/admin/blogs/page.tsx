@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import RichTextEditor from "@/components/ui/RichTextEditor";
 import EnhancedEditor from "@/components/ui/EnhancedEditor";
 import TipTapEditor from "@/app/admin/components/TipTapEditor";
+import PermissionGuard from '@/components/PermissionGuard';
 
 interface Post {
   id: string;
@@ -33,6 +34,14 @@ interface Post {
 }
 
 export default function AdminBlogsPage() {
+  return (
+    <PermissionGuard requiredPermission="manage_blog">
+      <AdminBlogsPageContent />
+    </PermissionGuard>
+  );
+}
+
+function AdminBlogsPageContent() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);

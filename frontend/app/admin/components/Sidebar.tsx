@@ -10,8 +10,12 @@ import {
   Settings,
   LogOut,
   BookOpen,
+  Lock,
+  Shield,
+  UserCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import RoleBasedAccess from '@/components/RoleBasedAccess';
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -23,11 +27,13 @@ const sidebarItems = [
   {
     name: 'Dashboard',
     href: '/admin/dashboard',
-    icon: <LayoutDashboard className="h-4 w-4" />
+    icon: <LayoutDashboard className="h-4 w-4" />,
+    permission: 'view_analytics'
   },
   {
     name: 'Partnerships',
     icon: <Users className="h-4 w-4" />,
+    permission: 'manage_partnerships',
     subItems: [
       { name: 'Pending', href: '/admin/partnerships' },
       { name: 'Accepted', href: '/admin/partnerships/accepted' }
@@ -36,16 +42,19 @@ const sidebarItems = [
   {
     name: 'Products',
     href: '/admin/products',
-    icon: <ShoppingBag className="h-4 w-4" />
+    icon: <ShoppingBag className="h-4 w-4" />,
+    permission: 'manage_products'
   },
   {
     name: 'Blog Posts',
     href: '/admin/blogs',
-    icon: <BookOpen className="h-4 w-4" />
+    icon: <BookOpen className="h-4 w-4" />,
+    permission: 'manage_blog'
   },
   {
     name: 'Career',
     icon: <FileText className="h-4 w-4" />,
+    permission: 'manage_careers',
     subItems: [
       { name: 'Manage', href: '/admin/career' },
       { name: 'View Applications', href: '/admin/career/applications' },
@@ -54,8 +63,10 @@ const sidebarItems = [
   {
     name: 'Admin Users',
     href: '/admin/users',
-    icon: <Settings className="h-4 w-4" />
+    icon: <Settings className="h-4 w-4" />,
+    permission: 'manage_users'
   },
+
 ];
 
 export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarProps) {
@@ -101,34 +112,39 @@ export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarPro
         <nav className="flex-1 overflow-y-auto py-4 px-3 bg-white">
           <div className="space-y-1">
             {sidebarItems.map((item) => (
-              item.subItems ? (
-                <div key={item.name}>
-                  <div className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700">
-                    <span className="flex items-center justify-center w-5 text-gray-500">{item.icon}</span>
-                    <span>{item.name}</span>
+              <RoleBasedAccess
+                key={item.name}
+                requiredPermission={item.permission}
+                fallback={null}
+              >
+                {item.subItems ? (
+                  <div>
+                    <div className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700">
+                      <span className="flex items-center justify-center w-5 text-gray-500">{item.icon}</span>
+                      <span>{item.name}</span>
+                    </div>
+                    <div className="ml-8 space-y-1">
+                      {item.subItems.map((sub) => (
+                        <button
+                          key={sub.name}
+                          onClick={() => handleNavigation(sub.href)}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-gray-100 active:bg-gray-200 touch-manipulation ${pathname === sub.href ? 'bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-500 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                        >
+                          <span>{sub.name}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="ml-8 space-y-1">
-                    {item.subItems.map((sub) => (
-                      <button
-                        key={sub.name}
-                        onClick={() => handleNavigation(sub.href)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-all duration-200 hover:bg-gray-100 active:bg-gray-200 touch-manipulation ${pathname === sub.href ? 'bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-500 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
-                      >
-                        <span>{sub.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <button
-                  key={item.href || item.name}
-                  onClick={() => handleNavigation(item.href)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm rounded-lg transition-all duration-200 hover:bg-gray-100 active:bg-gray-200 touch-manipulation ${pathname === item.href ? 'bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-500 shadow-sm' : 'text-gray-700 hover:text-gray-900'}`}
-                >
-                  <span className={`flex items-center justify-center w-5 ${pathname === item.href ? 'text-blue-600' : 'text-gray-500'}`}>{item.icon}</span>
-                  <span className="font-medium">{item.name}</span>
-                </button>
-              )
+                ) : (
+                  <button
+                    onClick={() => handleNavigation(item.href)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm rounded-lg transition-all duration-200 hover:bg-gray-100 active:bg-gray-200 touch-manipulation ${pathname === item.href ? 'bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-500 shadow-sm' : 'text-gray-700 hover:text-gray-900'}`}
+                  >
+                    <span className={`flex items-center justify-center w-5 ${pathname === item.href ? 'text-blue-600' : 'text-gray-500'}`}>{item.icon}</span>
+                    <span className="font-medium">{item.name}</span>
+                  </button>
+                )}
+              </RoleBasedAccess>
             ))}
           </div>
         </nav>

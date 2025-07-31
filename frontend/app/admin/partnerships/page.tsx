@@ -19,6 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import InquiryDetailsDialog from './InquiryDetailsDialog';
+import PermissionGuard from '@/components/PermissionGuard';
 
 interface PartnershipInquiry {
   id: string;
@@ -32,6 +33,14 @@ interface PartnershipInquiry {
 }
 
 export default function Partnerships() {
+  return (
+    <PermissionGuard requiredPermission="manage_partnerships">
+      <PartnershipsContent />
+    </PermissionGuard>
+  );
+}
+
+function PartnershipsContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [inquiries, setInquiries] = useState<PartnershipInquiry[]>([]);

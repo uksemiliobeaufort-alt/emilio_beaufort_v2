@@ -37,10 +37,10 @@ export default function ExclusiveProductsMarquee() {
 
       // Process Firebase hair extension products
       const firebaseFeaturedProducts = firebaseProducts
-        .filter((product: any) => product.featured === true)
+        .filter((product: any) => product.featured === true && product.id)
         .map((product: any) => ({
-          id: product.id,
-          title: product.name,
+          id: product.id || `firebase-${Date.now()}-${Math.random()}`,
+          title: product.name || 'Untitled Product',
           description: product.description || product.detailed_description || '',
           image: product.main_image_url || getImageUrl("product-images", "cosmetics1.jpg"),
           price: product.price,
@@ -50,10 +50,10 @@ export default function ExclusiveProductsMarquee() {
 
       // Process Supabase cosmetics products
       const supabaseFeaturedProducts = supabaseProducts
-        .filter(product => product.featured === true && product.category === 'cosmetics')
+        .filter(product => product.featured === true && product.category === 'cosmetics' && product.id)
         .map(product => ({
-          id: product.id,
-          title: product.name,
+          id: product.id || `supabase-${Date.now()}-${Math.random()}`,
+          title: product.name || 'Untitled Product',
           description: product.description || '',
           image: product.main_image_url || getImageUrl("product-images", "cosmetics1.jpg"),
           price: product.price,
@@ -160,8 +160,8 @@ export default function ExclusiveProductsMarquee() {
           style={{ scrollBehavior: 'smooth' }}
         >
           <div className="flex gap-8 min-w-max">
-            {marqueeProducts.map((product, idx) => (
-              <div key={product.id} className="min-w-[300px] max-w-xs flex-shrink-0">
+            {marqueeProducts.filter(product => product.id).map((product, idx) => (
+              <div key={`${product.id}-${product.category}-${idx}`} className="min-w-[300px] max-w-xs flex-shrink-0">
                 <ProductCard 
                   product={{
                     id: product.id,

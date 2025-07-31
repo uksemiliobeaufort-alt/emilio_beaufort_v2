@@ -110,10 +110,10 @@ export function Navbar() {
       transition={{ duration: 0.8, ease: "easeOut" }}
     >
       <div className="container-premium">
-        <div className="flex items-center justify-between h-14">
-          {/* Logo */}
+        <div className="flex items-center justify-between h-14 sm:h-16 lg:h-18">
+          {/* Logo - Left Side */}
           <motion.div
-            className={`heading-premium text-2xl cursor-pointer transition-colors duration-300 ${isHomePage && !isScrolled ? 'text-white' : 'text-premium'}`}
+            className={`heading-premium text-xl sm:text-2xl lg:text-2xl cursor-pointer transition-colors duration-300 ${isHomePage && !isScrolled ? 'text-white' : 'text-premium'}`}
             onClick={handleLogoClick}
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
@@ -121,12 +121,12 @@ export function Navbar() {
             Emilio Beaufort
           </motion.div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-12">
+          {/* Desktop Navigation - Visible on tablet and larger screens */}
+          <div className="hidden sm:flex items-center justify-center space-x-4 lg:space-x-6 xl:space-x-8 flex-1">
             {navItems.map((item, index) => (
               <motion.button
                 key={item.name}
-                className={`font-sans-medium transition-premium relative group ${isHomePage && !isScrolled ? 'text-white hover:text-gold' : 'text-premium hover:text-gold'}`}
+                className={`font-sans-medium text-xs lg:text-sm xl:text-base transition-premium relative group ${isHomePage && !isScrolled ? 'text-white hover:text-gold' : 'text-premium hover:text-gold'}`}
                 onClick={() => handleNavigation(item.href)}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -139,24 +139,24 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* CTA Button */}
+          {/* Partner Button - Visible on tablet and larger screens */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-            className="hidden md:block"
+            className="hidden sm:block"
           >
             <Button
               onClick={handlePartnerClick}
-              className="btn-primary-premium"
+              className="btn-primary-premium text-xs lg:text-sm xl:text-base px-3 lg:px-4 xl:px-6"
               size="sm"
             >
               Partner With Us
             </Button>
           </motion.div>
 
-          {/* Mobile Navigation */}
-          <div className="md:hidden">
+          {/* Mobile Navigation - Only visible on mobile screens */}
+          <div className="sm:hidden">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <button className={`transition-premium ${isHomePage && !isScrolled ? 'text-white hover:text-gold' : 'text-premium hover:text-gold'}`}>
@@ -165,12 +165,12 @@ export function Navbar() {
               </SheetTrigger>
               <SheetContent 
                 side="right" 
-                className="w-[300px] sm:w-[400px] bg-white border-l border-premium p-0"
+                className="w-[280px] bg-white border-l border-premium p-0"
                 hideCloseButton
               >
-                <SheetHeader className="p-6 border-b border-gray-100">
+                <SheetHeader className="p-4 border-b border-gray-100">
                   <div className="flex items-center justify-between">
-                    <SheetTitle className="font-serif text-xl">Menu</SheetTitle>
+                    <SheetTitle className="font-serif text-lg">Menu</SheetTitle>
                     <button 
                       onClick={() => setIsOpen(false)}
                       className="text-gray-500 hover:text-gray-900 transition-premium rounded-full hover:bg-gray-100 p-1"
@@ -179,19 +179,19 @@ export function Navbar() {
                     </button>
                   </div>
                 </SheetHeader>
-                <nav className="flex flex-col p-6" aria-label="Mobile Navigation">
+                <nav className="flex flex-col p-4" aria-label="Mobile Navigation">
                   {navItems.map((item) => (
                     <button
                       key={item.name}
                       onClick={() => handleNavigation(item.href)}
-                      className="font-sans-medium text-lg text-premium hover:text-gold transition-premium text-left py-4 border-b border-gray-100 last:border-none"
+                      className="font-sans-medium text-base text-premium hover:text-gold transition-premium text-left py-3 border-b border-gray-100 last:border-none"
                     >
                       {item.name}
                     </button>
                   ))}
                   <Button
                     onClick={handlePartnerClick}
-                    className="btn-primary-premium w-full mt-8 py-6"
+                    className="btn-primary-premium w-full mt-6 py-4 text-sm"
                   >
                     Partner With Us
                   </Button>
