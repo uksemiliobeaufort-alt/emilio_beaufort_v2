@@ -774,11 +774,45 @@
 
 /* Preserve blank lines with <br> tags */
 .rich-text-content br {
-  display: block;
-  content: "";
-  margin-top: 0.75em;
-  margin-bottom: 0.75em;
-  line-height: 1.5;
+  display: block !important;
+  content: "" !important;
+  margin-top: 0.75em !important;
+  margin-bottom: 0.75em !important;
+  line-height: 1.5 !important;
+  height: 0.75em !important;
+  min-height: 0.75em !important;
+}
+
+/* Additional specificity for br tags in rich text content */
+.rich-text-content br,
+.rich-text-content br:before,
+.rich-text-content br:after {
+  display: block !important;
+  content: "" !important;
+  margin-top: 0.75em !important;
+  margin-bottom: 0.75em !important;
+  line-height: 1.5 !important;
+  height: 0.75em !important;
+  min-height: 0.75em !important;
+}
+
+/* Maximum specificity for br tags */
+.rich-text-content br,
+.rich-text-content br:before,
+.rich-text-content br:after,
+div.rich-text-content br,
+div.rich-text-content br:before,
+div.rich-text-content br:after,
+.rich-text-content div br,
+.rich-text-content div br:before,
+.rich-text-content div br:after {
+  display: block !important;
+  content: "" !important;
+  margin-top: 0.75em !important;
+  margin-bottom: 0.75em !important;
+  line-height: 1.5 !important;
+  height: 0.75em !important;
+  min-height: 0.75em !important;
 }
 
 .rich-text-content h1,

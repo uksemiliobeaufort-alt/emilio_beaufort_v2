@@ -53,6 +53,8 @@ export default function AdminCareersPage() {
     fetchJobs();
   }, []);
 
+
+
   const fetchJobs = async () => {
     try {
       const querySnapshot = await getDocs(collection(firestore, 'job_posts'));

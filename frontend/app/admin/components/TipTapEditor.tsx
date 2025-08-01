@@ -42,6 +42,14 @@ const BlankLineExtension = Extension.create({
       },
     }
   },
+  
+  addCommands() {
+    return {
+      insertBlankLine: () => ({ commands }) => {
+        return commands.insertContent('<br>');
+      },
+    }
+  },
 });
 import {
   Bold,
@@ -429,10 +437,18 @@ const TipTapEditor = forwardRef<TipTapEditorHandle, TipTapEditorProps>(({ conten
         
         // Process HTML to preserve blank lines
         // Replace empty paragraphs with <br> tags to preserve blank lines
-        html = html.replace(/<p><\/p>/g, '<br>');
+        html = html.replace(/<p><\/p>/g, '<br />');
         
         // Also handle cases where paragraphs only contain whitespace
-        html = html.replace(/<p>\s*<\/p>/g, '<br>');
+        html = html.replace(/<p>\s*<\/p>/g, '<br />');
+        
+        // Handle consecutive <br> tags to ensure proper spacing
+        html = html.replace(/(<br\s*\/?>\s*){2,}/g, '<br /><br />');
+        
+        // Ensure all <br> tags are properly formatted
+        html = html.replace(/<br\s*\/?>/g, '<br />');
+        
+
         
         onChange(html);
       } catch (error) {
@@ -673,11 +689,13 @@ const TipTapEditor = forwardRef<TipTapEditorHandle, TipTapEditorProps>(({ conten
         
         /* Preserve blank lines with <br> tags in editor */
         .ProseMirror br {
-          display: block;
-          content: "";
-          margin-top: 0.75em;
-          margin-bottom: 0.75em;
-          line-height: 1.5;
+          display: block !important;
+          content: "" !important;
+          margin-top: 0.75em !important;
+          margin-bottom: 0.75em !important;
+          line-height: 1.5 !important;
+          height: 0.75em !important;
+          min-height: 0.75em !important;
         }
       `}</style>
     </div>
