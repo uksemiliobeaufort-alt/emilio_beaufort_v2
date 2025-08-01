@@ -26,7 +26,7 @@ import { UploadCloud } from "lucide-react";
 const formSchema = z.object({
   fullName: z.string().min(2, "Full name is required and must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
-  github: z.string().url("Please enter a valid GitHub URL").min(2, "GitHub URL is required"),
+  github: z.string().url("Please enter a valid GitHub URL").optional().or(z.literal("")),
   linkedin: z.string().url("Please enter a valid LinkedIn URL").min(2, "LinkedIn URL is required"),
   portfolio: z.string().url("Please enter a valid Portfolio URL").optional().or(z.literal("")),
   resume: z.any().refine((file) => file instanceof File && file.size > 0, {
@@ -48,6 +48,7 @@ function CareersFormContent() {
   const [resumeName, setResumeName] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [jobId, setJobId] = useState("");
+  const [jobDepartment, setJobDepartment] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [parsingResume, setParsingResume] = useState(false);
 
@@ -60,9 +61,16 @@ function CareersFormContent() {
   useEffect(() => {
     const title = searchParams?.get("jobTitle");
     const id = searchParams?.get("jobId");
+    const department = searchParams?.get("department");
     if (title) setJobTitle(decodeURIComponent(title));
     if (id) setJobId(id);
+    if (department) setJobDepartment(decodeURIComponent(department));
   }, [searchParams]);
+
+  // Function to determine if GitHub and Portfolio fields should be shown
+  const shouldShowTechFields = () => {
+    return jobDepartment === "Software Development" || jobDepartment === "AI/ML";
+  };
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -82,16 +90,23 @@ function CareersFormContent() {
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      // Check if job is still accepting applications
+      // Quick validation
+      if (!data.resume || data.resume.size === 0) {
+        toast.error("Please upload a resume");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 1. Check job availability (only if jobId is provided)
+      let jobData: any = null;
       if (jobId) {
         const { checkJobAvailability } = await import('@/lib/api');
         const { firestore } = await import('@/lib/firebase');
         const { doc, getDoc } = await import('firebase/firestore');
         
-        // Get job details to check seats available
         const jobDoc = await getDoc(doc(firestore, 'job_posts', jobId));
         if (jobDoc.exists()) {
-          const jobData = jobDoc.data();
+          jobData = jobDoc.data();
           const availability = await checkJobAvailability(jobId, jobData.seats_available);
           
           if (!availability.isAvailable) {
@@ -106,11 +121,12 @@ function CareersFormContent() {
       }
       
       const resumeFile = data.resume;
-      // 1. Create Firestore doc first (without resumeUrl)
-      const docRef = await addDoc(collection(firestore, 'career_applications'), {
+      
+      // 2. Create application data
+      const applicationData = {
         fullName: data.fullName,
         email: data.email,
-        github: data.github,
+        github: data.github || '',
         linkedin: data.linkedin,
         portfolio: data.portfolio || '',
         coverLetter: data.coverLetter || '',
@@ -118,69 +134,73 @@ function CareersFormContent() {
         jobId: jobId || '',
         hearAbout: data.hearAbout === 'Other' ? data.hearAboutOther : data.hearAbout,
         createdAt: serverTimestamp(),
-      });
-      // 2. Upload resume to Storage under 'career_applications/{docId}_{filename}'
-      const storage = getStorage();
-      const storageRef = ref(storage, `career_applications/${docRef.id}_${resumeFile.name}`);
-      await uploadBytes(storageRef, resumeFile);
-      const resumeUrl = await getDownloadURL(storageRef);
-      // 3. Update Firestore doc with resumeUrl
-      await import('firebase/firestore').then(({ updateDoc }) => updateDoc(docRef, { resumeUrl }));
+      };
+
+      // 3. Create Firestore document and upload resume in parallel
+      const { firestore } = await import('@/lib/firebase');
+      const { collection, addDoc } = await import('firebase/firestore');
+      const { getStorage, ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
       
-      // 4. Send email notifications
-      try {
-        const emailData = {
-          applicantName: data.fullName,
-          applicantEmail: data.email,
-          jobTitle: jobTitle || '',
-          jobId: jobId || docRef.id,
-          githubUrl: data.github,
-          linkedinUrl: data.linkedin,
-          portfolioUrl: data.portfolio || undefined,
-          coverLetter: data.coverLetter || undefined,
-          hearAbout: data.hearAbout === 'Other' ? data.hearAboutOther : data.hearAbout,
-          resumeUrl: resumeUrl,
-        };
+      // Start both operations in parallel
+      const [docRef, uploadTask] = await Promise.all([
+        addDoc(collection(firestore, 'career_applications'), applicationData),
+        (async () => {
+          const storage = getStorage();
+          const storageRef = ref(storage, `career_applications/${Date.now()}_${resumeFile.name}`);
+          await uploadBytes(storageRef, resumeFile);
+          return await getDownloadURL(storageRef);
+        })()
+      ]);
 
-        const emailResponse = await fetch('/api/send-job-application-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(emailData),
-        });
+      // 4. Update document with resume URL
+      const { updateDoc } = await import('firebase/firestore');
+      await updateDoc(docRef, { resumeUrl: uploadTask });
 
-        if (emailResponse.ok) {
-          const emailResult = await emailResponse.json();
+      // 5. Send success message immediately
+      toast.success("Application submitted successfully!");
+
+      // 6. Send email notifications in background (non-blocking)
+      const emailData = {
+        applicantName: data.fullName,
+        applicantEmail: data.email,
+        jobTitle: jobTitle || '',
+        jobId: jobId || docRef.id,
+        githubUrl: data.github || '',
+        linkedinUrl: data.linkedin,
+        portfolioUrl: data.portfolio || undefined,
+        coverLetter: data.coverLetter || undefined,
+        hearAbout: data.hearAbout === 'Other' ? data.hearAboutOther : data.hearAbout,
+        resumeUrl: uploadTask,
+      };
+
+      // Send emails in background without blocking the UI
+      fetch('/api/send-job-application-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(emailData),
+      }).then(async (response) => {
+        if (response.ok) {
+          const emailResult = await response.json();
           console.log('📧 Email sending result:', emailResult);
-          
           if (emailResult.applicantEmailSent) {
-            toast.success("Application submitted! Check your email for confirmation.");
-          } else {
-            toast.success("Application submitted successfully!");
+            toast.success("Confirmation email sent to your inbox!");
           }
         } else {
           console.error('Failed to send email notifications');
         }
-      } catch (error) {
+      }).catch((error) => {
         console.error('Failed to send email notifications:', error);
-        // Don't fail the application submission if email fails
-      }
+      });
 
-      // 5. Sync to Google Sheets if available (this would need to be done server-side in production)
-      try {
-        // Note: In production, this should be done server-side for security
-        // For now, we'll just log that the application was created
-        console.log('Application created with ID:', docRef.id);
-      } catch (error) {
-        console.error('Failed to sync to Google Sheets:', error);
-      }
-      
+      // 7. Reset form and show success
       form.reset();
       setResumeName("");
       setIsSuccess(true);
       setHearAbout("");
       setShowOther(false);
+      
     } catch (error) {
       toast.error("Submission failed. Please try again.");
       console.error("Error submitting form:", error);
@@ -348,25 +368,27 @@ function CareersFormContent() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="github"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold text-black">
-                        GitHub URL <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://github.com/yourusername"
-                          className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {shouldShowTechFields() && (
+                  <FormField
+                    control={form.control}
+                    name="github"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-semibold text-black">
+                          GitHub URL <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="https://github.com/yourusername"
+                            className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
@@ -388,25 +410,27 @@ function CareersFormContent() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="portfolio"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold text-black">
-                        Portfolio URL <span className="text-gray-400 font-normal">(optional)</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://yourportfolio.com"
-                          className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {shouldShowTechFields() && (
+                  <FormField
+                    control={form.control}
+                    name="portfolio"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-semibold text-black">
+                          Portfolio URL <span className="text-gray-400 font-normal">(optional)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="https://yourportfolio.com"
+                            className="rounded-xl bg-gray-50 focus:bg-white border-gray-200 focus:shadow-md"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 {/* Hear About Dropdown - now a standard select */}
                 <FormField
@@ -477,7 +501,14 @@ function CareersFormContent() {
                 className="w-full bg-gradient-to-r from-black via-gold to-black text-white text-lg py-4 rounded-2xl shadow-xl hover:from-gold hover:to-black hover:via-black hover:text-gold transition-all font-extrabold tracking-wide border-2 border-black disabled:opacity-60 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Submitting..." : "Submit Application"}
+                {isSubmitting ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Submitting Application...</span>
+                  </div>
+                ) : (
+                  "Submit Application"
+                )}
               </Button>
             </form>
           </Form>

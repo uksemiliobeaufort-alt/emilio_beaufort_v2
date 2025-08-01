@@ -391,7 +391,7 @@ export default function AdminCareersPage() {
                   size="icon" 
                   variant="ghost" 
                   onClick={() => handleEdit(job)} 
-                  className="h-8 w-8 sm:h-9 sm:w-9 bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm"
+                  className="h-8 w-8 sm:h-9 sm:w-9 bg-white/80 backdrop-blur-sm hover:bg-white hover:text-gray-900 text-gray-600 shadow-sm"
                 >
                   <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
@@ -399,7 +399,7 @@ export default function AdminCareersPage() {
                   size="icon" 
                   variant="ghost" 
                   onClick={() => handleShare(job)} 
-                  className="h-8 w-8 sm:h-9 sm:w-9 bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm"
+                  className="h-8 w-8 sm:h-9 sm:w-9 bg-white/80 backdrop-blur-sm hover:bg-white hover:text-gray-900 text-gray-600 shadow-sm"
                 >
                   <Share2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
@@ -407,7 +407,7 @@ export default function AdminCareersPage() {
                   size="icon" 
                   variant="destructive" 
                   onClick={() => handleDelete(job.id)} 
-                  className="h-8 w-8 sm:h-9 sm:w-9 shadow-sm"
+                  className="h-8 w-8 sm:h-9 sm:w-9 shadow-sm hover:bg-red-600 hover:text-white text-red-600"
                 >
                   <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
@@ -468,7 +468,7 @@ export default function AdminCareersPage() {
                     setSelectedJob(job);
                     setExpandedJobId(job.id);
                   }}
-                  className="w-full text-xs sm:text-sm border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                  className="w-full text-xs sm:text-sm border-gray-300 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 text-gray-700"
                 >
                   View Details
                 </Button>
@@ -478,7 +478,7 @@ export default function AdminCareersPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 text-orange-600 border-orange-300 hover:bg-orange-50 text-xs sm:text-sm"
+                      className="flex-1 text-orange-600 border-orange-300 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-400 text-xs sm:text-sm"
                       onClick={() => handleExtendAutoDelete(job.id)}
                       disabled={isProcessing}
                     >
@@ -489,7 +489,7 @@ export default function AdminCareersPage() {
                     <Button
                       variant="default"
                       size="sm"
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs sm:text-sm shadow-sm"
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white hover:text-white text-xs sm:text-sm shadow-sm"
                       onClick={() => window.open(job.application_form_link, '_blank')}
                     >
                       Apply Now
@@ -524,64 +524,93 @@ export default function AdminCareersPage() {
           ))}
         </div>
       )}
-      {selectedJob && expandedJobId === selectedJob.id && (
-        <Dialog open={true} onOpenChange={() => { setExpandedJobId(null); setSelectedJob(null); }}>
-          <DialogContent className="max-w-lg w-full bg-white rounded-3xl shadow-2xl p-0 overflow-hidden border border-gray-200 animate-fade-in">
-            <div className="flex flex-col h-full min-h-[350px]">
-              {/* Custom Header Grid */}
-              <div className="flex items-start justify-between px-6 pt-8 pb-2 w-full">
-                <DialogTitle className="text-2xl sm:text-3xl font-extrabold text-premium mb-2 break-words max-w-[80%]">{selectedJob.title}</DialogTitle>
-                {/* Removed custom close button to avoid duplicate '×' icons */}
-              </div>
-              <div className="flex flex-wrap gap-2 justify-start mb-2 px-6 w-full max-w-full break-all">
-                {selectedJob.department && <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100 break-words max-w-full">{departmentIcon(selectedJob.department)}<span className="ml-1">{selectedJob.department}</span></span>}
-                {selectedJob.location && <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-100 break-words max-w-full">{selectedJob.location}</span>}
-                {selectedJob.type && <span className="inline-flex items-center px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold border border-purple-100 break-words max-w-full">{selectedJob.type}</span>}
-                {selectedJob.salary && <span className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-semibold border border-yellow-100 break-words max-w-full">Salary: {selectedJob.salary}</span>}
-                {selectedJob.application_form_link && <span className="inline-flex items-center px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold border border-orange-100 break-words max-w-full">External Form</span>}
-              </div>
-              <div className="text-xs text-gray-400 mb-2 px-6">
-                {selectedJob.created_at && (typeof selectedJob.created_at === 'string' ? new Date(selectedJob.created_at).toLocaleDateString() : '')}
-              </div>
-              <hr className="my-2 border-gray-200" />
-              {/* Description */}
-              <div className="flex-1 overflow-y-auto px-6 pb-4 pt-2 w-full">
-                <div className="text-gray-800 text-base leading-relaxed whitespace-pre-line break-words break-all max-w-full" style={{minHeight: 80}}>
-                  <span dangerouslySetInnerHTML={{ __html: selectedJob.description }} />
-                </div>
-                {/* Apply button for desktop */}
-                {selectedJob.application_form_link && (
-                  <div className="mt-6 pt-4 border-t border-gray-100">
-                    <button
-                      className="w-full px-6 py-3 font-semibold rounded-full shadow-lg hover:bg-orange-600 border border-orange-500 text-white bg-orange-500 transition-all"
-                      onClick={() => window.open(selectedJob.application_form_link, '_blank')}
-                    >
-                      Apply Now
-                    </button>
+                                                                                                               {selectedJob && expandedJobId === selectedJob.id && (
+          <Dialog open={true} onOpenChange={() => { setExpandedJobId(null); setSelectedJob(null); }}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-0 border-0">
+              <div className="p-6 sm:p-8">
+                {/* Header Section */}
+                <DialogHeader className="mb-6">
+                  <DialogTitle className="text-2xl sm:text-3xl font-bold text-black mb-2">
+                    {selectedJob.title}
+                  </DialogTitle>
+                  <div className="text-gray-600 text-sm sm:text-base">
+                    {selectedJob.department && `${selectedJob.department} • `}{selectedJob.location}
                   </div>
-                )}
-              </div>
-              {/* Sticky Close Button for mobile */}
-              <div className="px-6 pb-6 pt-2 bg-white flex justify-center sticky bottom-0 z-10 border-t border-gray-100 sm:hidden">
-                {selectedJob.application_form_link && (
-                                      <button
-                      className="px-6 py-3 font-semibold rounded-full shadow hover:bg-orange-100 border border-orange-300 text-orange-700 bg-orange-50 mr-2"
-                      onClick={() => window.open(selectedJob.application_form_link, '_blank')}
+                </DialogHeader>
+                
+                <div className="space-y-6">
+                  {/* Job Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob.type && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100 break-words max-w-full">
+                        {selectedJob.type}
+                      </span>
+                    )}
+                    {selectedJob.salary && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-semibold border border-yellow-100 break-words max-w-full">
+                        Salary: {selectedJob.salary}
+                      </span>
+                    )}
+                    {selectedJob.application_form_link && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold border border-orange-100 break-words max-w-full">
+                        External Form
+                      </span>
+                    )}
+                    {selectedJob.seats_available && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-100 break-words max-w-full">
+                        Seats: {selectedJob.seats_available}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Date Information */}
+                  <div className="text-xs text-gray-400 mb-4">
+                    {selectedJob.created_at && (typeof selectedJob.created_at === 'string' ? new Date(selectedJob.created_at).toLocaleDateString() : '')}
+                    {selectedJob.auto_delete_at && (
+                      <span className="ml-4 text-orange-600">
+                        Expires: {selectedJob.auto_delete_at.toDate ? selectedJob.auto_delete_at.toDate().toLocaleDateString() : new Date(selectedJob.auto_delete_at).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <hr className="my-4 border-gray-200" />
+                  
+                  {/* Description */}
+                  <div className="flex-1 overflow-y-auto">
+                    <div className="text-gray-800 text-base sm:text-lg leading-relaxed prose prose-gray max-w-none" style={{minHeight: 80}}>
+                      <div 
+                        className="rich-text-content"
+                        dangerouslySetInnerHTML={{ __html: selectedJob.description }} 
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100">
+                    {selectedJob.application_form_link && (
+                      <Button
+                        className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
+                        onClick={() => window.open(selectedJob.application_form_link, '_blank')}
+                      >
+                        <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6z" />
+                        </svg>
+                        Apply Now
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto border-gray-300 text-gray-700 font-semibold py-3 px-8 rounded-xl hover:bg-gray-50 transition-all duration-200"
+                      onClick={() => { setExpandedJobId(null); setSelectedJob(null); }}
                     >
-                      Apply Now
-                    </button>
-                )}
-                <button
-                  className="px-8 py-3 font-semibold rounded-full shadow hover:bg-gray-100 border border-gray-300 text-gray-700 bg-white"
-                  onClick={() => { setExpandedJobId(null); setSelectedJob(null); }}
-                >
-                  Close
-                </button>
+                      Close
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+            </DialogContent>
+          </Dialog>
+        )}
     </div>
   );
 }

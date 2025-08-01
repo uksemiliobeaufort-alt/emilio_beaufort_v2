@@ -31,8 +31,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Send emails
-    const emailResults = await sendJobApplicationEmails(data);
+    // Send emails with timeout to prevent hanging
+    const emailPromise = sendJobApplicationEmails(data);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Email timeout')), 10000) // 10 second timeout
+    );
+
+    const emailResults = await Promise.race([emailPromise, timeoutPromise]) as any;
     
     console.log('📧 Email sending results:', emailResults);
     
@@ -44,8 +49,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Error in send-job-application-email API:', error);
+    // Return success even if email fails to not block the application
     return NextResponse.json({ 
-      error: 'Failed to send job application emails' 
-    }, { status: 500 });
+      success: true,
+      message: 'Application saved but email sending failed',
+      applicantEmailSent: false,
+      adminEmailSent: false
+    });
   }
 } 

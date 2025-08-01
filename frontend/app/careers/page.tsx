@@ -33,6 +33,7 @@ const DEPARTMENTS = [
   { name: "HR", icon: <Users className="h-4 w-4 mr-2" /> },
   { name: "Founder's Office", icon: <User className="h-4 w-4 mr-2" /> },
   { name: "Social and Outreach", icon: <HeartHandshake className="h-4 w-4 mr-2" /> },
+  { name: "Sales and Marketing", icon: <Users className="h-4 w-4 mr-2" /> },
 ];
 
 const DEPARTMENT_GRADIENTS: Record<string, string> = {
@@ -41,6 +42,7 @@ const DEPARTMENT_GRADIENTS: Record<string, string> = {
   'HR': 'linear-gradient(135deg, #fff0e6 0%, #fff8f3 100%)',
   "Founder's Office": 'linear-gradient(135deg, #fffbe6 0%, #fdf6e3 100%)',
   'Social and Outreach': 'linear-gradient(135deg, #e6fff7 0%, #f3fffb 100%)',
+  'Sales and Marketing': 'linear-gradient(135deg, #ffe6f0 0%, #fff0f5 100%)',
   'Default': 'linear-gradient(135deg, #f8fafc 0%, #f3f4f6 100%)',
 };
 
@@ -101,12 +103,14 @@ function CareersContent() {
 
   // Check for jobId in URL params and open dialog if found
   useEffect(() => {
-    const jobId = searchParams.get('jobId');
-    if (jobId) {
-      const job = jobs.find(j => j.id === jobId);
-      if (job) {
-        setSelectedJob(job);
-        setIsDialogOpen(true);
+    if (searchParams) {
+      const jobId = searchParams.get('jobId');
+      if (jobId) {
+        const job = jobs.find(j => j.id === jobId);
+        if (job) {
+          setSelectedJob(job);
+          setIsDialogOpen(true);
+        }
       }
     }
   }, [searchParams, jobs]);
@@ -224,15 +228,15 @@ function CareersContent() {
         </div>
         {/* Department Filter Buttons with Icons */}
         <div className="relative">
-          <div className="flex flex-nowrap gap-3 mb-8 overflow-x-auto justify-start pb-2 px-2 sm:px-0 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex flex-nowrap gap-2 lg:gap-3 mb-8 overflow-x-auto justify-start pb-2 px-2 sm:px-0 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
             {DEPARTMENTS.map((dept) => (
               <button
                 key={dept.name}
-                className={`px-5 py-2 rounded-full border text-sm font-semibold whitespace-nowrap flex items-center transition-all min-w-0 sm:min-w-[120px] flex-shrink-0 ${selectedDept === dept.name ? 'bg-black text-white border-black shadow' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`px-3 lg:px-5 py-2 rounded-full border text-xs lg:text-sm font-semibold whitespace-nowrap flex items-center transition-all flex-shrink-0 ${selectedDept === dept.name ? 'bg-black text-white border-black shadow' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                 onClick={() => setSelectedDept(dept.name)}
               >
                 {dept.icon}
-                <span className="truncate max-w-[100px] sm:max-w-none">{dept.name}</span>
+                <span className="truncate max-w-[80px] lg:max-w-none">{dept.name}</span>
               </button>
             ))}
           </div>
@@ -321,7 +325,7 @@ function CareersContent() {
                       </Button>
                     ) : (
                       <Link
-                        href={job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? '#' : `/careersForm?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title)}`}
+                        href={job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? '#' : `/careersForm?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title)}&department=${encodeURIComponent(job.department || '')}`}
                         className="w-1/2"
                         onClick={(e) => {
                           if (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) {
@@ -412,8 +416,11 @@ function CareersContent() {
               <hr className="my-2 border-gray-200" />
               {/* Description */}
               <div className="flex-1 overflow-y-auto px-6 pb-4 pt-2 w-full">
-                <div className="text-gray-800 text-base leading-relaxed whitespace-pre-line break-words break-all max-w-full" style={{minHeight: 80}}>
-                  <span dangerouslySetInnerHTML={{ __html: selectedJob.description }} />
+                <div className="text-gray-800 text-base leading-relaxed prose prose-gray max-w-none" style={{minHeight: 80}}>
+                  <div 
+                    className="rich-text-content"
+                    dangerouslySetInnerHTML={{ __html: selectedJob.description }} 
+                  />
                 </div>
                 {/* Apply button for desktop */}
                 {selectedJob.application_form_link && (

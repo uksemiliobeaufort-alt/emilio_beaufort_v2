@@ -13,9 +13,36 @@ import Highlight from '@tiptap/extension-highlight';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
+import { Extension } from '@tiptap/core';
 import { useEffect, useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+
+// Custom extension to handle blank lines better
+const BlankLineExtension = Extension.create({
+  name: 'blankLine',
+  
+  addKeyboardShortcuts() {
+    return {
+      'Enter': () => {
+        const { state } = this.editor;
+        const { selection } = state;
+        const { $from } = selection;
+        
+        // If we're at the end of a paragraph and the paragraph is empty
+        if ($from.parent.type.name === 'paragraph' && 
+            $from.parent.content.size === 0 && 
+            $from.parentOffset === 0) {
+          // Insert a <br> tag instead of a new paragraph
+          this.editor.commands.insertContent('<br>');
+          return true;
+        }
+        
+        return false;
+      },
+    }
+  },
+});
 import {
   Bold,
   Italic,
@@ -134,6 +161,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
     <div className="border-b bg-gray-50 p-2 flex flex-wrap gap-1 items-center">
       <div className="flex gap-1">
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -142,6 +170,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <Bold className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -150,6 +179,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <Italic className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleUnderline().run()}
@@ -158,6 +188,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <UnderlineIcon className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleStrike().run()}
@@ -169,6 +200,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
 
       <div className="flex gap-1">
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
@@ -177,6 +209,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <Heading1 className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
@@ -185,6 +218,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <Heading2 className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
@@ -196,6 +230,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
 
       <div className="flex gap-1">
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -204,6 +239,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <List className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
@@ -212,6 +248,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <ListOrdered className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
@@ -220,6 +257,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <Quote className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
@@ -231,6 +269,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
 
       <div className="flex gap-1">
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
@@ -239,6 +278,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <AlignLeft className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
@@ -247,6 +287,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <AlignCenter className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
@@ -255,6 +296,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <AlignRight className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().setTextAlign('justify').run()}
@@ -266,6 +308,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
 
       <div className="flex gap-1">
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={addImage}
@@ -274,6 +317,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <ImageIcon className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => setLinkDialogOpen(true)}
@@ -281,6 +325,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
           <LinkIcon className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           size="sm"
           variant="ghost"
           onClick={() => editor.chain().focus().toggleHighlight().run()}
@@ -294,6 +339,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
       <Popover open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
         <PopoverTrigger asChild>
           <Button
+            type="button"
             size="sm"
             variant="ghost"
             onClick={() => setColorPickerOpen(!colorPickerOpen)}
@@ -332,6 +378,11 @@ const TipTapEditor = forwardRef<TipTapEditorHandle, TipTapEditorProps>(({ conten
         bulletList: false,
         orderedList: false,
         listItem: false,
+        paragraph: {
+          HTMLAttributes: {
+            class: 'tiptap-paragraph',
+          },
+        },
       }),
       BulletList.configure({
         keepMarks: true,
@@ -369,11 +420,21 @@ const TipTapEditor = forwardRef<TipTapEditorHandle, TipTapEditorProps>(({ conten
       Highlight.configure({
         multicolor: true,
       }),
+      BlankLineExtension,
     ],
     content,
     onUpdate: ({ editor }) => {
       try {
-        onChange(editor.getHTML());
+        let html = editor.getHTML();
+        
+        // Process HTML to preserve blank lines
+        // Replace empty paragraphs with <br> tags to preserve blank lines
+        html = html.replace(/<p><\/p>/g, '<br>');
+        
+        // Also handle cases where paragraphs only contain whitespace
+        html = html.replace(/<p>\s*<\/p>/g, '<br>');
+        
+        onChange(html);
       } catch (error) {
         console.error('Error in editor onUpdate:', error);
         setHasError(true);
@@ -608,6 +669,15 @@ const TipTapEditor = forwardRef<TipTapEditorHandle, TipTapEditorProps>(({ conten
           float: left;
           height: 0;
           pointer-events: none;
+        }
+        
+        /* Preserve blank lines with <br> tags in editor */
+        .ProseMirror br {
+          display: block;
+          content: "";
+          margin-top: 0.75em;
+          margin-bottom: 0.75em;
+          line-height: 1.5;
         }
       `}</style>
     </div>
