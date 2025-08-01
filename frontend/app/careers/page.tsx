@@ -58,6 +58,8 @@ function CareersContent() {
   const [jobAvailability, setJobAvailability] = useState<Record<string, { isAvailable: boolean; applicationsCount: number }>>({});
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [jobToShare, setJobToShare] = useState<Job | null>(null);
+  const [loadingDialog, setLoadingDialog] = useState(false);
+  const [loadingApply, setLoadingApply] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -228,15 +230,15 @@ function CareersContent() {
         </div>
         {/* Department Filter Buttons with Icons */}
         <div className="relative">
-          <div className="flex flex-nowrap gap-2 lg:gap-3 mb-8 overflow-x-auto justify-start pb-2 px-2 sm:px-0 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex flex-nowrap gap-1 lg:gap-2 xl:gap-3 mb-8 overflow-x-auto lg:overflow-visible justify-start pb-2 px-2 sm:px-0 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
             {DEPARTMENTS.map((dept) => (
               <button
                 key={dept.name}
-                className={`px-3 lg:px-5 py-2 rounded-full border text-xs lg:text-sm font-semibold whitespace-nowrap flex items-center transition-all flex-shrink-0 ${selectedDept === dept.name ? 'bg-black text-white border-black shadow' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+                className={`px-2 lg:px-3 xl:px-4 py-2 rounded-full border text-xs lg:text-sm font-semibold whitespace-nowrap flex items-center transition-all flex-shrink-0 ${selectedDept === dept.name ? 'bg-black text-white border-black shadow' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'}`}
                 onClick={() => setSelectedDept(dept.name)}
               >
                 {dept.icon}
-                <span className="truncate max-w-[80px] lg:max-w-none">{dept.name}</span>
+                <span className="truncate max-w-[60px] lg:max-w-[80px] xl:max-w-none">{dept.name}</span>
               </button>
             ))}
           </div>
@@ -306,38 +308,84 @@ function CareersContent() {
                   <div className="mt-auto pt-2 flex gap-2">
                     <Button
                       className="w-1/2 bg-white text-black border border-gray-300 text-lg py-3 rounded-2xl shadow transition-all font-bold
-                        hover:bg-black hover:text-white hover:border-black hover:shadow-lg focus:ring-2 focus:ring-black focus:outline-none"
+                        hover:bg-black hover:text-white hover:border-black hover:shadow-lg focus:ring-2 focus:ring-black focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                       variant="outline"
-                      onClick={() => {
-                        setSelectedJob(job);
-                        setIsDialogOpen(true);
+                      disabled={loadingDialog}
+                      onClick={async () => {
+                        setLoadingDialog(true);
+                        try {
+                          // Simulate a small delay to show loading state
+                          await new Promise(resolve => setTimeout(resolve, 300));
+                          setSelectedJob(job);
+                          setIsDialogOpen(true);
+                        } finally {
+                          setLoadingDialog(false);
+                        }
                       }}
                     >
-                      View Details
+                      {loadingDialog ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        'View Details'
+                      )}
                     </Button>
                     {job.application_form_link ? (
                       <Button 
                         className="w-1/2 bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={() => window.open(job.application_form_link, '_blank')}
-                        disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable)}
+                        onClick={async () => {
+                          setLoadingApply(job.id);
+                          try {
+                            // Simulate a small delay to show loading state
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            window.open(job.application_form_link, '_blank');
+                          } finally {
+                            setLoadingApply(null);
+                          }
+                        }}
+                        disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) || loadingApply === job.id}
                       >
-                        {job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')}
+                        {loadingApply === job.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Opening...
+                          </>
+                        ) : (
+                          job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')
+                        )}
                       </Button>
                     ) : (
                       <Link
                         href={job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? '#' : `/careersForm?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title)}&department=${encodeURIComponent(job.department || '')}`}
                         className="w-1/2"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           if (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) {
                             e.preventDefault();
+                            return;
+                          }
+                          setLoadingApply(job.id);
+                          try {
+                            // Simulate a small delay to show loading state
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                          } finally {
+                            setLoadingApply(null);
                           }
                         }}
                       >
                         <Button 
                           className="w-full bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                          disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable)}
+                          disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) || loadingApply === job.id}
                         >
-                          {job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')}
+                          {loadingApply === job.id ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Opening...
+                            </>
+                          ) : (
+                            job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')
+                          )}
                         </Button>
                       </Link>
                     )}
@@ -426,10 +474,27 @@ function CareersContent() {
                 {selectedJob.application_form_link && (
                   <div className="mt-6 pt-4 border-t border-gray-100">
                     <button
-                      className="w-full px-6 py-3 font-semibold rounded-full shadow-lg hover:bg-orange-600 border border-orange-500 text-white bg-orange-500 transition-all"
-                      onClick={() => window.open(selectedJob.application_form_link, '_blank')}
+                      className="w-full px-6 py-3 font-semibold rounded-full shadow-lg hover:bg-orange-600 border border-orange-500 text-white bg-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={async () => {
+                        setLoadingApply(selectedJob.id);
+                        try {
+                          // Simulate a small delay to show loading state
+                          await new Promise(resolve => setTimeout(resolve, 500));
+                          window.open(selectedJob.application_form_link, '_blank');
+                        } finally {
+                          setLoadingApply(null);
+                        }
+                      }}
+                      disabled={loadingApply === selectedJob.id}
                     >
-                      Apply Now
+                      {loadingApply === selectedJob.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Opening Application Form...
+                        </>
+                      ) : (
+                        'Apply Now'
+                      )}
                     </button>
                   </div>
                 )}

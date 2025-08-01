@@ -259,11 +259,11 @@ function CareersFormContent() {
           <h1 className="text-3xl sm:text-4xl font-extrabold text-black text-center mb-2">
             {jobTitle ? `Apply for: ${jobTitle}` : "Join Our Team"}
           </h1>
-          <p className="text-base sm:text-lg text-gray-500 text-center max-w-lg">
+          {/* <p className="text-base sm:text-lg text-gray-500 text-center max-w-lg">
             {jobTitle
               ? `You're applying for the position of "${jobTitle}". Please fill out the form below.`
               : "Explore internships or collaborate as an influencer with Emilio Beaufort."}
-          </p>
+          </p> */}
         </div>
 
         {!jobTitle && (
@@ -457,7 +457,7 @@ function CareersFormContent() {
                             <option value="">Select an option</option>
                             <option value="LinkedIn">LinkedIn</option>
                             <option value="Instagram">Instagram</option>
-                            <option value="Emilio Beaufort Website">Emilio Beaufort Website</option>
+                            <option value="OurWebsite">Our Website</option>
                             <option value="Friend">Friend/Colleague</option>
                             <option value="Other">Other</option>
                           </select>
