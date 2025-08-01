@@ -23,12 +23,32 @@ export async function POST(request: NextRequest) {
       console.error('Missing GOOGLE_SHEETS_ID environment variable');
       return NextResponse.json({ error: 'Google Sheets ID not configured' }, { status: 500 });
     }
+
+    // Handle private key formatting issues
+    let privateKey = process.env.GOOGLE_PRIVATE_KEY;
     
+    // Common formatting fixes
+    if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+      return NextResponse.json({
+        error: 'Invalid private key format',
+        details: 'Private key must be in PEM format with BEGIN/END markers'
+      }, { status: 500 });
+    }
+
+    // Fix common newline issues
+    privateKey = privateKey.replace(/\\n/g, '\n');
+    
+    // Ensure proper formatting
+    if (!privateKey.includes('\n')) {
+      privateKey = privateKey.replace(/-----BEGIN PRIVATE KEY-----/, '-----BEGIN PRIVATE KEY-----\n');
+      privateKey = privateKey.replace(/-----END PRIVATE KEY-----/, '\n-----END PRIVATE KEY-----');
+    }
+
     // Initialize Google Sheets API
     const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        private_key: privateKey,
       },
       scopes: SCOPES,
     });
