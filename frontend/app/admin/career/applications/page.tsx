@@ -472,9 +472,17 @@ export default function ViewApplicationsPage() {
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button 
+                                <Button 
                   onClick={async () => {
                     try {
+                      // First test the connection
+                      const testResponse = await fetch('/api/test-google-sheets');
+                      if (!testResponse.ok) {
+                        const testError = await testResponse.json();
+                        toast.error('Google Sheets connection failed: ' + (testError.details || testError.error));
+                        return;
+                      }
+                      
                       const allApps = await getAllApplications();
                       const response = await fetch('/api/sync-applications', {
                         method: 'POST',
@@ -488,16 +496,18 @@ export default function ViewApplicationsPage() {
                       });
                       
                       if (response.ok) {
-                        toast.success(`All ${allApps.length} applications synced to Google Sheets!`);
+                        const result = await response.json();
+                        toast.success(result.message || `All ${allApps.length} applications synced to Google Sheets!`);
                       } else {
-                        toast.error('Failed to sync: ' + await response.text());
+                        const errorData = await response.json();
+                        toast.error('Failed to sync: ' + (errorData.details || errorData.error || 'Unknown error'));
                       }
                     } catch (error) {
                       toast.error('Failed to sync: ' + error);
                     }
                   }}
                   variant="outline"
-                  className="flex items-center gap-1 sm:gap-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 text-sm sm:text-base"
+                  className="flex items-center gap-1 sm:gap-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 text-sm sm:text-base transition-colors"
                 >
                   <span className="hidden sm:inline">🔄</span>
                   <span className="sm:hidden">🔄</span>
@@ -508,7 +518,7 @@ export default function ViewApplicationsPage() {
                   <Button 
                     onClick={() => window.open(sheetsUrl, '_blank')}
                     variant="outline"
-                    className="flex items-center gap-1 sm:gap-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 text-sm sm:text-base"
+                    className="flex items-center gap-1 sm:gap-2 bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 text-sm sm:text-base transition-colors"
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span className="hidden sm:inline">View Sheets</span>
@@ -527,10 +537,11 @@ export default function ViewApplicationsPage() {
                     <span className="sm:hidden">Setup</span>
                   </Button>
                 )}
+
                 <Button 
                   onClick={exportToCSV}
                   variant="outline"
-                  className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base"
+                  className="flex items-center gap-1 sm:gap-2 bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 hover:text-gray-800 text-sm sm:text-base transition-colors"
                   disabled={applications.length === 0}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
