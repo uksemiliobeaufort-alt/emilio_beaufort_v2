@@ -66,6 +66,7 @@ export default function RootLayout({
           </main>
         </BagProvider>
         <ConditionalAutoFeedback />
+        <Toaster position="top-center" richColors />
         <ReactHotToastToaster position="top-center" reverseOrder={false} />
         <GoogleAnalytics />
       </body>

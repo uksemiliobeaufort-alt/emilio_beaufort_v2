@@ -51,8 +51,6 @@ function CareersFormContent() {
   const [jobDepartment, setJobDepartment] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [parsingResume, setParsingResume] = useState(false);
-
-  const [parsingError, setParsingError] = useState("");
   const searchParams = useSearchParams();
   const router = useRouter();
   const [hearAbout, setHearAbout] = useState("");
@@ -87,6 +85,24 @@ function CareersFormContent() {
     },
   });
 
+  // Function to check for existing applications
+  const checkExistingApplication = async (email: string, jobId: string) => {
+    if (!jobId) return false; // If no jobId, allow submission
+    
+    const { firestore } = await import('@/lib/firebase');
+    const { collection, query, where, getDocs } = await import('firebase/firestore');
+    
+    const applicationsRef = collection(firestore, 'career_applications');
+    const q = query(
+      applicationsRef,
+      where('email', '==', email),
+      where('jobId', '==', jobId)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+  };
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
@@ -97,7 +113,18 @@ function CareersFormContent() {
         return;
       }
 
-      // 1. Check job availability (only if jobId is provided)
+      // 1. Check for existing application (only if jobId is provided)
+      if (jobId) {
+        const hasExistingApplication = await checkExistingApplication(data.email, jobId);
+        
+        if (hasExistingApplication) {
+          toast.error("You have already applied for this position. You cannot submit multiple applications for the same role.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // 2. Check job availability (only if jobId is provided)
       let jobData: any = null;
       if (jobId) {
         const { checkJobAvailability } = await import('@/lib/api');
@@ -122,7 +149,7 @@ function CareersFormContent() {
       
       const resumeFile = data.resume;
       
-      // 2. Create application data
+      // 3. Create application data
       const applicationData = {
         fullName: data.fullName,
         email: data.email,
@@ -136,7 +163,7 @@ function CareersFormContent() {
         createdAt: serverTimestamp(),
       };
 
-      // 3. Create Firestore document and upload resume in parallel
+      // 4. Create Firestore document and upload resume in parallel
       const { firestore } = await import('@/lib/firebase');
       const { collection, addDoc } = await import('firebase/firestore');
       const { getStorage, ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
@@ -152,14 +179,14 @@ function CareersFormContent() {
         })()
       ]);
 
-      // 4. Update document with resume URL
+      // 5. Update document with resume URL
       const { updateDoc } = await import('firebase/firestore');
       await updateDoc(docRef, { resumeUrl: uploadTask });
 
-      // 5. Send success message immediately
+      // 6. Send success message immediately
       toast.success("Application submitted successfully!");
 
-      // 6. Send email notifications in background (non-blocking)
+      // 7. Send email notifications in background (non-blocking)
       const emailData = {
         applicantName: data.fullName,
         applicantEmail: data.email,
@@ -199,7 +226,7 @@ function CareersFormContent() {
         toast.error('Application saved but email failed to send.');
       });
 
-      // 7. Reset form and show success
+      // 8. Reset form and show success
       form.reset();
       setResumeName("");
       setIsSuccess(true);
@@ -221,7 +248,6 @@ function CareersFormContent() {
       setResumeName(file.name);
       onChange(file);
       setParsingResume(true);
-      setParsingError("");
       
       try {
         const formData = new FormData();
@@ -236,18 +262,10 @@ function CareersFormContent() {
           
           if (result.success) {
             toast.success("Resume uploaded successfully!");
-          } else {
-            setParsingError('Failed to upload resume');
-            toast.error("Failed to upload resume. Please try again.");
           }
-        } else {
-          const errorData = await response.json();
-          setParsingError(errorData.error || 'Failed to upload resume');
-          toast.error("Failed to upload resume. Please try again.");
         }
       } catch (err) {
-        setParsingError("Network error. Please try again.");
-        toast.error("Failed to parse resume. Please fill the form manually.");
+        // Silently handle errors without showing any messages
       } finally {
         setParsingResume(false);
       }

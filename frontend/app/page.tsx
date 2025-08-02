@@ -206,6 +206,7 @@ function InteractiveBackground() {
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(true);
   const router = useRouter();
   // const analytics = useAnalytics();
     const [showFullPhilosophy, setShowFullPhilosophy] = useState(false);
@@ -355,14 +356,51 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-premium">
+        {/* Fallback background in case video fails to load */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#B7A16C] to-[#9a8a5a] z-0" />
+        
+        {/* Video Loading State */}
+        {videoLoading && (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#B7A16C] to-[#9a8a5a] z-10 transition-opacity duration-1000">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="animate-pulse text-white text-lg font-medium">Loading...</div>
+            </div>
+          </div>
+        )}
+        
         {/* Video background */}
         <video
-          className="absolute inset-0 w-full h-full object-cover z-0"
+          className="absolute inset-0 w-full h-full object-cover z-0 opacity-0 transition-opacity duration-1000"
           src={getImageUrl("product-images", "heroVideo.mp4")}
           autoPlay
           muted
           loop
           playsInline
+          preload="metadata"
+          onLoadedData={(e) => {
+            // Ensure video starts playing and loops properly
+            const video = e.currentTarget;
+            video.currentTime = 0;
+            video.play().catch(console.error);
+            
+            // Fade in video and hide loading state
+            setTimeout(() => {
+              video.style.opacity = '1';
+              setVideoLoading(false);
+            }, 100);
+          }}
+          onEnded={(e) => {
+            // Force restart if loop doesn't work
+            const video = e.currentTarget;
+            video.currentTime = 0;
+            video.play().catch(console.error);
+          }}
+          onError={(e) => {
+            console.error('Video failed to load:', e);
+            // Hide video element and loading state if it fails to load
+            e.currentTarget.style.display = 'none';
+            setVideoLoading(false);
+          }}
         />
         {/* Optional overlay for readability */}
         <div className="absolute inset-0 bg-black/30 z-10" />
