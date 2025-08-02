@@ -1,14 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
-import Image from "next/image";
-import { useRef, useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { getImageUrl, getProducts, UnifiedProduct as SupabaseProduct } from "@/lib/supabase";
-import Link from "next/link";
-import { ProductCard } from '@/components/ui/ProductCard';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { getHairExtensionsFromFirebase } from '@/lib/firebase';
+import { ProductCard } from '@/components/ui/ProductCard';
+import { getImageUrl } from '@/lib/supabase';
 
 interface DisplayProduct {
   title: string;
@@ -26,44 +22,69 @@ export default function ExclusiveProductsMarquee() {
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
-  // Fetch real products from Firebase and Supabase
   const fetchProducts = async () => {
     try {
-      // Fetch from both Firebase and Supabase
-      const [firebaseProducts, supabaseProducts] = await Promise.all([
-        getHairExtensionsFromFirebase().catch(() => []),
-        getProducts().catch(() => [])
-      ]);
+      setRefreshing(true);
+      
+      // For now, we'll use mock data since the supabase connection isn't set up
+      const mockProducts: DisplayProduct[] = [
+        {
+          id: '1',
+          title: 'Emilio Beaufort Luxe Ponytail/Wrap Ponytail',
+          description: 'Premium hair extension with dark grey floral accent',
+          image: getImageUrl("product-images", "cosmetics1.jpg"),
+          price: 74250,
+          category: 'HAIR',
+          in_stock: false
+        },
+        {
+          id: '2',
+          title: 'Emilio Beaufort Luxe Mono Base Topper',
+          description: 'Dark brown hair topper for natural coverage',
+          image: getImageUrl("product-images", "cosmetics1.jpg"),
+          price: 54000,
+          category: 'HAIR',
+          in_stock: false
+        },
+        {
+          id: '3',
+          title: 'Emilio Beaufort Luxe I-tip Hair Extension',
+          description: 'I-tip hair extensions in various shades',
+          image: getImageUrl("product-images", "cosmetics1.jpg"),
+          price: 54000,
+          category: 'HAIR',
+          in_stock: false
+        },
+        {
+          id: '4',
+          title: 'Emilio Beaufort Luxe Swiss Full Lace',
+          description: 'Dark, wavy full lace wig with lace base',
+          image: getImageUrl("product-images", "cosmetics1.jpg"),
+          price: 114750,
+          category: 'HAIR',
+          in_stock: false
+        },
+        {
+          id: '5',
+          title: 'Emilio Beaufort Luxe Swiss Closure Wig',
+          description: 'Dark, wavy hair closure with lace base',
+          image: getImageUrl("product-images", "cosmetics1.jpg"),
+          price: 87750,
+          category: 'HAIR',
+          in_stock: false
+        },
+        {
+          id: '6',
+          title: 'Emilio Beaufort Luxe Braiding Loose Hair',
+          description: 'Long, dark, wavy braiding hair with gold bands',
+          image: getImageUrl("product-images", "cosmetics1.jpg"),
+          price: 54000,
+          category: 'HAIR',
+          in_stock: false
+        }
+      ];
 
-      // Process Firebase hair extension products
-      const firebaseFeaturedProducts = firebaseProducts
-        .filter((product: any) => product.featured === true && product.id)
-        .map((product: any) => ({
-          id: product.id || `firebase-${Date.now()}-${Math.random()}`,
-          title: product.name || 'Untitled Product',
-          description: product.description || product.detailed_description || '',
-          image: product.main_image_url || getImageUrl("product-images", "cosmetics1.jpg"),
-          price: product.price,
-          category: 'HAIR' as 'COSMETICS' | 'HAIR',
-          in_stock: product.in_stock !== false // Default to true if not specified
-        }));
-
-      // Process Supabase cosmetics products
-      const supabaseFeaturedProducts = supabaseProducts
-        .filter(product => product.featured === true && product.category === 'cosmetics' && product.id)
-        .map(product => ({
-          id: product.id || `supabase-${Date.now()}-${Math.random()}`,
-          title: product.name || 'Untitled Product',
-          description: product.description || '',
-          image: product.main_image_url || getImageUrl("product-images", "cosmetics1.jpg"),
-          price: product.price,
-          category: 'COSMETICS' as 'COSMETICS' | 'HAIR',
-          in_stock: product.in_stock
-        }));
-
-      // Combine and sort by featured status
-      const allFeaturedProducts = [...firebaseFeaturedProducts, ...supabaseFeaturedProducts];
-      setExclusiveProducts(allFeaturedProducts);
+      setExclusiveProducts(mockProducts);
     } catch (error) {
       console.error('Failed to fetch products:', error);
       setExclusiveProducts([]);
@@ -99,7 +120,7 @@ export default function ExclusiveProductsMarquee() {
   // Show loading state
   if (loading) {
     return (
-      <div className="w-full py-16 bg-premium overflow-hidden relative">
+      <div className="w-full py-16 overflow-hidden relative">
         <h2 className="text-4xl font-serif font-bold text-premium mb-10 text-center">
           Most Exclusive Collection
         </h2>
@@ -113,7 +134,7 @@ export default function ExclusiveProductsMarquee() {
   // If there are no featured products, show a message or nothing
   if (!loading && exclusiveProducts.length === 0) {
     return (
-      <div className="w-full py-16 bg-premium overflow-hidden relative">
+      <div className="w-full py-16 overflow-hidden relative">
         <h2 className="text-4xl font-serif font-bold text-premium mb-10 text-center">
           Most Exclusive Collection
         </h2>
@@ -125,7 +146,7 @@ export default function ExclusiveProductsMarquee() {
   }
 
   return (
-    <div className="w-full py-16 bg-premium overflow-hidden relative">
+    <div className="w-full py-16 overflow-hidden relative">
       <div className="flex items-center justify-center gap-3 mb-10">
         <h2 className="text-4xl font-serif font-bold text-premium text-center">
           Most Exclusive Collection

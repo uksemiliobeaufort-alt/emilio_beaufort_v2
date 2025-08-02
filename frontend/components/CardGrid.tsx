@@ -54,7 +54,7 @@ export default function CardGrid() {
   return (
     <section className="bg-white">
       <div className="container mx-auto px-4 py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {cardData.map((card, index) => (
             <motion.div
               key={index}
@@ -65,39 +65,66 @@ export default function CardGrid() {
               className="group cursor-pointer"
               onClick={() => handleClick(card.link, card.title)}
             >
-              <Card className="relative overflow-hidden bg-white border-0 shadow-lg transition-all duration-500 hover:shadow-xl group-hover:border-2 group-hover:border-[#B7A16C]">
-                {/* Image */}
-                <div className="relative h-[300px] w-full overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
-                  <img
-                    src={card.image}
-                    alt={card.title}
-                    className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
-                  />
+              <Card className="relative overflow-hidden bg-white border-0 shadow-lg transition-all duration-500 hover:shadow-xl group-hover:border-2 group-hover:border-[#B7A16C] h-full">
+                {/* Responsive Image Container */}
+                <div className="responsive-image-container">
+                  {/* Mobile: Square aspect ratio */}
+                  <div className="block sm:hidden">
+                    <div className="relative image-height-mobile w-full">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
+                      <img
+                        src={card.image}
+                        alt={card.title}
+                        className="responsive-image transition-transform duration-700 group-hover:scale-110"
+                        loading="lazy"
+                        onError={(e) => {
+                          console.error('Image failed to load:', card.image);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Tablet and Desktop: Responsive height */}
+                  <div className="hidden sm:block">
+                    <div className="relative image-height-tablet md:image-height-tablet lg:image-height-desktop xl:image-height-xl 2xl:image-height-2xl w-full">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
+                      <img
+                        src={card.image}
+                        alt={card.title}
+                        className="responsive-image transition-transform duration-700 group-hover:scale-110"
+                        loading="lazy"
+                        onError={(e) => {
+                          console.error('Image failed to load:', card.image);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Content */}
-                <CardContent className="relative z-20 -mt-20 bg-gradient-to-t from-white via-white/95 to-white/80 p-8">
-                  <div className="space-y-4">
-                    <p className="text-sm uppercase tracking-wider text-gray-500 font-medium">
+                <CardContent className="relative z-20 -mt-16 sm:-mt-20 lg:-mt-24 bg-gradient-to-t from-white via-white/95 to-white/80 p-4 sm:p-6 lg:p-8">
+                  <div className="space-y-3 sm:space-y-4">
+                    <p className="text-xs sm:text-sm uppercase tracking-wider text-gray-500 font-medium">
                       {card.subtitle}
                     </p>
 
-                    <h3 className="text-3xl font-serif text-gray-900 group-hover:text-black transition-colors duration-300">
+                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-serif text-gray-900 group-hover:text-black transition-colors duration-300">
                       {card.title}
                     </h3>
 
-                    <p className="text-gray-600 leading-relaxed">
+                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                       {card.description}
                     </p>
 
-                    <div className="pt-4 flex items-center space-x-2 text-gray-600 group-hover:text-black transition-colors duration-300">
-                      <span className="text-sm uppercase tracking-wider font-medium">
+                    <div className="pt-2 sm:pt-4 flex items-center space-x-2 text-gray-600 group-hover:text-black transition-colors duration-300">
+                      <span className="text-xs sm:text-sm uppercase tracking-wider font-medium">
                         Explore Collection
                       </span>
                       <ArrowRight
-                        size={20}
-                        className="transform transition-transform duration-300 group-hover:translate-x-1"
+                        size={16}
+                        className="sm:w-5 sm:h-5 transform transition-transform duration-300 group-hover:translate-x-1"
                       />
                     </div>
                   </div>

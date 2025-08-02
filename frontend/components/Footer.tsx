@@ -1,6 +1,6 @@
 "use client";
 
-import { Instagram, Twitter, Facebook, Linkedin, MessageCircle, ArrowUp } from "lucide-react";
+import { Instagram, Twitter, Facebook, Linkedin, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -11,19 +11,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
   const router = useRouter();
   const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
-  const [showBackToTop, setShowBackToTop] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 200);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleBackToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
   
   return (
     <>
@@ -168,15 +156,7 @@ export function Footer() {
           isAutoTriggered={false}
         />
       </footer>
-      {showBackToTop && (
-        <button
-          onClick={handleBackToTop}
-          className="fixed bottom-6 right-6 z-50 bg-premium-dark text-white p-3 rounded-full shadow-lg border border-premium-dark transition-all duration-200 hover:shadow-2xl hover:scale-110 hover:bg-gradient-to-br hover:from-[#B7A16C] hover:to-[#fffbe6] hover:text-black"
-          aria-label="Back to Top"
-        >
-          <ArrowUp size={24} />
-        </button>
-      )}
+
     </>
   );
 } 

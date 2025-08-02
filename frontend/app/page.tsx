@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 // import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
 import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
 import { getImageUrl, getFounderImageUrl } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Leaf, Globe, Shield, BadgePercent, Crown, Award } from 'lucide-react';
+import { Leaf, Globe, Shield, BadgePercent, Crown, Award, ChevronUp } from 'lucide-react';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import CookieConsent from '@/components/CookieConsent';
 import FeedbackFormDialog from '@/components/ui/FeedbackFormDialog';
@@ -22,6 +22,7 @@ import { trackEngagement, trackUserBehavior } from '@/lib/analytics';
 import TeamMemberSocialLinks from '@/components/TeamMemberSocialLinks';
 import Image from "next/image";
 import PartnersMarquee from "@/components/PartnersMarquee";
+import Chatbot from "@/components/Chatbot";
 
 // Auto Feedback Trigger Component
 function AutoFeedbackTrigger() {
@@ -207,7 +208,12 @@ export default function Home() {
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
   const router = useRouter();
   // const analytics = useAnalytics();
-  const [showFullPhilosophy, setShowFullPhilosophy] = useState(false);
+    const [showFullPhilosophy, setShowFullPhilosophy] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+
+  
+
+
 
   useEffect(() => {
     // No need to fetch home data as components handle their own data fetching
@@ -225,6 +231,32 @@ export default function Home() {
       }
     }
   }, []);
+
+  // Handle scroll-to-top button visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      const philosophySection = document.getElementById('philosophy');
+      if (philosophySection) {
+        const philosophyTop = philosophySection.offsetTop;
+        const scrollPosition = window.scrollY + window.innerHeight;
+        
+        // Show scroll-to-top button when user scrolls past philosophy section
+        if (scrollPosition > philosophyTop + 100) {
+          setShowScrollToTop(true);
+        } else {
+          setShowScrollToTop(false);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+
 
   if (loading) {
     return (
@@ -318,6 +350,8 @@ export default function Home() {
 
       {/* Auto Feedback Trigger */}
       <AutoFeedbackTrigger />
+
+
 
       {/* Hero Section */}
       <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-premium">
@@ -557,7 +591,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="max-w-6xl mx-auto mb-12"
           >
-            <div className="body-premium text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-gray-800 relative">
+            <div className="body-premium text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-gray-800 relative text-justify">
               <div className={`${!showFullPhilosophy ? 'line-clamp-6 lg:line-clamp-none' : ''} space-y-4`}>
                 {/* Animated Paragraphs with Proper Text Alignment */}
                 <motion.div
@@ -1278,6 +1312,27 @@ export default function Home() {
         isOpen={isPartnershipFormOpen}
         onClose={() => setIsPartnershipFormOpen(false)}
       />
+
+      {/* Floating Action Button - Scroll to Top */}
+      <AnimatePresence>
+        {showScrollToTop && (
+          <motion.button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 bg-gradient-to-r from-[#8B4513] to-[#D4AF37] text-white p-3 sm:p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Chatbot Support System */}
+      <Chatbot />
     </div>
   );
 }

@@ -85,6 +85,11 @@ export default function CookieConsent({ className }: CookieConsentProps) {
     localStorage.setItem("emilio-beaufort-consent-date", new Date().toISOString());
     setShowConsent(false);
     
+    // Dispatch custom event for chatbot activation
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cookieConsentAccepted'));
+    }
+    
     // Initialize analytics after consent
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('consent', 'update', {
@@ -97,6 +102,11 @@ export default function CookieConsent({ className }: CookieConsentProps) {
     localStorage.setItem("emilio-beaufort-cookies-consent", "declined");
     localStorage.setItem("emilio-beaufort-consent-date", new Date().toISOString());
     setShowConsent(false);
+    
+    // Dispatch custom event for chatbot activation (same as accept)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cookieConsentAccepted'));
+    }
     
     // Disable analytics after decline
     if (typeof window !== 'undefined' && window.gtag) {
