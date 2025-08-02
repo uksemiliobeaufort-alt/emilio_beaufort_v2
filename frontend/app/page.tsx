@@ -495,7 +495,7 @@ export default function Home() {
             />
 
             <motion.h2
-              className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[0.9] tracking-tight relative"
+              className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-tight sm:leading-[0.9] tracking-tight relative"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               transition={{ duration: 1 }}
@@ -516,19 +516,23 @@ export default function Home() {
 
                 {/* Subtitle with Refined Effect */}
                 <motion.span
-                  className="block text-gold text-glow"
+                  className="block text-[#D4AF37] font-bold"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 1, delay: 0.4 }}
                   viewport={{ once: true }}
                   whileHover={{ scale: 1.02 }}
+                  style={{
+                    textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                    filter: 'drop-shadow(0 1px 1px rgba(212, 175, 55, 0.3))'
+                  }}
                 >
                   & About Us
                 </motion.span>
 
                 {/* Sophisticated Underline */}
                 <motion.div
-                  className="absolute -bottom-4 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"
+                  className="absolute -bottom-2 sm:-bottom-4 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"
                   initial={{ scaleX: 0 }}
                   whileInView={{ scaleX: 1 }}
                   transition={{ duration: 1.2, delay: 0.6 }}
