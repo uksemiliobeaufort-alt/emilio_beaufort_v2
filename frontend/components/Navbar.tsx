@@ -148,7 +148,7 @@ export function Navbar() {
           >
             <Button
               onClick={handlePartnerClick}
-              className="btn-primary-premium text-xs lg:text-sm xl:text-base px-3 lg:px-4 xl:px-6"
+              className="bg-black hover:bg-gray-800 text-white text-xs lg:text-sm xl:text-base px-3 lg:px-4 xl:px-6 transition-colors duration-300"
               size="sm"
             >
               Partner With Us
@@ -191,7 +191,7 @@ export function Navbar() {
                   ))}
                   <Button
                     onClick={handlePartnerClick}
-                    className="btn-primary-premium w-full mt-6 py-4 text-sm"
+                    className="bg-black hover:bg-gray-800 text-white w-full mt-6 py-4 text-sm transition-colors duration-300"
                   >
                     Partner With Us
                   </Button>

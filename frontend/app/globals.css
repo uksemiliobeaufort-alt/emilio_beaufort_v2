@@ -327,7 +327,7 @@
   }
 
   .bg-premium-dark {
-    background: linear-gradient(135deg, #9a8a5a 0%, #B7A16C 100%);
+    background: linear-gradient(135deg, #9a8a5a 0%, #B7A16C 100%) !important;
   }
 
   .bg-premium-dark::before {
@@ -340,6 +340,11 @@
     background: inherit;
     border-radius: inherit;
     z-index: -1;
+  }
+
+  /* Footer specific background */
+  footer.bg-premium-dark {
+    background: linear-gradient(135deg, #9a8a5a 0%, #B7A16C 100%) !important;
   }
 
   section {

@@ -15,7 +15,13 @@ export function Footer() {
   
   return (
     <>
-      <footer className="bg-premium-dark border-t border-premium py-8 sm:py-12 lg:py-16">
+      <footer 
+        className="bg-black border-t border-gray-700 py-8 sm:py-12 lg:py-16"
+        style={{ 
+          background: '#000000 !important',
+          position: 'relative'
+        }}
+      >
         <div className="container-premium">
           {/* Mobile: Single column, Tablet: 2 columns, Desktop: 3 columns */}
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 sm:gap-8 lg:gap-12 mb-8 sm:mb-10 lg:mb-12">

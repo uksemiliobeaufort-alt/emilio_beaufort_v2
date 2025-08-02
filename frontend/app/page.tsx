@@ -954,9 +954,7 @@ export default function Home() {
         className="py-6 sm:py-8 md:py-12 relative overflow-hidden"
         onMouseEnter={() => trackUserBehavior.sectionView('team')}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-white"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#B7A16C]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
-
+        <div className="absolute inset-0 bg-white"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             className="text-center mb-8 sm:mb-12"
@@ -1243,9 +1241,7 @@ export default function Home() {
         className="py-16 sm:py-20 md:py-24 relative overflow-hidden"
         onMouseEnter={() => trackUserBehavior.sectionView('partnership')}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-white"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#B7A16C]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
-
+        <div className="absolute inset-0 bg-white"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             className="text-center mb-8 sm:mb-12"
@@ -1274,7 +1270,7 @@ export default function Home() {
           >
             <Button
               size="lg"
-              className="btn-primary-premium text-sm sm:text-sm md:text-base lg:text-lg px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-6 font-sans-medium"
+              className="bg-black hover:bg-gray-800 text-white text-sm sm:text-sm md:text-base lg:text-lg px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-6 font-sans-medium transition-colors duration-300"
               onClick={() => {
                 setIsPartnershipFormOpen(true);
                 trackEngagement.buttonClick('Fill Partnership Form', 'partnership-section');
