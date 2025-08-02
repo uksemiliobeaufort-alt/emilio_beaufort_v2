@@ -715,7 +715,7 @@ export default function Home() {
               {/* Enhanced Read More Button with Better Animation */}
               <motion.button
                 onClick={() => setShowFullPhilosophy(!showFullPhilosophy)}
-                className="mt-6 lg:hidden inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-premium-dark to-[#D4AF37] text-white rounded-full transition-all duration-300 text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 glow-premium focus-glow"
+                className="mt-6 lg:hidden inline-flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#8B4513] via-[#A0522D] to-[#D4AF37] text-white rounded-full transition-all duration-300 text-xs sm:text-sm md:text-base font-bold shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[120px] sm:min-w-[140px] border border-[#D4AF37]/30 hover:border-[#D4AF37]/50"
                 initial={{ opacity: 0, y: 20, scale: 0.9 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.8, delay: 1.6, ease: "easeOut" }}
@@ -726,17 +726,22 @@ export default function Home() {
                   transition: { duration: 0.3 }
                 }}
                 whileTap={{ scale: 0.95 }}
+                style={{
+                  textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                  boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3), 0 2px 4px rgba(0,0,0,0.1)'
+                }}
               >
                 <motion.span
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   transition={{ duration: 0.5, delay: 1.8 }}
                   viewport={{ once: true }}
+                  className="whitespace-nowrap"
                 >
                   {showFullPhilosophy ? 'Read Less' : 'Read More'}
                 </motion.span>
                 <motion.svg
-                  className={`ml-2 w-4 h-4 transition-transform duration-300`}
+                  className={`ml-2 w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 flex-shrink-0`}
                   animate={{ rotate: showFullPhilosophy ? 180 : 0 }}
                   fill="none"
                   stroke="currentColor"

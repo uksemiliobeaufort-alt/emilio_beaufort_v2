@@ -21,7 +21,7 @@ const navItems = [
   { name: 'Journal', href: '#journal' },
   { name: 'Meet The Brains', href: '#team' },
   {name: 'Products', href: '/products'},
-  { name: 'Careers', href: '/careers' },
+  { name: 'Career', href: '/careers' },
   // { name: 'Alliances', href: '#alliances' },
 ];
 

@@ -290,7 +290,7 @@ function ProductsPageContent() {
         <div className="flex justify-center mb-12">
           <div className="flex space-x-4">
             {[
-              { value: 'HAIR', label: 'Hairs' },
+              { value: 'HAIR', label: 'Hair' },
               { value: 'COSMETICS', label: 'Cosmetics' },
             ].map((category) => (
               <RippleButton
