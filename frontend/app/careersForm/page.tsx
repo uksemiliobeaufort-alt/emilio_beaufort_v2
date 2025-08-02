@@ -186,12 +186,17 @@ function CareersFormContent() {
           console.log('📧 Email sending result:', emailResult);
           if (emailResult.applicantEmailSent) {
             toast.success("Confirmation email sent to your inbox!");
+          } else if (emailResult.configMissing) {
+            console.warn('⚠️ Email configuration missing:', emailResult.message);
+            toast.info("Application saved! Email notifications not configured.");
           }
         } else {
           console.error('Failed to send email notifications');
+          toast.error('Application saved but email failed to send.');
         }
       }).catch((error) => {
         console.error('Failed to send email notifications:', error);
+        toast.error('Application saved but email failed to send.');
       });
 
       // 7. Reset form and show success

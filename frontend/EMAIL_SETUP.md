@@ -5,28 +5,23 @@ This guide will help you set up automatic email notifications for job applicatio
 ## Prerequisites
 
 1. **Gmail Account** (or other email service)
-2. **App Password** (for Gmail security)
+2. **Regular Email Password** (no 2FA required)
 
-## Step 1: Gmail Setup (Recommended)
+## Step 1: Gmail Setup (Simple Method)
 
-### For Gmail Users:
+### For Gmail Users (No 2FA Required):
 
-1. **Enable 2-Factor Authentication**:
-   - Go to your Google Account settings
-   - Navigate to Security
-   - Enable 2-Step Verification
+1. **Use Regular Password**:
+   - No need to enable 2-Factor Authentication
+   - Use your regular Gmail password
+   - Make sure "Less secure app access" is enabled (if prompted)
 
-2. **Generate App Password**:
-   - Go to Security → App passwords
-   - Select "Mail" and your device
-   - Copy the generated 16-character password
-
-3. **Add Environment Variables**:
+2. **Add Environment Variables**:
    Add these to your `.env.local` file:
    ```env
    # Email Configuration
    EMAIL_USER=your-email@gmail.com
-   EMAIL_PASSWORD=your-16-character-app-password
+   EMAIL_PASSWORD=your-regular-gmail-password
    ADMIN_EMAILS=admin1@example.com,admin2@example.com
    ```
 
@@ -80,14 +75,14 @@ Once set up, you'll have:
 
 ### Email Not Sending?
 - ✅ Check environment variables are set
-- ✅ Verify app password is correct
-- ✅ Ensure 2FA is enabled (for Gmail)
+- ✅ Verify regular password is correct
+- ✅ Enable "Less secure app access" in Gmail settings
 - ✅ Check spam folder
 
 ### Gmail Security Issues?
-- ✅ Use App Password instead of regular password
-- ✅ Enable "Less secure app access" (not recommended)
-- ✅ Consider using OAuth2 (advanced setup)
+- ✅ Use regular password (no 2FA required)
+- ✅ Enable "Less secure app access" in Gmail settings
+- ✅ Make sure your Gmail account allows less secure apps
 
 ### Multiple Admin Emails?
 ```env

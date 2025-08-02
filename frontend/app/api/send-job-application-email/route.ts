@@ -23,11 +23,17 @@ export async function POST(request: NextRequest) {
     // Check if email configuration is set up
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
       console.warn('⚠️ Email configuration not set up. Skipping email sending.');
+      console.log('📧 Environment check:', {
+        EMAIL_USER: process.env.EMAIL_USER ? 'Set' : 'Missing',
+        EMAIL_PASSWORD: process.env.EMAIL_PASSWORD ? 'Set' : 'Missing',
+        ADMIN_EMAILS: process.env.ADMIN_EMAILS ? 'Set' : 'Missing'
+      });
       return NextResponse.json({ 
         success: true, 
-        message: 'Application saved but email notifications are not configured',
+        message: 'Application saved but email notifications are not configured. Please set up EMAIL_USER and EMAIL_PASSWORD in .env.local',
         applicantEmailSent: false,
-        adminEmailSent: false
+        adminEmailSent: false,
+        configMissing: true
       });
     }
 

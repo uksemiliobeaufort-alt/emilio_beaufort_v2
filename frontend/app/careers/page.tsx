@@ -470,11 +470,15 @@ function CareersContent() {
                     dangerouslySetInnerHTML={{ __html: selectedJob.description }} 
                   />
                 </div>
-                {/* Apply button for desktop */}
-                {selectedJob.application_form_link && (
-                  <div className="mt-6 pt-4 border-t border-gray-100">
-                    <button
-                      className="w-full px-6 py-3 font-semibold rounded-full shadow-lg hover:bg-orange-600 border border-orange-500 text-white bg-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="px-6 pb-6 pt-4 border-t border-gray-100">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Apply Button */}
+                  {selectedJob.application_form_link ? (
+                    <Button
+                      className="flex-1 px-6 py-3 font-semibold rounded-full shadow-lg hover:bg-orange-600 border border-orange-500 text-white bg-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={async () => {
                         setLoadingApply(selectedJob.id);
                         try {
@@ -495,19 +499,30 @@ function CareersContent() {
                       ) : (
                         'Apply Now'
                       )}
-                    </button>
-                  </div>
-                )}
-              </div>
-              {/* Sticky Close Button for mobile */}
-              <div className="px-6 pb-6 pt-2 bg-white flex justify-center sticky bottom-0 z-10 border-t border-gray-100 sm:hidden">
-                <Button
-                  onClick={() => setIsDialogOpen(false)}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Close
-                </Button>
+                    </Button>
+                  ) : (
+                    <Link
+                      href={`/careersForm?jobId=${selectedJob.id}&jobTitle=${encodeURIComponent(selectedJob.title)}&department=${encodeURIComponent(selectedJob.department || '')}`}
+                      className="flex-1"
+                    >
+                      <Button 
+                        className="w-full px-6 py-3 font-semibold rounded-full shadow-lg hover:bg-black border border-black text-white bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!!(selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable)}
+                      >
+                        {selectedJob.is_closed ? 'Closed' : (selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable ? 'Full' : 'Apply Now')}
+                      </Button>
+                    </Link>
+                  )}
+                  
+                  {/* Close Button */}
+                  <Button
+                    onClick={() => setIsDialogOpen(false)}
+                    variant="outline"
+                    className="px-6 py-3 font-semibold rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all"
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
             </div>
           </DialogContent>

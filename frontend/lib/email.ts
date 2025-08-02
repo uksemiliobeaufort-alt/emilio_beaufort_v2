@@ -32,8 +32,13 @@ const createTransporter = () => {
     service: 'gmail', // You can change this to other services like 'outlook', 'yahoo', etc.
     auth: {
       user: process.env.EMAIL_USER, // Your email address
-      pass: process.env.EMAIL_PASSWORD, // Your email password or app password
+      pass: process.env.EMAIL_PASSWORD, // Your regular email password
     },
+    // Allow less secure apps (for regular password without 2FA)
+    secure: false,
+    tls: {
+      rejectUnauthorized: false
+    }
   });
 };
 
