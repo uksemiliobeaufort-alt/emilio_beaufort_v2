@@ -516,15 +516,15 @@ export default function Home() {
 
                 {/* Subtitle with Refined Effect */}
                 <motion.span
-                  className="block text-[#D4AF37] font-bold"
+                  className="block text-[#8B4513] font-black"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 1, delay: 0.4 }}
                   viewport={{ once: true }}
                   whileHover={{ scale: 1.02 }}
                   style={{
-                    textShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                    filter: 'drop-shadow(0 1px 1px rgba(212, 175, 55, 0.3))'
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3), 0 1px 2px rgba(139, 69, 19, 0.5)',
+                    filter: 'drop-shadow(0 2px 4px rgba(139, 69, 19, 0.4))'
                   }}
                 >
                   & About Us
