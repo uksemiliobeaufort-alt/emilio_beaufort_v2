@@ -37,6 +37,10 @@ export default function ViewApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState<'Pending' | 'Shortlisted' | 'Rejected'>('Pending');
   const [processingAction, setProcessingAction] = useState<string | null>(null);
   const [sheetsUrl, setSheetsUrl] = useState<string>('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const applicationsPerPage = 5;
 
   // Get all applications from all collections
   const getAllApplications = async (): Promise<Application[]> => {
@@ -456,6 +460,17 @@ export default function ViewApplicationsPage() {
     );
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredApps.length / applicationsPerPage);
+  const startIndex = (currentPage - 1) * applicationsPerPage;
+  const endIndex = startIndex + applicationsPerPage;
+  const currentApplications = filteredApps.slice(startIndex, endIndex);
+
+  // Reset to first page when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
   return (
     <>
       <div className="min-h-screen bg-gray-50">
@@ -632,8 +647,9 @@ export default function ViewApplicationsPage() {
                 <p className="text-gray-500 text-base sm:text-lg">No applications found.</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
-                {filteredApps.map((app) => (
+              <>
+                <div className="divide-y divide-gray-200">
+                  {currentApplications.map((app) => (
                   <div key={app.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-0">
                       <div className="flex-1">
@@ -680,8 +696,60 @@ export default function ViewApplicationsPage() {
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="px-4 sm:px-6 py-4 border-t border-gray-200 bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      Showing {startIndex + 1} to {Math.min(endIndex, filteredApps.length)} of {filteredApps.length} applications
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Previous
+                      </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                        className="flex items-center gap-1"
+                      >
+                        Next
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -816,6 +884,7 @@ export default function ViewApplicationsPage() {
             )}
           </DialogContent>
         </Dialog>
+      </div>
     </>
   );
 } 

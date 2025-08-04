@@ -154,8 +154,13 @@ export default function ExclusiveProductsMarquee() {
         </button>
         <div
           ref={scrollRef}
-          className="overflow-x-auto scrollbar-hide w-full px-12"
-          style={{ scrollBehavior: 'smooth' }}
+          className="overflow-x-auto w-full px-12 hide-scrollbar"
+          style={{ 
+            scrollBehavior: 'smooth', 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
         >
           <div className="flex gap-8 min-w-max">
             {marqueeProducts.filter(product => product.id).map((product, idx) => (

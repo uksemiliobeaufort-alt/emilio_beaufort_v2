@@ -441,7 +441,7 @@ export function ProductDetailDialog({
           {/* Right: Details */}
           <div
             className="w-full lg:w-1/2 overflow-y-auto max-h-[50vh] lg:max-h-[98vh]
-              scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+                              scrollbar-thin scrollbar-thumb-black scrollbar-track-transparent"
           >
             <div className="p-8 lg:p-10 space-y-8">
               {loading ? (

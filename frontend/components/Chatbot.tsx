@@ -173,7 +173,7 @@ export default function Chatbot() {
               
                              {/* Header */}
                <div className="flex items-center space-x-3 mb-3">
-                 <div className="bg-gradient-to-r from-[#8B4513] to-[#D4AF37] p-2 rounded-full">
+                 <div className="bg-gradient-to-r from-gray-800 to-black p-2 rounded-full">
                    <Bot className="w-5 h-5 text-white" />
                  </div>
                  <div>
@@ -193,7 +193,7 @@ export default function Chatbot() {
                    setShowGreetingNotification(false);
                    setIsOpen(true);
                  }}
-                 className="w-full bg-gradient-to-r from-[#8B4513] to-[#D4AF37] text-white py-2 px-4 rounded-xl text-sm font-sans-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                 className="w-full bg-gradient-to-r from-gray-800 to-black text-white py-2 px-4 rounded-xl text-sm font-sans-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                >
                  Start Chat
                </button>
@@ -205,12 +205,12 @@ export default function Chatbot() {
              {/* Modern Chatbot Toggle Button */}
        <motion.button
          onClick={() => setIsOpen(!isOpen)}
-         className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 bg-gradient-to-r from-[#8B4513] to-[#D4AF37] text-white p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl transition-all duration-300 hover:scale-110 border border-white/20 backdrop-blur-sm"
+         className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 bg-gradient-to-r from-gray-800 to-black text-white p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl transition-all duration-300 hover:scale-110 border border-white/20 backdrop-blur-sm"
          whileHover={{ scale: 1.1, y: -2 }}
          whileTap={{ scale: 0.95 }}
-         style={{
-           boxShadow: '0 8px 25px rgba(139, 69, 19, 0.3), 0 4px 12px rgba(0,0,0,0.1)'
-         }}
+                    style={{
+             boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0,0,0,0.1)'
+           }}
        >
          {isOpen ? (
            <X className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -236,11 +236,11 @@ export default function Chatbot() {
              transition={{ duration: 0.3, type: "spring", bounce: 0.2 }}
              className="fixed bottom-20 right-4 left-4 sm:bottom-24 sm:right-6 sm:left-auto z-40 w-auto sm:w-80 h-80 sm:h-96 bg-white rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-gray-100 flex flex-col overflow-hidden backdrop-blur-sm"
              style={{
-               boxShadow: '0 15px 45px rgba(0,0,0,0.15), 0 6px 20px rgba(139, 69, 19, 0.1)'
+               boxShadow: '0 15px 45px rgba(0,0,0,0.15), 0 6px 20px rgba(0, 0, 0, 0.1)'
              }}
            >
                          {/* Modern Header */}
-             <div className="bg-gradient-to-r from-[#8B4513] to-[#D4AF37] text-white p-3 sm:p-4 flex items-center justify-between relative overflow-hidden">
+             <div className="bg-gradient-to-r from-gray-800 to-black text-white p-3 sm:p-4 flex items-center justify-between relative overflow-hidden">
                {/* Background decoration */}
                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
                <div className="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-white/10 rounded-full -translate-y-8 sm:-translate-y-10 translate-x-8 sm:translate-x-10"></div>
@@ -260,7 +260,7 @@ export default function Chatbot() {
              </div>
 
                          {/* Messages Container with Modern Scrollbar */}
-             <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-3 sm:space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+             <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-3 sm:space-y-4">
                              {messages.map((message) => (
                  <motion.div
                    key={message.id}
@@ -272,7 +272,7 @@ export default function Chatbot() {
                                        <div
                       className={`max-w-[280px] sm:max-w-xs px-3 py-2.5 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl ${
                         message.sender === 'user'
-                          ? 'bg-gradient-to-r from-[#8B4513] to-[#D4AF37] text-white shadow-lg'
+                          ? 'bg-gradient-to-r from-gray-800 to-black text-white shadow-lg'
                           : 'bg-gray-50 text-gray-800 border border-gray-100 shadow-sm'
                       }`}
                     >
@@ -286,7 +286,7 @@ export default function Chatbot() {
                                onClick={() => {
                                  window.open('mailto:hello@emiliobeaufort.com', '_blank');
                                }}
-                                                               className="flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-[#8B4513] to-[#D4AF37] text-white px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-md sm:rounded-lg text-xs font-sans-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                                                               className="flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-gray-800 to-black text-white px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-md sm:rounded-lg text-xs font-sans-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                              >
                                <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -297,7 +297,7 @@ export default function Chatbot() {
                                onClick={() => {
                                  window.open('tel:+918962648358', '_blank');
                                }}
-                                                               className="flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-[#D4AF37] to-[#8B4513] text-white px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-md sm:rounded-lg text-xs font-sans-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                                                               className="flex items-center justify-center gap-1.5 sm:gap-2 bg-gradient-to-r from-black to-gray-800 text-white px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-md sm:rounded-lg text-xs font-sans-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                              >
                                <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -353,14 +353,14 @@ export default function Chatbot() {
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Type your message..."
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent text-xs sm:text-sm bg-white shadow-sm text-gray-900 placeholder-gray-500"
+                      className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent text-xs sm:text-sm bg-white shadow-sm text-gray-900 placeholder-gray-500"
                     />
                    <Sparkles className="absolute right-2.5 sm:right-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
                  </div>
                  <button
                    onClick={handleSendMessage}
                    disabled={!inputValue.trim()}
-                   className="bg-gradient-to-r from-[#8B4513] to-[#D4AF37] text-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                   className="bg-gradient-to-r from-gray-800 to-black text-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
                  >
                    <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                  </button>

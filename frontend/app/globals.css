@@ -210,20 +210,20 @@
   }
 
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 4px;
   }
 
   ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #B7A16C;
-    border-radius: 4px;
+    background: #000000;
+    border-radius: 2px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #9a8a5a;
+    background: #333333;
   }
 
   .scrollbar-hidden {
@@ -232,6 +232,10 @@
   }
 
   .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
 
@@ -295,10 +299,30 @@
   }
 
   .text-gold-gradient {
-    background: linear-gradient(135deg, #B7A16C 0%, #D4C4A3 50%, #B7A16C 100%);
+    background: linear-gradient(135deg, #D4AF37 0%, #B7A16C 50%, #F4E4BC 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  .footer-link-underline {
+    position: relative;
+    text-decoration: none;
+  }
+
+  .footer-link-underline::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background: linear-gradient(135deg, #D4AF37 0%, #B7A16C 100%);
+    transition: width 0.3s ease;
+  }
+
+  .footer-link-underline:hover::after {
+    width: 100%;
   }
 
   .border-premium {
