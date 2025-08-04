@@ -687,38 +687,44 @@ export default function ViewApplicationsPage() {
 
         {/* Details Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-lg w-[95vw] sm:w-full bg-white/95 border border-gray-200 rounded-2xl p-0 overflow-hidden">
+          <DialogContent className="w-[90vw] sm:w-[600px] md:w-[700px] lg:w-[800px] h-[80vh] sm:h-[70vh] md:h-[75vh] bg-white/95 border border-gray-200 rounded-2xl p-0 overflow-hidden flex flex-col">
             {selectedApp && (
               <>
-                <DialogHeader className="px-4 sm:px-8 pt-6 sm:pt-8 pb-2 text-center">
-                  <DialogTitle className="text-xl sm:text-2xl font-extrabold mb-1 text-gray-900">{selectedApp.fullName}</DialogTitle>
-                  <div className="mb-2 text-base sm:text-lg text-gold font-semibold tracking-wide">{selectedApp.jobTitle || "—"}</div>
+                <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 text-center flex-shrink-0 border-b border-gray-100">
+                  <DialogTitle className="text-lg sm:text-xl font-bold mb-1 text-gray-900">{selectedApp.fullName}</DialogTitle>
+                  <div className="text-sm sm:text-base text-gold font-semibold tracking-wide">{selectedApp.jobTitle || "—"}</div>
                 </DialogHeader>
                 
-                <div className="px-4 sm:px-8 pb-6 sm:pb-8 pt-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-3 sm:gap-y-4 text-sm sm:text-base">
-                    <div className="font-semibold text-gray-700">Email:</div>
-                    <div><a href={`mailto:${selectedApp.email}`} className="text-blue-700 underline break-all">{selectedApp.email}</a></div>
-                    
-                    <div className="font-semibold text-gray-700">LinkedIn:</div>
-                    <div>{selectedApp.linkedin && selectedApp.linkedin.trim() !== "" ? (
-                      <a href={selectedApp.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 transition">View</a>
-                    ) : <span className="text-gray-400">—</span>}</div>
-                    
-                    <div className="font-semibold text-gray-700">GitHub:</div>
-                    <div>{selectedApp.github && selectedApp.github.trim() !== "" ? (
-                      <a href={selectedApp.github} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 transition">View</a>
-                    ) : <span className="text-gray-400">—</span>}</div>
-                    
-                    <div className="font-semibold text-gray-700">Portfolio:</div>
-                    <div>{selectedApp.portfolio && selectedApp.portfolio.trim() !== "" ? (
-                      <a href={selectedApp.portfolio} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 transition">View</a>
-                    ) : <span className="text-gray-400">—</span>}</div>
-                    
-                    <div className="font-semibold text-gray-700">Resume:</div>
-                    <div>
-                      {selectedApp.resumeUrl ? (
-                        <div className="flex gap-3">
+                <div className="px-4 sm:px-6 py-4 flex-1 overflow-y-auto">
+                  {/* Basic Info Section */}
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Contact Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-20">Email:</span>
+                        <a href={`mailto:${selectedApp.email}`} className="text-blue-700 underline break-all">{selectedApp.email}</a>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-20">LinkedIn:</span>
+                        {selectedApp.linkedin && selectedApp.linkedin.trim() !== "" ? (
+                          <a href={selectedApp.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 transition">View Profile</a>
+                        ) : <span className="text-gray-400">—</span>}
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-20">GitHub:</span>
+                        {selectedApp.github && selectedApp.github.trim() !== "" ? (
+                          <a href={selectedApp.github} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 transition">View Profile</a>
+                        ) : <span className="text-gray-400">—</span>}
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-20">Portfolio:</span>
+                        {selectedApp.portfolio && selectedApp.portfolio.trim() !== "" ? (
+                          <a href={selectedApp.portfolio} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 transition">View Portfolio</a>
+                        ) : <span className="text-gray-400">—</span>}
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-20">Resume:</span>
+                        {selectedApp.resumeUrl ? (
                           <button
                             type="button"
                             className="text-blue-600 underline hover:text-blue-800 font-semibold transition"
@@ -726,67 +732,85 @@ export default function ViewApplicationsPage() {
                           >
                             View Resume
                           </button>
-                        </div>
-                      ) : <span className="text-gray-400">—</span>}
-                    </div>
-                    
-                    <div className="font-semibold text-gray-700">Cover Letter:</div>
-                    <div className="whitespace-pre-line break-words max-w-full">
-                      {selectedApp.coverLetter && selectedApp.coverLetter.trim() !== "" ? selectedApp.coverLetter : <span className="text-gray-400">—</span>}
-                    </div>
-                    
-                    <div className="font-semibold text-gray-700">How did you hear:</div>
-                    <div>{selectedApp.hearAbout && selectedApp.hearAbout.trim() !== "" ? selectedApp.hearAbout : <span className="text-gray-400">—</span>}</div>
-                    
-                    <div className="font-semibold text-gray-700">Submitted:</div>
-                    <div className="text-gray-500">
-                      {selectedApp.createdAt && selectedApp.createdAt.toDate ? selectedApp.createdAt.toDate().toLocaleString() : "—"}
+                        ) : <span className="text-gray-400">—</span>}
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row justify-end mt-6 sm:mt-8 gap-2">
-                    {statusFilter === 'Pending' ? (
-                      <>
-                        <Button 
-                          variant="destructive" 
-                          onClick={() => handleReject(selectedApp)}
-                          disabled={processingAction !== null}
-                          className="w-full sm:w-auto"
-                        >
-                          {processingAction === 'reject' ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Rejecting...
-                            </>
-                          ) : (
-                            'Reject'
-                          )}
-                        </Button>
-                        <Button 
-                          onClick={() => handleAccept(selectedApp)}
-                          disabled={processingAction !== null}
-                          className="w-full sm:w-auto"
-                        >
-                          {processingAction === 'accept' ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Accepting...
-                            </>
-                          ) : (
-                            'Accept'
-                          )}
-                        </Button>
-                      </>
-                    ) : (
+
+                  {/* Cover Letter Section */}
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Cover Letter</h3>
+                    <div className="bg-gray-50 rounded-lg p-4 max-h-48 overflow-y-auto">
+                      {selectedApp.coverLetter && selectedApp.coverLetter.trim() !== "" ? (
+                        <div className="text-sm leading-relaxed whitespace-pre-line break-words">
+                          {selectedApp.coverLetter}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-sm">No cover letter provided</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Additional Info Section */}
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Additional Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-start">
+                        <span className="font-medium text-gray-700 w-32 flex-shrink-0">How did you hear:</span>
+                        <span className="text-gray-800">{selectedApp.hearAbout && selectedApp.hearAbout.trim() !== "" ? selectedApp.hearAbout : <span className="text-gray-400">—</span>}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-700 w-32 flex-shrink-0">Submitted:</span>
+                        <span className="text-gray-500">
+                          {selectedApp.createdAt && selectedApp.createdAt.toDate ? selectedApp.createdAt.toDate().toLocaleString() : "—"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-end gap-2 flex-shrink-0 border-t border-gray-100">
+                  {statusFilter === 'Pending' ? (
+                    <>
                       <Button 
-                        onClick={() => setDialogOpen(false)}
+                        variant="destructive" 
+                        onClick={() => handleReject(selectedApp)}
+                        disabled={processingAction !== null}
                         className="w-full sm:w-auto"
                       >
-                        Close
+                        {processingAction === 'reject' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Rejecting...
+                          </>
+                        ) : (
+                          'Reject'
+                        )}
                       </Button>
-                    )}
-                  </div>
+                      <Button 
+                        onClick={() => handleAccept(selectedApp)}
+                        disabled={processingAction !== null}
+                        className="w-full sm:w-auto"
+                      >
+                        {processingAction === 'accept' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Accepting...
+                          </>
+                        ) : (
+                          'Accept'
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button 
+                      onClick={() => setDialogOpen(false)}
+                      className="w-full sm:w-auto"
+                    >
+                      Close
+                    </Button>
+                  )}
                 </div>
               </>
             )}
