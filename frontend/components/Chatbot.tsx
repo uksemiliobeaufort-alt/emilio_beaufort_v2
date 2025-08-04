@@ -171,6 +171,15 @@ export default function Chatbot() {
            >
              <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl border border-gray-100 p-4 sm:p-6 relative">
               
+                             {/* Close Button */}
+               <button
+                 onClick={() => setShowGreetingNotification(false)}
+                 className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1"
+                 aria-label="Close notification"
+               >
+                 <X className="w-4 h-4" />
+               </button>
+              
                              {/* Header */}
                <div className="flex items-center space-x-3 mb-3">
                  <div className="bg-gradient-to-r from-gray-800 to-black p-2 rounded-full">

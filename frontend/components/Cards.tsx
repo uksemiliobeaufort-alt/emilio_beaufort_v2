@@ -57,25 +57,37 @@ export function Cards() {
   };
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="space-y-3 sm:space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
         {currentProducts.map((product) => (
-          <Card key={product.id} className="overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-            <div className="relative h-40 w-full bg-gray-50">
+          <Card key={product.id} className="overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300 group">
+            {/* Responsive Image Container */}
+            <div className="relative w-full h-32 sm:h-36 md:h-40 lg:h-44 bg-gray-50">
               <img
                 src={product.image}
                 alt={product.name}
-                className="object-cover w-full h-full"
+                className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
+                onError={(e) => {
+                  console.error('Image failed to load:', product.image);
+                  e.currentTarget.style.display = 'none';
+                }}
               />
             </div>
-            <CardContent className="p-3">
-              <div className="flex justify-between items-start mb-1">
-                <h3 className="text-base font-serif">{product.name}</h3>
-                <span className="text-sm font-medium text-[#B7A16C]">₹{product.price}</span>
+            <CardContent className="p-4 sm:p-5 md:p-6 lg:p-7 bg-gray-50 sm:bg-gray-100 md:bg-gray-50 lg:bg-gray-100 min-h-[140px] sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px]">
+              <div className="flex justify-between items-start mb-3 sm:mb-4 md:mb-5">
+                <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-serif text-gray-900 group-hover:text-black transition-colors duration-300 break-words leading-tight flex-1 pr-2 sm:pr-3">
+                  {product.name}
+                </h3>
+                <span className="text-xs sm:text-sm md:text-base lg:text-lg font-medium text-[#B7A16C] flex-shrink-0">
+                  ₹{product.price}
+                </span>
               </div>
-              <p className="text-gray-600 text-xs mb-2">{product.description}</p>
+              <p className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-600 mb-4 sm:mb-5 md:mb-6 leading-relaxed break-words line-clamp-2">
+                {product.description}
+              </p>
               <Button 
-                className="w-full bg-black hover:bg-gray-900 text-white text-xs h-8"
+                className="w-full bg-black hover:bg-gray-900 text-white text-xs sm:text-sm md:text-base lg:text-lg h-9 sm:h-10 md:h-11 lg:h-12 transition-all duration-300 group-hover:scale-105"
                 onClick={() => window.open("/products/cosmetics", "_self")}
               >
                 View Details
@@ -86,27 +98,27 @@ export function Cards() {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-2 pt-3">
+        <div className="flex justify-center items-center space-x-2 sm:space-x-3 pt-3 sm:pt-4">
           <Button
             variant="outline"
             onClick={handlePrevPage}
             disabled={currentPage === 1}
-            className="h-7 px-2 text-xs"
+            className="h-7 sm:h-8 md:h-9 px-2 sm:px-3 text-xs sm:text-sm"
           >
-            <ChevronLeft className="h-3 w-3 mr-1" />
+            <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
             Prev
           </Button>
-          <span className="text-xs text-gray-600">
+          <span className="text-xs sm:text-sm md:text-base text-gray-600">
             {currentPage} / {totalPages}
           </span>
           <Button
             variant="outline"
             onClick={handleNextPage}
             disabled={currentPage === totalPages}
-            className="h-7 px-2 text-xs"
+            className="h-7 sm:h-8 md:h-9 px-2 sm:px-3 text-xs sm:text-sm"
           >
             Next
-            <ChevronRight className="h-3 w-3 ml-1" />
+            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
           </Button>
         </div>
       )}

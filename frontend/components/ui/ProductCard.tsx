@@ -131,19 +131,19 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
           )}
         </div>
         {/* Content Section - Flex grow to fill available space */}
-        <div className="p-6 space-y-3 flex-grow flex flex-col justify-between w-full">
-          <div className="space-y-3 w-full">
+        <div className="p-5 sm:p-6 md:p-7 lg:p-8 space-y-3 sm:space-y-4 md:space-y-5 flex-grow flex flex-col justify-between w-full bg-gray-50 sm:bg-gray-100 md:bg-gray-50 lg:bg-gray-100 min-h-[160px] sm:min-h-[180px] md:min-h-[200px] lg:min-h-[220px]">
+          <div className="space-y-3 sm:space-y-4 md:space-y-5 w-full">
             {/* Product Name - Word-based truncation */}
-            <div className="min-h-[3rem] flex items-start w-full">
-              <h3 className={`font-bold text-gray-900 text-lg leading-tight group-hover:text-gray-700 transition-colors duration-300 ${productCardUtils.textWrapClasses} line-clamp-2 w-full`}>
+            <div className="min-h-[3rem] sm:min-h-[3.5rem] md:min-h-[4rem] flex items-start w-full">
+              <h3 className={`font-bold text-gray-900 text-sm sm:text-base md:text-lg lg:text-xl leading-tight group-hover:text-gray-700 transition-colors duration-300 ${productCardUtils.textWrapClasses} line-clamp-2 w-full break-words`}>
                 {truncatedName}
               </h3>
             </div>
 
             {/* Description - Word-based truncation with flexible height */}
             {product.description && (
-              <div className="min-h-[3.5rem] flex items-start w-full">
-                <p className={`text-sm text-gray-600 leading-relaxed ${productCardUtils.textWrapClasses} line-clamp-3 w-full`}>
+              <div className="min-h-[3.5rem] sm:min-h-[4rem] md:min-h-[4.5rem] flex items-start w-full">
+                <p className={`text-xs sm:text-sm md:text-base lg:text-lg text-gray-600 leading-relaxed ${productCardUtils.textWrapClasses} line-clamp-3 w-full break-words`}>
                   {truncatedDescription}
                 </p>
               </div>
@@ -151,21 +151,21 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
           </div>
 
           {/* Price and Status Section - Always at bottom */}
-          <div className="space-y-3 mt-auto pt-2 w-full">
+          <div className="space-y-3 sm:space-y-4 md:space-y-5 mt-auto pt-4 sm:pt-5 w-full">
             {/* Price Section */}
-            <div className="space-y-1 w-full">
-              <div className="flex items-center gap-3 flex-wrap w-full">
-                <span className={`text-xl font-bold text-gray-900 ${productCardUtils.textWrapClasses}`}>
+            <div className="space-y-2 w-full">
+              <div className="flex items-center gap-3 sm:gap-4 md:gap-5 flex-wrap w-full">
+                <span className={`text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 ${productCardUtils.textWrapClasses} break-words`}>
                   {productCardUtils.formatPrice(priceInfo.displayPrice)}
                 </span>
                 {priceInfo.hasDiscount && priceInfo.originalPrice && (
-                  <span className={`text-sm text-gray-400 line-through ${productCardUtils.textWrapClasses}`}>
+                  <span className={`text-sm sm:text-base md:text-lg text-gray-400 line-through ${productCardUtils.textWrapClasses} break-words`}>
                     {productCardUtils.formatPrice(priceInfo.originalPrice)}
                   </span>
                 )}
               </div>
               {priceInfo.hasDiscount && priceInfo.savings > 0 && (
-                <div className={`text-xs font-semibold ${productCardUtils.textWrapClasses} w-full ${
+                <div className={`text-sm sm:text-base font-semibold ${productCardUtils.textWrapClasses} w-full break-words ${
                   priceInfo.isSignificantDiscount 
                     ? 'text-red-600' 
                     : priceInfo.isModerateDiscount 
@@ -178,16 +178,16 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
             </div>
 
             {/* Status Indicator */}
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100 w-full">
-              <div className={`flex items-center gap-2 text-xs font-medium ${product.isSoldOut ? 'text-red-600' : 'text-green-600'
+            <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-100 w-full">
+              <div className={`flex items-center gap-2 sm:gap-2.5 text-sm sm:text-base font-medium ${product.isSoldOut ? 'text-red-600' : 'text-green-600'
                 } flex-shrink-0`}>
-                <div className={`w-2 h-2 rounded-full ${product.isSoldOut ? 'bg-red-500' : 'bg-green-500'
+                <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${product.isSoldOut ? 'bg-red-500' : 'bg-green-500'
                   }`}></div>
-                <span className={`${productCardUtils.textWrapClasses}`}>
+                <span className={`${productCardUtils.textWrapClasses} break-words`}>
                   {product.isSoldOut ? 'Out of Stock' : 'In Stock'}
                 </span>
               </div>
-              <div className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap flex-shrink-0">
+              <div className="text-sm sm:text-base text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap flex-shrink-0">
                 View Details →
               </div>
             </div>
