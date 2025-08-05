@@ -222,327 +222,349 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full lg:w-[50vw] mx-auto bg-white rounded-2xl shadow-xl p-8 space-y-8 mt-8">
-      <DialogHeader>
-        <DialogTitle className="text-2xl font-bold">
+    <form onSubmit={handleSubmit} className="w-full h-full flex flex-col bg-white space-y-4 sm:space-y-6">
+      <DialogHeader className="flex-shrink-0">
+        <DialogTitle className="text-lg sm:text-xl md:text-2xl font-bold">
           {isEdit ? "Edit Job" : "Post a New Job"}
         </DialogTitle>
       </DialogHeader>
-             {/* Desktop: two-column layout */}
-       <div className="hidden lg:grid grid-cols-2 gap-6">
-         <div className="space-y-4">
-           <div>
-             <label className="block font-semibold mb-1">Job Title <span className="text-red-500">*</span></label>
-             <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Frontend Developer" className="rounded-xl bg-gray-50 focus:bg-white" required />
-           </div>
-           <div className="flex gap-4">
-             <div className="flex-1">
-               <label className="block font-semibold mb-1">Department <span className="text-red-500">*</span></label>
-               <BootstrapDropdown
-                 trigger={<span className="flex items-center gap-2">{departmentIcon(department)}{department || "Select department"}</span>}
-                 items={[
-                   { label: "Software Development", onClick: () => setDepartment("Software Development") },
-                   { label: "AI/ML", onClick: () => setDepartment("AI/ML") },
-                   { label: "HR", onClick: () => setDepartment("HR") },
-                   { label: "Founder's Office", onClick: () => setDepartment("Founder's Office") },
-                   { label: "Social and Outreach", onClick: () => setDepartment("Social and Outreach") },
-                   { label: "Sales and Marketing", onClick: () => setDepartment("Sales and Marketing") },
-                 ]}
-                 className="w-full rounded-xl bg-white border-gray-200"
-               />
-             </div>
-             <div className="flex-1">
-               <label className="block font-semibold mb-1">Type <span className="text-red-500">*</span></label>
-               <BootstrapDropdown
-                 trigger={<span className="flex items-center gap-2">{type || "Select type"}</span>}
-                 items={[
-                   { label: "Internship", onClick: () => setType("Internship") },
-                   { label: "Full-time", onClick: () => setType("Full-time") },
-                 ]}
-                 className="w-full rounded-xl bg-white border-gray-200"
-               />
-             </div>
-           </div>
-           <div className="flex gap-4">
-             <div className="w-1/2">
-               <label className="block font-semibold mb-1">Location <span className="text-red-500">*</span></label>
-               <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Remote, Bangalore" className="rounded-xl bg-gray-50 focus:bg-white" required />
-             </div>
-             <div className="w-1/2">
-               <label className="block font-semibold mb-1">Salary <span className="text-red-500">*</span></label>
-               <Input value={salary} onChange={e => setSalary(e.target.value)} placeholder="e.g. 20 LPA, Performance" className="rounded-xl bg-gray-50 focus:bg-white" required />
-             </div>
-           </div>
-           <div className="flex gap-4">
-             <div className="w-1/2">
-               <label className="block font-semibold mb-1">Seats Available</label>
-               <Input 
-                 type="number" 
-                 min="1" 
-                 value={seatsAvailable} 
-                 onChange={e => setSeatsAvailable(e.target.value)} 
-                 placeholder="5" 
-                 className="rounded-xl bg-gray-50 focus:bg-white" 
-               />
-               <p className="text-xs text-gray-500 mt-1">Leave empty for unlimited applications.</p>
-             </div>
-             <div className="w-1/2">
-               <label className="block font-semibold mb-1">Application Form Link</label>
-               <Input 
-                 value={applicationFormLink} 
-                 onChange={e => setApplicationFormLink(e.target.value)} 
-                 placeholder="https://forms.google.com/..." 
-                 className="rounded-xl bg-gray-50 focus:bg-white" 
-               />
-               <p className="text-xs text-gray-500 mt-1">Optional external form link.</p>
-             </div>
-           </div>
-           <div className="flex items-center gap-4">
-             <div className="flex items-center gap-2">
-               <input
-                 type="checkbox"
-                 id="isJobClosed"
-                 checked={isJobClosed}
-                 onChange={(e) => setIsJobClosed(e.target.checked)}
-                 className="rounded border-gray-300 text-black focus:ring-black"
-               />
-               <label htmlFor="isJobClosed" className="text-sm font-medium text-gray-700">
-                 Close this job opening
-               </label>
-             </div>
-             {isJobClosed && (
-               <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
-                 Applications will be disabled
-               </span>
-             )}
-           </div>
-         </div>
-         <div className="space-y-4 flex flex-col h-full">
-           <div className="flex-1 flex flex-col">
-             <label className="block font-semibold mb-1">Job Description <span className="text-red-500">*</span></label>
-             {useFallbackEditor ? (
-               <div>
-                 <textarea
-                   value={description}
-                   onChange={(e) => setDescription(e.target.value)}
-                   placeholder="Write job details..."
-                   className="min-h-[180px] max-h-[300px] p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                 />
-                 <p className="text-xs text-gray-500 mt-1">Using simple text editor. <button type="button" onClick={() => setUseFallbackEditor(false)} className="text-blue-600 underline">Try rich editor again</button></p>
-               </div>
-             ) : (
-               <TipTapEditorErrorBoundary>
-                 <TipTapEditor 
-                   ref={editorRef} 
-                   content={description} 
-                   onChange={setDescription} 
-                   placeholder="Write job details..."
-                 />
-               </TipTapEditorErrorBoundary>
-             )}
-           </div>
-         </div>
-               </div>
-                 {/* Required fields note for desktop */}
-         <div className="hidden lg:block">
-           <p className="text-xs text-gray-600 text-left mt-4 mb-2">
-             <span className="text-red-500 font-bold">⚠️</span> Fields marked with an asterisk (<span className="text-red-500 font-bold">*</span>) are compulsory to be filled
-           </p>
-         </div>
-        {/* Sticky footer for desktop button */}
-        <div className="hidden lg:block sticky bottom-0 left-0 w-full bg-white pt-4 z-10">
-          <Button
-            type="submit"
-            className="w-full bg-black text-white text-lg py-3 rounded-xl font-bold shadow hover:bg-gray-900 hover:scale-[1.02] transition-all"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (isEdit ? "Updating..." : "Posting...") : (isEdit ? "Update Job" : "Post Job")}
-          </Button>
+      
+      {/* Desktop and Large Tablet: two-column layout */}
+      <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 flex-1 min-h-0">
+        <div className="space-y-3 lg:space-y-4 overflow-y-auto">
+          <div>
+            <label className="block font-semibold mb-2 text-sm lg:text-base">Job Title <span className="text-red-500">*</span></label>
+            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Frontend Developer" className="rounded-xl bg-gray-50 focus:bg-white text-sm lg:text-base" required />
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold mb-2 text-sm lg:text-base">Department <span className="text-red-500">*</span></label>
+              <BootstrapDropdown
+                trigger={<span className="flex items-center gap-2 text-sm lg:text-base">{departmentIcon(department)}{department || "Select department"}</span>}
+                items={[
+                  { label: "Software Development", onClick: () => setDepartment("Software Development") },
+                  { label: "AI/ML", onClick: () => setDepartment("AI/ML") },
+                  { label: "HR", onClick: () => setDepartment("HR") },
+                  { label: "Founder's Office", onClick: () => setDepartment("Founder's Office") },
+                  { label: "Social and Outreach", onClick: () => setDepartment("Social and Outreach") },
+                  { label: "Sales and Marketing", onClick: () => setDepartment("Sales and Marketing") },
+                ]}
+                className="w-full rounded-xl bg-white border-gray-200"
+              />
+            </div>
+            <div>
+              <label className="block font-semibold mb-2 text-sm lg:text-base">Type <span className="text-red-500">*</span></label>
+              <BootstrapDropdown
+                trigger={<span className="flex items-center gap-2 text-sm lg:text-base">{type || "Select type"}</span>}
+                items={[
+                  { label: "Internship", onClick: () => setType("Internship") },
+                  { label: "Full-time", onClick: () => setType("Full-time") },
+                ]}
+                className="w-full rounded-xl bg-white border-gray-200"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold mb-2 text-sm lg:text-base">Location <span className="text-red-500">*</span></label>
+              <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Remote, Bangalore" className="rounded-xl bg-gray-50 focus:bg-white text-sm lg:text-base" required />
+            </div>
+            <div>
+              <label className="block font-semibold mb-2 text-sm lg:text-base">Salary <span className="text-red-500">*</span></label>
+              <Input value={salary} onChange={e => setSalary(e.target.value)} placeholder="e.g. 20 LPA, Performance" className="rounded-xl bg-gray-50 focus:bg-white text-sm lg:text-base" required />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold mb-2 text-sm lg:text-base">Seats Available</label>
+              <Input 
+                type="number" 
+                min="1" 
+                value={seatsAvailable} 
+                onChange={e => setSeatsAvailable(e.target.value)} 
+                placeholder="5" 
+                className="rounded-xl bg-gray-50 focus:bg-white text-sm lg:text-base" 
+              />
+              <p className="text-xs text-gray-500 mt-1">Leave empty for unlimited applications.</p>
+            </div>
+            <div>
+              <label className="block font-semibold mb-2 text-sm lg:text-base">Application Form Link</label>
+              <Input 
+                value={applicationFormLink} 
+                onChange={e => setApplicationFormLink(e.target.value)} 
+                placeholder="https://forms.google.com/..." 
+                className="rounded-xl bg-gray-50 focus:bg-white text-sm lg:text-base" 
+              />
+              <p className="text-xs text-gray-500 mt-1">Optional external form link.</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isJobClosed"
+                checked={isJobClosed}
+                onChange={(e) => setIsJobClosed(e.target.checked)}
+                className="rounded border-gray-300 text-black focus:ring-black"
+              />
+              <label htmlFor="isJobClosed" className="text-sm font-medium text-gray-700">
+                Close this job opening
+              </label>
+            </div>
+            {isJobClosed && (
+              <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                Applications will be disabled
+              </span>
+            )}
+          </div>
         </div>
-       {/* Tablet and Mobile: two-page layout */}
-       <div className="lg:hidden">
-         {/* Progress indicator */}
-         <div className="flex items-center justify-center mb-6">
-           <div className="flex items-center space-x-2">
-             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${section === 1 ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'}`}>
-               1
-             </div>
-             <div className="w-8 h-1 bg-gray-200 rounded"></div>
-             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${section === 2 ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'}`}>
-               2
-             </div>
-           </div>
-         </div>
-         
-         {section === 1 && (
-           <div className="space-y-4">
-             <div>
-               <label className="block font-semibold mb-1">Job Title <span className="text-red-500">*</span></label>
-               <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Frontend Developer" className="rounded-xl bg-gray-50 focus:bg-white" required />
-             </div>
-             <div className="flex gap-4">
-               <div className="flex-1">
-                 <label className="block font-semibold mb-1">Department <span className="text-red-500">*</span></label>
-                 <BootstrapDropdown
-                   trigger={<span className="flex items-center gap-2">{departmentIcon(department)}{department || "Select department"}</span>}
-                   items={[
-                     { label: "Software Development", onClick: () => setDepartment("Software Development") },
-                     { label: "AI/ML", onClick: () => setDepartment("AI/ML") },
-                     { label: "HR", onClick: () => setDepartment("HR") },
-                     { label: "Founder's Office", onClick: () => setDepartment("Founder's Office") },
-                     { label: "Social and Outreach", onClick: () => setDepartment("Social and Outreach") },
-                     { label: "Sales and Marketing", onClick: () => setDepartment("Sales and Marketing") },
-                   ]}
-                   className="w-full rounded-xl bg-white border-gray-200"
-                 />
-               </div>
-               <div className="flex-1">
-                 <label className="block font-semibold mb-1">Type <span className="text-red-500">*</span></label>
-                 <BootstrapDropdown
-                   trigger={<span className="flex items-center gap-2">{type || "Select type"}</span>}
-                   items={[
-                     { label: "Internship", onClick: () => setType("Internship") },
-                     { label: "Full-time", onClick: () => setType("Full-time") },
-                   ]}
-                   className="w-full rounded-xl bg-white border-gray-200"
-                 />
-               </div>
-             </div>
-             <div className="flex gap-4">
-               <div className="w-1/2">
-                 <label className="block font-semibold mb-1">Location <span className="text-red-500">*</span></label>
-                 <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Remote, Bangalore" className="rounded-xl bg-gray-50 focus:bg-white" required />
-               </div>
-               <div className="w-1/2">
-                 <label className="block font-semibold mb-1">Salary <span className="text-red-500">*</span></label>
-                 <Input value={salary} onChange={e => setSalary(e.target.value)} placeholder="e.g. 20 LPA, Performance" className="rounded-xl bg-gray-50 focus:bg-white" required />
-               </div>
-             </div>
-             <div className="flex gap-4">
-               <div className="w-1/2">
-                 <label className="block font-semibold mb-1">Seats Available</label>
-                 <Input 
-                   type="number" 
-                   min="1" 
-                   value={seatsAvailable} 
-                   onChange={e => setSeatsAvailable(e.target.value)} 
-                   placeholder="5" 
-                   className="rounded-xl bg-gray-50 focus:bg-white" 
-                 />
-                 <p className="text-xs text-gray-500 mt-1">Leave empty for unlimited applications.</p>
-               </div>
-               <div className="w-1/2">
-                 <label className="block font-semibold mb-1">Application Form Link</label>
-                 <Input 
-                   value={applicationFormLink} 
-                   onChange={e => setApplicationFormLink(e.target.value)} 
-                   placeholder="https://forms.google.com/..." 
-                   className="rounded-xl bg-gray-50 focus:bg-white" 
-                 />
-                 <p className="text-xs text-gray-500 mt-1">Optional external form link.</p>
-               </div>
-             </div>
-             <div className="flex items-center gap-4">
-               <div className="flex items-center gap-2">
-                 <input
-                   type="checkbox"
-                   id="isJobClosedMobile"
-                   checked={isJobClosed}
-                   onChange={(e) => setIsJobClosed(e.target.checked)}
-                   className="rounded border-gray-300 text-black focus:ring-black"
-                 />
-                 <label htmlFor="isJobClosedMobile" className="text-sm font-medium text-gray-700">
-                   Close this job opening
-                 </label>
-               </div>
-               {isJobClosed && (
-                 <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
-                   Applications will be disabled
-                 </span>
-               )}
-             </div>
-                                                       {/* Required fields note for mobile page 1 */}
-               <div className="mt-4 mb-2">
-                 <p className="text-xs text-gray-600 text-left">
-                   <span className="text-red-500 font-bold">⚠️</span> Fields marked with an asterisk (<span className="text-red-500 font-bold">*</span>) are compulsory to be filled
-                 </p>
-               </div>
-              <div className="pt-4">
-                <Button 
-                  type="button" 
-                  className="w-full bg-black text-white text-lg py-3 rounded-xl shadow hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
-                  onClick={() => {
-                    // Validate required fields before allowing next
-                    if (!title.trim()) {
-                      toast.error('Job title is required');
-                      return;
-                    }
-                    if (!department.trim()) {
-                      toast.error('Department is required');
-                      return;
-                    }
-                    if (!type.trim()) {
-                      toast.error('Job type is required');
-                      return;
-                    }
-                    if (!location.trim()) {
-                      toast.error('Location is required');
-                      return;
-                    }
-                    if (!salary.trim()) {
-                      toast.error('Salary is required');
-                      return;
-                    }
-                    setSection(2);
-                  }}
-                  disabled={!title.trim() || !department.trim() || !type.trim() || !location.trim() || !salary.trim()}
-                >
-                  Next
-                </Button>
+        
+        <div className="space-y-3 lg:space-y-4 flex flex-col h-full min-h-0">
+          <div className="flex-1 flex flex-col min-h-0">
+            <label className="block font-semibold mb-2 text-sm lg:text-base">Job Description <span className="text-red-500">*</span></label>
+            {useFallbackEditor ? (
+              <div className="flex-1 min-h-0">
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Write job details..."
+                  className="h-full min-h-[200px] max-h-[400px] p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm lg:text-base"
+                />
+                <p className="text-xs text-gray-500 mt-1">Using simple text editor. <button type="button" onClick={() => setUseFallbackEditor(false)} className="text-blue-600 underline">Try rich editor again</button></p>
               </div>
-           </div>
-         )}
-                 {section === 2 && (
-           <div className="space-y-4">
-             <div className="flex-1 flex flex-col">
-               <label className="block font-semibold mb-1">Job Description <span className="text-red-500">*</span></label>
-               {useFallbackEditor ? (
-                 <div>
-                   <textarea
-                     value={description}
-                     onChange={(e) => setDescription(e.target.value)}
-                     placeholder="Write job details..."
-                     className="min-h-[300px] max-h-[400px] p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                   />
-                   <p className="text-xs text-gray-500 mt-1">Using simple text editor. <button type="button" onClick={() => setUseFallbackEditor(false)} className="text-blue-600 underline">Try rich editor again</button></p>
-                 </div>
-               ) : (
-                 <TipTapEditorErrorBoundary>
-                   <TipTapEditor 
-                     ref={editorRef} 
-                     content={description} 
-                     onChange={setDescription} 
-                     placeholder="Write job details..."
-                   />
-                 </TipTapEditorErrorBoundary>
-               )}
-                           </div>
-                             {/* Required fields note for mobile page 2 */}
-               <div className="mt-4 mb-2">
-                 <p className="text-xs text-gray-600 text-left">
-                   <span className="text-red-500 font-bold">⚠️</span> Fields marked with an asterisk (<span className="text-red-500 font-bold">*</span>) are compulsory to be filled
-                 </p>
-               </div>
-              <div className="flex gap-2 pt-4">
-                <Button type="button" variant="outline" className="w-1/2 rounded-xl" onClick={() => setSection(1)}>
-                  Back
-                </Button>
-                <Button type="submit" className="w-1/2 bg-black text-white text-lg py-3 rounded-xl shadow hover:bg-gray-900 transition-all" disabled={isSubmitting}>
-                  {isSubmitting ? (isEdit ? "Updating..." : "Posting...") : (isEdit ? "Update Job" : "Post Job")}
-                </Button>
+            ) : (
+              <div className="flex-1 min-h-0">
+                <TipTapEditorErrorBoundary>
+                  <TipTapEditor 
+                    ref={editorRef} 
+                    content={description} 
+                    onChange={setDescription} 
+                    placeholder="Write job details..."
+                  />
+                </TipTapEditorErrorBoundary>
               </div>
-           </div>
-         )}
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Required fields note for desktop */}
+      <div className="hidden md:block flex-shrink-0">
+        <p className="text-xs text-gray-600 text-left mt-2 mb-2">
+          <span className="text-red-500 font-bold">⚠️</span> Fields marked with an asterisk (<span className="text-red-500 font-bold">*</span>) are compulsory to be filled
+        </p>
+      </div>
+      
+      {/* Sticky footer for desktop button */}
+      <div className="hidden md:block flex-shrink-0 sticky bottom-0 left-0 w-full bg-white pt-3 z-10">
+        <Button
+          type="submit"
+          className="w-full bg-black text-white text-base lg:text-lg py-3 rounded-xl font-bold shadow hover:bg-gray-900 hover:scale-[1.02] transition-all"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (isEdit ? "Updating..." : "Posting...") : (isEdit ? "Update Job" : "Post Job")}
+        </Button>
+      </div>
+      
+      {/* Mobile and Small Tablet: multi-step layout */}
+      <div className="md:hidden flex-1 min-h-0 overflow-y-auto">
+        {/* Progress indicator */}
+        <div className="flex items-center justify-center mb-4 flex-shrink-0">
+          <div className="flex items-center space-x-2">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${section === 1 ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'}`}>
+              1
+            </div>
+            <div className="w-8 h-1 bg-gray-200 rounded"></div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${section === 2 ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'}`}>
+              2
+            </div>
+          </div>
+        </div>
+        
+        {section === 1 && (
+          <div className="space-y-3 flex-1 min-h-0">
+            <div>
+              <label className="block font-semibold mb-2 text-sm">Job Title <span className="text-red-500">*</span></label>
+              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Frontend Developer" className="rounded-xl bg-gray-50 focus:bg-white text-sm" required />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-semibold mb-2 text-sm">Department <span className="text-red-500">*</span></label>
+                <BootstrapDropdown
+                  trigger={<span className="flex items-center gap-2 text-sm">{departmentIcon(department)}{department || "Select department"}</span>}
+                  items={[
+                    { label: "Software Development", onClick: () => setDepartment("Software Development") },
+                    { label: "AI/ML", onClick: () => setDepartment("AI/ML") },
+                    { label: "HR", onClick: () => setDepartment("HR") },
+                    { label: "Founder's Office", onClick: () => setDepartment("Founder's Office") },
+                    { label: "Social and Outreach", onClick: () => setDepartment("Social and Outreach") },
+                    { label: "Sales and Marketing", onClick: () => setDepartment("Sales and Marketing") },
+                  ]}
+                  className="w-full rounded-xl bg-white border-gray-200"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold mb-2 text-sm">Type <span className="text-red-500">*</span></label>
+                <BootstrapDropdown
+                  trigger={<span className="flex items-center gap-2 text-sm">{type || "Select type"}</span>}
+                  items={[
+                    { label: "Internship", onClick: () => setType("Internship") },
+                    { label: "Full-time", onClick: () => setType("Full-time") },
+                  ]}
+                  className="w-full rounded-xl bg-white border-gray-200"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-semibold mb-2 text-sm">Location <span className="text-red-500">*</span></label>
+                <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Remote, Bangalore" className="rounded-xl bg-gray-50 focus:bg-white text-sm" required />
+              </div>
+              <div>
+                <label className="block font-semibold mb-2 text-sm">Salary <span className="text-red-500">*</span></label>
+                <Input value={salary} onChange={e => setSalary(e.target.value)} placeholder="e.g. 20 LPA, Performance" className="rounded-xl bg-gray-50 focus:bg-white text-sm" required />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-semibold mb-2 text-sm">Seats Available</label>
+                <Input 
+                  type="number" 
+                  min="1" 
+                  value={seatsAvailable} 
+                  onChange={e => setSeatsAvailable(e.target.value)} 
+                  placeholder="5" 
+                  className="rounded-xl bg-gray-50 focus:bg-white text-sm" 
+                />
+                <p className="text-xs text-gray-500 mt-1">Leave empty for unlimited applications.</p>
+              </div>
+              <div>
+                <label className="block font-semibold mb-2 text-sm">Application Form Link</label>
+                <Input 
+                  value={applicationFormLink} 
+                  onChange={e => setApplicationFormLink(e.target.value)} 
+                  placeholder="https://forms.google.com/..." 
+                  className="rounded-xl bg-gray-50 focus:bg-white text-sm" 
+                />
+                <p className="text-xs text-gray-500 mt-1">Optional external form link.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isJobClosedMobile"
+                  checked={isJobClosed}
+                  onChange={(e) => setIsJobClosed(e.target.checked)}
+                  className="rounded border-gray-300 text-black focus:ring-black"
+                />
+                <label htmlFor="isJobClosedMobile" className="text-sm font-medium text-gray-700">
+                  Close this job opening
+                </label>
+              </div>
+              {isJobClosed && (
+                <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                  Applications will be disabled
+                </span>
+              )}
+            </div>
+            
+            {/* Required fields note for mobile page 1 */}
+            <div className="mt-3 mb-2 flex-shrink-0">
+              <p className="text-xs text-gray-600 text-left">
+                <span className="text-red-500 font-bold">⚠️</span> Fields marked with an asterisk (<span className="text-red-500 font-bold">*</span>) are compulsory to be filled
+              </p>
+            </div>
+            
+            <div className="pt-3 flex-shrink-0">
+              <Button 
+                type="button" 
+                className="w-full bg-black text-white text-base py-3 rounded-xl shadow hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
+                onClick={() => {
+                  // Validate required fields before allowing next
+                  if (!title.trim()) {
+                    toast.error('Job title is required');
+                    return;
+                  }
+                  if (!department.trim()) {
+                    toast.error('Department is required');
+                    return;
+                  }
+                  if (!type.trim()) {
+                    toast.error('Job type is required');
+                    return;
+                  }
+                  if (!location.trim()) {
+                    toast.error('Location is required');
+                    return;
+                  }
+                  if (!salary.trim()) {
+                    toast.error('Salary is required');
+                    return;
+                  }
+                  setSection(2);
+                }}
+                disabled={!title.trim() || !department.trim() || !type.trim() || !location.trim() || !salary.trim()}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {section === 2 && (
+          <div className="space-y-3 flex-1 min-h-0 flex flex-col">
+            <div className="flex-1 flex flex-col min-h-0">
+              <label className="block font-semibold mb-2 text-sm">Job Description <span className="text-red-500">*</span></label>
+              {useFallbackEditor ? (
+                <div className="flex-1 min-h-0">
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Write job details..."
+                    className="h-full min-h-[200px] max-h-[300px] p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Using simple text editor. <button type="button" onClick={() => setUseFallbackEditor(false)} className="text-blue-600 underline">Try rich editor again</button></p>
+                </div>
+              ) : (
+                <div className="flex-1 min-h-0">
+                  <TipTapEditorErrorBoundary>
+                    <TipTapEditor 
+                      ref={editorRef} 
+                      content={description} 
+                      onChange={setDescription} 
+                      placeholder="Write job details..."
+                    />
+                  </TipTapEditorErrorBoundary>
+                </div>
+              )}
+            </div>
+            
+            {/* Required fields note for mobile page 2 */}
+            <div className="mt-3 mb-2 flex-shrink-0">
+              <p className="text-xs text-gray-600 text-left">
+                <span className="text-red-500 font-bold">⚠️</span> Fields marked with an asterisk (<span className="text-red-500 font-bold">*</span>) are compulsory to be filled
+              </p>
+            </div>
+            
+            <div className="flex gap-2 pt-3 flex-shrink-0">
+              <Button type="button" variant="outline" className="w-1/2 rounded-xl text-sm" onClick={() => setSection(1)}>
+                Back
+              </Button>
+              <Button type="submit" className="w-1/2 bg-black text-white text-base py-3 rounded-xl shadow hover:bg-gray-900 transition-all" disabled={isSubmitting}>
+                {isSubmitting ? (isEdit ? "Updating..." : "Posting...") : (isEdit ? "Update Job" : "Post Job")}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </form>
   );

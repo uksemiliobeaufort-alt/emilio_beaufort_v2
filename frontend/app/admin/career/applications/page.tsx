@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { firestore } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query, addDoc, deleteDoc, doc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { Loader2, ExternalLink } from "lucide-react";
@@ -25,6 +25,7 @@ interface Application {
   linkedin?: string;
   github?: string;
   hearAbout?: string;
+  rejectedAt?: any;
 }
 
 export default function ViewApplicationsPage() {
@@ -37,6 +38,9 @@ export default function ViewApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState<'Pending' | 'Shortlisted' | 'Rejected'>('Pending');
   const [processingAction, setProcessingAction] = useState<string | null>(null);
   const [sheetsUrl, setSheetsUrl] = useState<string>('');
+  const [isCleanupRunning, setIsCleanupRunning] = useState(false);
+  const cleanupIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastNotificationRef = useRef<string>('');
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -217,6 +221,59 @@ export default function ViewApplicationsPage() {
     }
   }, []);
 
+  // Auto-cleanup rejected applications (runs every 5 minutes in background)
+  useEffect(() => {
+    const cleanupRejectedApplications = async () => {
+      if (isCleanupRunning) return; // Prevent multiple simultaneous cleanups
+      
+      setIsCleanupRunning(true);
+      try {
+        const response = await fetch('/api/auto-delete-rejected', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'cleanup_rejected'
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.deletedCount > 0) {
+            console.log(`Auto-deleted ${result.deletedCount} rejected applications`);
+            // Refresh the applications list if we're on the rejected tab
+            if (statusFilter === 'Rejected') {
+              await fetchApplications();
+            }
+          }
+          // Don't show notifications for background cleanup to avoid spam
+        } else {
+          console.error('Failed to cleanup rejected applications:', await response.text());
+        }
+      } catch (error) {
+        console.error('Error during auto-cleanup:', error);
+      } finally {
+        setIsCleanupRunning(false);
+      }
+    };
+
+    // Clear any existing interval
+    if (cleanupIntervalRef.current) {
+      clearInterval(cleanupIntervalRef.current);
+    }
+
+    // Run cleanup immediately and then every 5 minutes
+    cleanupRejectedApplications();
+    cleanupIntervalRef.current = setInterval(cleanupRejectedApplications, 5 * 60 * 1000); // 5 minutes
+
+    return () => {
+      if (cleanupIntervalRef.current) {
+        clearInterval(cleanupIntervalRef.current);
+      }
+    };
+  }, [statusFilter]); // Removed isCleanupRunning from dependencies
+
   // Fetch applications when filter changes
   useEffect(() => {
     fetchApplications();
@@ -282,16 +339,16 @@ export default function ViewApplicationsPage() {
     
     setProcessingAction('reject');
     try {
-      // Add to rejected_candidates with auto-delete timestamp
-      const sevenDaysFromNow = new Date();
-      sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+      // Add to rejected_candidates with auto-delete timestamp (1 hour from now)
+      const oneHourFromNow = new Date();
+      oneHourFromNow.setHours(oneHourFromNow.getHours() + 1);
       
       await addDoc(collection(firestore, 'rejected_candidates'), {
         ...application,
         originalId: application.id,
         rejectedAt: serverTimestamp(),
         status: 'Rejected',
-        autoDeleteAt: Timestamp.fromDate(sevenDaysFromNow)
+        autoDeleteAt: Timestamp.fromDate(oneHourFromNow)
       });
 
       // Remove from career_applications
@@ -325,7 +382,7 @@ export default function ViewApplicationsPage() {
       
       setDialogOpen(false);
       setSelectedApp(null);
-      toast.success('Application rejected. It will be auto-deleted in 7 days.');
+      toast.success('Application rejected. It will be auto-deleted in 1 hour.');
     } catch (error) {
       console.error('Error rejecting application:', error);
       toast.error('Failed to reject application');
@@ -565,6 +622,77 @@ export default function ViewApplicationsPage() {
                   <span className="hidden sm:inline">Export CSV</span>
                   <span className="sm:hidden">CSV</span>
                 </Button>
+                                {statusFilter === 'Rejected' && (
+                  <Button 
+                    onClick={async () => {
+                      if (isCleanupRunning) {
+                        toast.info('Cleanup already in progress...');
+                        return;
+                      }
+                      
+                      setIsCleanupRunning(true);
+                      try {
+                        const response = await fetch('/api/auto-delete-rejected', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            action: 'cleanup_rejected'
+                          })
+                        });
+
+                        if (response.ok) {
+                          const result = await response.json();
+                          const notificationMessage = result.deletedCount > 0 
+                            ? `Manually deleted ${result.deletedCount} old rejected applications`
+                            : 'No old rejected applications to delete';
+                          
+                          // Prevent duplicate notifications
+                          if (lastNotificationRef.current !== notificationMessage) {
+                            lastNotificationRef.current = notificationMessage;
+                            if (result.deletedCount > 0) {
+                              toast.success(notificationMessage);
+                              await fetchApplications();
+                            } else {
+                              toast.info(notificationMessage);
+                            }
+                          }
+                        } else {
+                          const errorData = await response.json();
+                          const errorMessage = 'Failed to cleanup: ' + (errorData.details || errorData.error);
+                          if (lastNotificationRef.current !== errorMessage) {
+                            lastNotificationRef.current = errorMessage;
+                            toast.error(errorMessage);
+                          }
+                        }
+                      } catch (error) {
+                        toast.error('Error during manual cleanup: ' + error);
+                      } finally {
+                        setIsCleanupRunning(false);
+                      }
+                    }}
+                    disabled={isCleanupRunning}
+                    variant="outline"
+                    className="flex items-center gap-1 sm:gap-2 bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:text-red-800 text-sm sm:text-base transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isCleanupRunning ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="hidden sm:inline">Cleaning...</span>
+                        <span className="sm:hidden">Cleaning...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span className="hidden sm:inline">Manual Cleanup</span>
+                        <span className="sm:hidden">Cleanup</span>
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -661,6 +789,12 @@ export default function ViewApplicationsPage() {
                         <p className="text-xs sm:text-sm text-gray-500">
                           Submitted: {app.createdAt ? new Date(app.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}
                         </p>
+                        {statusFilter === 'Rejected' && app.rejectedAt && (
+                          <p className="text-xs sm:text-sm text-red-500 font-medium">
+                            ⏰ Auto-delete: {app.rejectedAt && app.rejectedAt.toDate ? 
+                              new Date(app.rejectedAt.toDate().getTime() + 60 * 60 * 1000).toLocaleString() : 'N/A'}
+                          </p>
+                        )}
                       </div>
                       <div className="flex gap-2 sm:gap-2">
                         <Button

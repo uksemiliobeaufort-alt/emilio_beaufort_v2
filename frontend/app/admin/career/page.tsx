@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Pencil, Trash2, UploadCloud, Share2, Copy, Twitter, Linkedin, Facebook, Link as LinkIcon, MessageCircle } from "lucide-react";
+import { Loader2, Pencil, Trash2, UploadCloud, Share2, Copy, Twitter, Linkedin, Facebook, Link as LinkIcon, MessageCircle, X } from "lucide-react";
 import { toast } from "sonner";
 import TipTapEditor from "@/app/admin/components/TipTapEditor";
 import { Info, PlusCircle } from "lucide-react";
@@ -239,16 +239,31 @@ export default function AdminCareersPage() {
           <h1 className="text-3xl font-extrabold mb-1">Career Opportunities</h1>
           <p className="text-gray-500">Post and manage job openings</p>
         </div>
-        <Button
-          onClick={() => {
-            resetForm();
-            setDialogOpen(true);
-          }}
-          className="hidden md:flex items-center gap-2 bg-black text-white px-5 py-2 rounded-full shadow-lg hover:bg-gray-900 transition-all"
-        >
-          <PlusCircle className="h-5 w-5" />
-          Post New Job
-        </Button>
+        <div className="flex items-center gap-3">
+          {dialogOpen && (
+            <Button
+              onClick={() => {
+                resetForm();
+                setDialogOpen(false);
+              }}
+              variant="outline"
+              className="hidden md:flex items-center gap-2 border-gray-300 text-gray-700 px-4 py-2 rounded-full shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all"
+            >
+              <X className="h-4 w-4" />
+              Close
+            </Button>
+          )}
+          <Button
+            onClick={() => {
+              resetForm();
+              setDialogOpen(true);
+            }}
+            className="hidden md:flex items-center gap-2 bg-black text-white px-5 py-2 rounded-full shadow-lg hover:bg-gray-900 transition-all"
+          >
+            <PlusCircle className="h-5 w-5" />
+            Post New Job
+          </Button>
+        </div>
       </div>
       {/* Floating Action Button for New Job */}
       <Button
@@ -262,39 +277,62 @@ export default function AdminCareersPage() {
         <PlusCircle className="h-6 w-6" />
         Post Job
       </Button>
+      
+      {/* Mobile Close Button */}
+      {dialogOpen && (
+        <Button
+          onClick={() => {
+            resetForm();
+            setDialogOpen(false);
+          }}
+          variant="outline"
+          className="fixed bottom-8 left-8 z-50 flex md:hidden items-center gap-2 border-gray-300 text-gray-700 px-4 py-3 rounded-full shadow-2xl hover:bg-gray-50 hover:border-gray-400 transition-all bg-white"
+          style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.15)" }}
+        >
+          <X className="h-5 w-5" />
+          Close
+        </Button>
+      )}
       {/* Job Form Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => {
         if (!open) resetForm();
         setDialogOpen(open);
       }}>
-        <DialogContent className="w-full max-w-full lg:max-w-[60vw] bg-white rounded-2xl shadow-2xl p-0 px-2 md:px-8 animate-fade-in overflow-hidden">
-          <JobPostForm
-            job={selectedJob}
-            onSubmit={async (data) => {
-              setIsProcessing(true);
-              const slug = data.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-              const jobData = { ...data, slug };
-              try {
-                if (selectedJob) {
-                  await updateDoc(doc(firestore, 'job_posts', selectedJob.id), jobData);
-                  toast.success("Job updated");
-                } else {
-                  await addDoc(collection(firestore, 'job_posts'), jobData);
-                  toast.success("Job posted");
+        <DialogContent 
+          className="w-[95vw] h-[70vh] sm:w-[90vw] sm:h-[70vh] md:w-[80vw] md:h-[70vh] lg:w-[70vw] lg:h-[70vh] xl:w-[60vw] xl:h-[70vh] bg-white rounded-2xl shadow-2xl p-3 sm:p-4 md:p-6 lg:p-8 animate-fade-in overflow-hidden relative" 
+          style={{ height: '70vh !important', maxHeight: '70vh !important' }}
+          showCloseButton={false}
+        >
+          {/* Content Container */}
+          <div className="h-full overflow-y-auto">
+            <JobPostForm
+              job={selectedJob}
+              onSubmit={async (data) => {
+                setIsProcessing(true);
+                const slug = data.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                const jobData = { ...data, slug };
+                try {
+                  if (selectedJob) {
+                    await updateDoc(doc(firestore, 'job_posts', selectedJob.id), jobData);
+                    toast.success("Job updated");
+                  } else {
+                    await addDoc(collection(firestore, 'job_posts'), jobData);
+                    toast.success("Job posted");
+                  }
+                  resetForm();
+                  setDialogOpen(false);
+                  fetchJobs();
+                } catch (error) {
+                  console.error(error);
+                  toast.error("Failed to save job");
+                } finally {
+                  setIsProcessing(false);
                 }
-                resetForm();
-                setDialogOpen(false);
-                fetchJobs();
-              } catch (error) {
-                console.error(error);
-                toast.error("Failed to save job");
-              } finally {
-                setIsProcessing(false);
-              }
-            }}
-            isSubmitting={isProcessing}
-            isEdit={!!selectedJob}
-          />
+              }}
+              isSubmitting={isProcessing}
+              isEdit={!!selectedJob}
+            />
+          </div>
         </DialogContent>
       </Dialog>
       {/* Share Dialog */}

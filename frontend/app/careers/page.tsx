@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { firestore } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, onSnapshot } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Briefcase, Brain, Users, User, Globe, HeartHandshake, Search, Loader2, Info, MapPin, BadgeDollarSign, Clock, Users as UsersIcon, Share2, Copy, Twitter, Linkedin, Facebook, Mail, Link as LinkIcon, MessageCircle } from "lucide-react";
@@ -60,6 +60,7 @@ function CareersContent() {
   const [jobToShare, setJobToShare] = useState<Job | null>(null);
   const [loadingDialog, setLoadingDialog] = useState(false);
   const [loadingApply, setLoadingApply] = useState<string | null>(null);
+  const [isRealtimeLoading, setIsRealtimeLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -100,8 +101,76 @@ function CareersContent() {
       }
       setLoading(false);
     };
+
+    // Set up real-time listeners for job posts
+    const jobsQuery = query(collection(firestore, "job_posts"), orderBy("created_at", "desc"));
+    const unsubscribeJobs = onSnapshot(jobsQuery, (snapshot) => {
+      setIsRealtimeLoading(true);
+      const jobsData = snapshot.docs.map(docSnap => ({ ...(docSnap.data() as Omit<Job, 'id'>), id: docSnap.id }));
+      
+      // Filter out expired jobs
+      const currentTime = new Date();
+      const activeJobs = jobsData.filter(job => {
+        if (!job.auto_delete_at) return true;
+        const deleteTime = job.auto_delete_at.toDate ? job.auto_delete_at.toDate() : new Date(job.auto_delete_at);
+        return deleteTime > currentTime;
+      });
+      
+      setJobs(activeJobs);
+      
+      // Update availability for each job
+      activeJobs.forEach(async (job) => {
+        const availability = await checkJobAvailability(job.id, job.seats_available, job.is_closed);
+        setJobAvailability(prev => ({
+          ...prev,
+          [job.id]: { isAvailable: availability.isAvailable, applicationsCount: availability.applicationsCount }
+        }));
+      });
+      setIsRealtimeLoading(false);
+    }, (error) => {
+      console.error("Error listening to job posts:", error);
+      setIsRealtimeLoading(false);
+    });
+
+    // Set up real-time listeners for career applications
+    const applicationsQuery = query(collection(firestore, "career_applications"));
+    const unsubscribeApplications = onSnapshot(applicationsQuery, async (snapshot) => {
+      setIsRealtimeLoading(true);
+      // Group applications by jobId
+      const applicationsByJob: Record<string, number> = {};
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const jobId = data.jobId;
+        if (jobId) {
+          applicationsByJob[jobId] = (applicationsByJob[jobId] || 0) + 1;
+        }
+      });
+
+      // Update availability for each job
+      jobs.forEach(async (job) => {
+        const applicationsCount = applicationsByJob[job.id] || 0;
+        const isAvailable = !job.is_closed && (!job.seats_available || applicationsCount < job.seats_available);
+        
+        setJobAvailability(prev => ({
+          ...prev,
+          [job.id]: { isAvailable, applicationsCount }
+        }));
+      });
+      setIsRealtimeLoading(false);
+    }, (error) => {
+      console.error("Error listening to career applications:", error);
+      setIsRealtimeLoading(false);
+    });
+
+    // Initial fetch
     fetchJobs();
-  }, []);
+
+    // Cleanup listeners on unmount
+    return () => {
+      unsubscribeJobs();
+      unsubscribeApplications();
+    };
+  }, [jobs]); // Add jobs as dependency to ensure updates when jobs change
 
   // Check for jobId in URL params and open dialog if found
   useEffect(() => {
@@ -214,6 +283,12 @@ function CareersContent() {
         <div className="text-center mb-10">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-black mb-2">Open Positions</h1>
           <p className="text-gray-500 text-lg">Join our team and help shape the future of luxury grooming.</p>
+          {isRealtimeLoading && (
+            <div className="flex items-center justify-center mt-2 text-sm text-green-600">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
+              Live updates
+            </div>
+          )}
         </div>
         {/* Search Bar */}
         <div className="flex justify-center mb-8">
@@ -271,12 +346,21 @@ function CareersContent() {
               return (
                 <div
                   key={job.id}
-                  className="relative border border-gray-200 flex flex-col h-full group transition-all duration-300 ring-1 ring-transparent hover:ring-[#B7A16C]/40 sm:rounded-3xl sm:shadow-lg sm:p-8 p-4 rounded-none shadow-none hover:shadow-none sm:hover:shadow-2xl sm:hover:-translate-y-2 sm:hover:scale-[1.03] hover:border-[#B7A16C]"
+                  className={`relative border border-gray-200 flex flex-col h-full group transition-all duration-300 ring-1 ring-transparent hover:ring-[#B7A16C]/40 sm:rounded-3xl sm:shadow-lg sm:p-8 p-4 rounded-none shadow-none hover:shadow-none sm:hover:shadow-2xl sm:hover:-translate-y-2 sm:hover:scale-[1.03] hover:border-[#B7A16C] ${
+                    job.is_closed ? 'opacity-75 bg-gray-50' : ''
+                  }`}
                   style={{
                     boxShadow: '0 8px 32px 0 rgba(17,17,17,0.06)',
-                    background: gradient,
+                    background: job.is_closed ? 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)' : gradient,
                   }}
                 >
+                  {/* Closed Position Badge */}
+                  {job.is_closed && (
+                    <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg">
+                      CLOSED
+                    </div>
+                  )}
+                  
                   {/* Share button - top right */}
                   <button
                     onClick={(e) => {
@@ -290,17 +374,26 @@ function CareersContent() {
                   </button>
                   
                   {/* Job Title */}
-                  <div className="text-xl font-bold text-premium mb-2 line-clamp-2 min-h-[2.5em]">{job.title}</div>
+                  <div className={`text-xl font-bold text-premium mb-2 line-clamp-2 min-h-[2.5em] ${job.is_closed ? 'mt-12' : ''}`}>{job.title}</div>
                   {/* Department and tags */}
                   <div className="flex items-center gap-2 mb-4 text-xs text-gray-500 font-semibold flex-wrap">
                     {job.department && <span className="flex items-center gap-1"><Briefcase className="h-4 w-4 mr-1 text-gray-400" />{job.department}</span>}
                     {job.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4 mr-1 text-gray-400" />{job.location}</span>}
                     {job.type && <span className="flex items-center gap-1"><Clock className="h-4 w-4 mr-1 text-gray-400" />{job.type}</span>}
                     {job.salary && <span className="flex items-center gap-1"><BadgeDollarSign className="h-4 w-4 mr-1 text-gray-400" />{job.salary}</span>}
-                    {job.seats_available && jobAvailability[job.id] && (
-                      <span className={`flex items-center gap-1 ${jobAvailability[job.id].isAvailable ? 'text-green-600' : 'text-red-600'}`}>
-                        <UsersIcon className="h-4 w-4 mr-1" />
-                        {jobAvailability[job.id].applicationsCount}/{job.seats_available}
+                    {jobAvailability[job.id] && (
+                      <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                        jobAvailability[job.id].isAvailable 
+                          ? 'bg-green-50 text-green-700 border border-green-200' 
+                          : 'bg-red-50 text-red-700 border border-red-200'
+                      }`}>
+                        <UsersIcon className="h-3 w-3 mr-1" />
+                        {jobAvailability[job.id].applicationsCount} {jobAvailability[job.id].applicationsCount === 1 ? 'applied' : 'applied'}
+                        {job.seats_available && (
+                          <span className="ml-1 text-gray-500">
+                            / {job.seats_available} seats
+                          </span>
+                        )}
                       </span>
                     )}
                   </div>
@@ -334,8 +427,12 @@ function CareersContent() {
                     </Button>
                     {job.application_form_link ? (
                       <Button 
-                        className="w-1/2 bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-1/2 bg-gray-400 text-white text-lg py-3 rounded-2xl shadow transition-all font-bold cursor-not-allowed disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={async () => {
+                          if (job.is_closed) {
+                            toast.error("This position is closed and no longer accepting applications.");
+                            return;
+                          }
                           setLoadingApply(job.id);
                           try {
                             // Simulate a small delay to show loading state
@@ -345,7 +442,7 @@ function CareersContent() {
                             setLoadingApply(null);
                           }
                         }}
-                        disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) || loadingApply === job.id}
+                        disabled={job.is_closed || !!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) || loadingApply === job.id}
                       >
                         {loadingApply === job.id ? (
                           <>
@@ -353,14 +450,19 @@ function CareersContent() {
                             Opening...
                           </>
                         ) : (
-                          job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')
+                          job.is_closed ? 'Position Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')
                         )}
                       </Button>
                     ) : (
                       <Link
-                        href={job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? '#' : `/careersForm?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title)}&department=${encodeURIComponent(job.department || '')}`}
+                        href={job.is_closed || (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) ? '#' : `/careersForm?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title)}&department=${encodeURIComponent(job.department || '')}`}
                         className="w-1/2"
                         onClick={async (e) => {
+                          if (job.is_closed) {
+                            e.preventDefault();
+                            toast.error("This position is closed and no longer accepting applications.");
+                            return;
+                          }
                           if (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) {
                             e.preventDefault();
                             return;
@@ -375,8 +477,12 @@ function CareersContent() {
                         }}
                       >
                         <Button 
-                          className="w-full bg-black text-white text-lg py-3 rounded-2xl shadow hover:bg-gray-900 hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                          disabled={!!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) || loadingApply === job.id}
+                          className={`w-full text-lg py-3 rounded-2xl shadow transition-all font-bold ${
+                            job.is_closed 
+                              ? 'bg-gray-400 text-white cursor-not-allowed' 
+                              : 'bg-black text-white hover:bg-gray-900 hover:shadow-lg'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                          disabled={job.is_closed || !!(job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable) || loadingApply === job.id}
                         >
                           {loadingApply === job.id ? (
                             <>
@@ -384,7 +490,7 @@ function CareersContent() {
                               Opening...
                             </>
                           ) : (
-                            job.is_closed ? 'Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')
+                            job.is_closed ? 'Position Closed' : (job.seats_available && jobAvailability[job.id] && !jobAvailability[job.id].isAvailable ? 'Full' : 'Apply')
                           )}
                         </Button>
                       </Link>
@@ -457,6 +563,21 @@ function CareersContent() {
                 {selectedJob.type && <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100 break-words max-w-full">{selectedJob.type}</span>}
                 {selectedJob.salary && <span className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-semibold border border-yellow-100 break-words max-w-full">Salary: {selectedJob.salary}</span>}
                 {selectedJob.application_form_link && <span className="inline-flex items-center px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold border border-orange-100 break-words max-w-full">External Form</span>}
+                {jobAvailability[selectedJob.id] && (
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
+                    jobAvailability[selectedJob.id].isAvailable 
+                      ? 'bg-green-50 text-green-700 border-green-200' 
+                      : 'bg-red-50 text-red-700 border-red-200'
+                  }`}>
+                    <UsersIcon className="h-3 w-3 mr-1" />
+                    {jobAvailability[selectedJob.id].applicationsCount} {jobAvailability[selectedJob.id].applicationsCount === 1 ? 'person applied' : 'people applied'}
+                    {selectedJob.seats_available && (
+                      <span className="ml-1 text-gray-500">
+                        / {selectedJob.seats_available} seats
+                      </span>
+                    )}
+                  </span>
+                )}
               </div>
               <div className="text-xs text-gray-400 mb-2 px-6">
                 {selectedJob.created_at && (typeof selectedJob.created_at === 'string' ? new Date(selectedJob.created_at).toLocaleDateString() : '')}
@@ -478,8 +599,16 @@ function CareersContent() {
                   {/* Apply Button */}
                   {selectedJob.application_form_link ? (
                     <Button
-                      className="flex-1 px-6 py-3 font-semibold rounded-full shadow-lg hover:bg-orange-600 border border-orange-500 text-white bg-orange-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`flex-1 px-6 py-3 font-semibold rounded-full shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                        selectedJob.is_closed 
+                          ? 'bg-gray-400 text-white cursor-not-allowed border border-gray-400' 
+                          : 'hover:bg-orange-600 border border-orange-500 text-white bg-orange-500'
+                      }`}
                       onClick={async () => {
+                        if (selectedJob.is_closed) {
+                          toast.error("This position is closed and no longer accepting applications.");
+                          return;
+                        }
                         setLoadingApply(selectedJob.id);
                         try {
                           // Simulate a small delay to show loading state
@@ -489,7 +618,7 @@ function CareersContent() {
                           setLoadingApply(null);
                         }
                       }}
-                      disabled={loadingApply === selectedJob.id}
+                      disabled={selectedJob.is_closed || loadingApply === selectedJob.id}
                     >
                       {loadingApply === selectedJob.id ? (
                         <>
@@ -497,19 +626,29 @@ function CareersContent() {
                           Opening Application Form...
                         </>
                       ) : (
-                        'Apply Now'
+                        selectedJob.is_closed ? 'Position Closed' : 'Apply Now'
                       )}
                     </Button>
                   ) : (
                     <Link
-                      href={`/careersForm?jobId=${selectedJob.id}&jobTitle=${encodeURIComponent(selectedJob.title)}&department=${encodeURIComponent(selectedJob.department || '')}`}
+                      href={selectedJob.is_closed ? '#' : `/careersForm?jobId=${selectedJob.id}&jobTitle=${encodeURIComponent(selectedJob.title)}&department=${encodeURIComponent(selectedJob.department || '')}`}
                       className="flex-1"
+                      onClick={(e) => {
+                        if (selectedJob.is_closed) {
+                          e.preventDefault();
+                          toast.error("This position is closed and no longer accepting applications.");
+                        }
+                      }}
                     >
                       <Button 
-                        className="w-full px-6 py-3 font-semibold rounded-full shadow-lg hover:bg-black border border-black text-white bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!!(selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable)}
+                        className={`w-full px-6 py-3 font-semibold rounded-full shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                          selectedJob.is_closed 
+                            ? 'bg-gray-400 text-white cursor-not-allowed border border-gray-400' 
+                            : 'hover:bg-black border border-black text-white bg-black'
+                        }`}
+                        disabled={selectedJob.is_closed || !!(selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable)}
                       >
-                        {selectedJob.is_closed ? 'Closed' : (selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable ? 'Full' : 'Apply Now')}
+                        {selectedJob.is_closed ? 'Position Closed' : (selectedJob.seats_available && jobAvailability[selectedJob.id] && !jobAvailability[selectedJob.id].isAvailable ? 'Full' : 'Apply Now')}
                       </Button>
                     </Link>
                   )}
