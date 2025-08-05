@@ -381,7 +381,7 @@ function CareersContent() {
                     {job.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4 mr-1 text-gray-400" />{job.location}</span>}
                     {job.type && <span className="flex items-center gap-1"><Clock className="h-4 w-4 mr-1 text-gray-400" />{job.type}</span>}
                     {job.salary && <span className="flex items-center gap-1"><BadgeDollarSign className="h-4 w-4 mr-1 text-gray-400" />{job.salary}</span>}
-                    {jobAvailability[job.id] && (
+                    {/* {jobAvailability[job.id] && (
                       <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                         jobAvailability[job.id].isAvailable 
                           ? 'bg-green-50 text-green-700 border border-green-200' 
@@ -395,7 +395,7 @@ function CareersContent() {
                           </span>
                         )}
                       </span>
-                    )}
+                    )} */}
                   </div>
                   {/* Buttons */}
                   <div className="mt-auto pt-2 flex gap-2">
@@ -563,7 +563,7 @@ function CareersContent() {
                 {selectedJob.type && <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100 break-words max-w-full">{selectedJob.type}</span>}
                 {selectedJob.salary && <span className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-semibold border border-yellow-100 break-words max-w-full">Salary: {selectedJob.salary}</span>}
                 {selectedJob.application_form_link && <span className="inline-flex items-center px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold border border-orange-100 break-words max-w-full">External Form</span>}
-                {jobAvailability[selectedJob.id] && (
+                {/* {jobAvailability[selectedJob.id] && (
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
                     jobAvailability[selectedJob.id].isAvailable 
                       ? 'bg-green-50 text-green-700 border-green-200' 
@@ -577,7 +577,7 @@ function CareersContent() {
                       </span>
                     )}
                   </span>
-                )}
+                )} */}
               </div>
               <div className="text-xs text-gray-400 mb-2 px-6">
                 {selectedJob.created_at && (typeof selectedJob.created_at === 'string' ? new Date(selectedJob.created_at).toLocaleDateString() : '')}
