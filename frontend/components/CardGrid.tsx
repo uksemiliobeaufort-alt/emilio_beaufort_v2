@@ -26,7 +26,7 @@ const cardData: CardData[] = [
     subtitle: "Premium Grooming Collection",
     description: "Discover our signature range of luxury grooming essentials, crafted with precision and care.",
     link: "/products",
-    image: getImageUrl('the-house', 'Cosmetics Banner.jpeg')
+    image: getImageUrl('the-house', 'Cosmetics Banner.webp')
   },
   {
     title: "ORMÉE Hair",

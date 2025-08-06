@@ -1044,3 +1044,207 @@
   background-color: inherit !important;
 }
 }
+
+/* Custom styles for job form dialog */
+.job-form-dialog {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 1000 !important;
+  width: 90vw !important;
+  max-width: 1000px !important;
+  height: 80vh !important;
+  max-height: 80vh !important;
+  margin: 0 !important;
+  border-radius: 1rem !important;
+  overflow: hidden !important;
+  background: white !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Override Radix UI dialog positioning */
+[data-radix-dialog-content] {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 1000 !important;
+  margin: 0 !important;
+  max-height: 80vh !important;
+  max-width: 90vw !important;
+}
+
+/* Specific override for job form dialog */
+[data-radix-dialog-content].job-form-dialog,
+[data-radix-dialog-content][style*="position: fixed"] {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 1000 !important;
+  width: 90vw !important;
+  max-width: 1000px !important;
+  height: 80vh !important;
+  max-height: 80vh !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 1rem !important;
+  overflow: hidden !important;
+  background: white !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  padding: 0 !important;
+}
+
+.job-form-dialog-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  z-index: 999 !important;
+}
+
+@media (max-width: 768px) {
+  .job-form-dialog {
+    width: 95vw !important;
+    height: 85vh !important;
+    max-height: 85vh !important;
+  }
+  
+  [data-radix-dialog-content] {
+    max-height: 85vh !important;
+    max-width: 95vw !important;
+  }
+  
+  [data-radix-dialog-content].job-form-dialog,
+  [data-radix-dialog-content][style*="position: fixed"] {
+    width: 95vw !important;
+    height: 85vh !important;
+    max-height: 85vh !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .job-form-dialog {
+    width: 80vw !important;
+    max-width: 900px !important;
+  }
+  
+  [data-radix-dialog-content] {
+    max-width: 80vw !important;
+  }
+  
+  [data-radix-dialog-content].job-form-dialog,
+  [data-radix-dialog-content][style*="position: fixed"] {
+    width: 80vw !important;
+    max-width: 900px !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .job-form-dialog {
+    width: 70vw !important;
+    max-width: 800px !important;
+  }
+  
+  [data-radix-dialog-content] {
+    max-width: 70vw !important;
+  }
+  
+  [data-radix-dialog-content].job-form-dialog,
+  [data-radix-dialog-content][style*="position: fixed"] {
+    width: 70vw !important;
+    max-width: 800px !important;
+  }
+}
+
+/* Ensure form content fills the dialog properly */
+.job-form-container {
+  height: 100% !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Fix for mobile form layout */
+@media (max-width: 768px) {
+  .job-form-mobile {
+    padding: 1rem !important;
+    overflow-y: auto !important;
+    height: 100% !important;
+  }
+}
+
+/* Override any conflicting Radix UI styles */
+[data-radix-dialog-content] {
+  border: none !important;
+  background: white !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  padding: 0 !important;
+}
+
+/* Ensure dialog portal is properly positioned */
+[data-radix-dialog-portal] {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 999 !important;
+}
+
+/* Force dialog to be centered and properly sized */
+[data-radix-dialog-content][style*="position: fixed"] {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 1000 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 1rem !important;
+  overflow: hidden !important;
+  background: white !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  padding: 0 !important;
+}
+
+/* Ensure dialog stays within viewport */
+@media (max-height: 600px) {
+  .job-form-dialog,
+  [data-radix-dialog-content].job-form-dialog,
+  [data-radix-dialog-content][style*="position: fixed"] {
+    height: 90vh !important;
+    max-height: 90vh !important;
+    top: 5vh !important;
+    transform: translate(-50%, 0) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .job-form-dialog,
+  [data-radix-dialog-content].job-form-dialog,
+  [data-radix-dialog-content][style*="position: fixed"] {
+    width: 98vw !important;
+    height: 90vh !important;
+    max-height: 90vh !important;
+    top: 5vh !important;
+    transform: translate(-50%, 0) !important;
+  }
+}
+
+/* Custom scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Job form dialog custom styles */

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { firestore } from '@/lib/firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogPortal, DialogOverlay } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Pencil, Trash2, UploadCloud, Share2, Copy, Twitter, Linkedin, Facebook, Link as LinkIcon, MessageCircle, X } from "lucide-react";
@@ -14,6 +14,7 @@ import { Info, PlusCircle } from "lucide-react";
 import BootstrapDropdown from "@/components/ui/BootstrapDropdown";
 import { Briefcase, Code, Cpu, Users, User } from "lucide-react";
 import JobPostForm from "./JobPostForm";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 interface JobPost {
   id: string;
@@ -298,42 +299,66 @@ export default function AdminCareersPage() {
         if (!open) resetForm();
         setDialogOpen(open);
       }}>
-        <DialogContent 
-          className="w-[95vw] h-[70vh] sm:w-[90vw] sm:h-[70vh] md:w-[80vw] md:h-[70vh] lg:w-[70vw] lg:h-[70vh] xl:w-[60vw] xl:h-[70vh] bg-white rounded-2xl shadow-2xl p-3 sm:p-4 md:p-6 lg:p-8 animate-fade-in overflow-hidden relative" 
-          style={{ height: '70vh !important', maxHeight: '70vh !important' }}
-          showCloseButton={false}
-        >
-          {/* Content Container */}
-          <div className="h-full overflow-y-auto">
-            <JobPostForm
-              job={selectedJob}
-              onSubmit={async (data) => {
-                setIsProcessing(true);
-                const slug = data.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-                const jobData = { ...data, slug };
-                try {
-                  if (selectedJob) {
-                    await updateDoc(doc(firestore, 'job_posts', selectedJob.id), jobData);
-                    toast.success("Job updated");
-                  } else {
-                    await addDoc(collection(firestore, 'job_posts'), jobData);
-                    toast.success("Job posted");
-                  }
-                  resetForm();
-                  setDialogOpen(false);
-                  fetchJobs();
-                } catch (error) {
-                  console.error(error);
-                  toast.error("Failed to save job");
-                } finally {
-                  setIsProcessing(false);
-                }
+        {dialogOpen && (
+          <DialogPortal>
+            <DialogOverlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+            <DialogPrimitive.Content
+              className="job-form-dialog fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-6xl h-[85vh] max-h-[85vh] translate-x-[-50%] translate-y-[-50%] bg-white rounded-2xl shadow-2xl border-0 overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+              style={{
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 1000,
+                width: '90vw',
+                maxWidth: '1000px',
+                height: '80vh',
+                maxHeight: '80vh',
+                margin: 0,
+                border: 'none',
+                borderRadius: '1rem',
+                overflow: 'hidden',
+                background: 'white',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
               }}
-              isSubmitting={isProcessing}
-              isEdit={!!selectedJob}
-            />
-          </div>
-        </DialogContent>
+            >
+              {/* Content Container */}
+              <div className="h-full w-full overflow-hidden flex flex-col">
+                <JobPostForm
+                  job={selectedJob}
+                  onSubmit={async (data) => {
+                    setIsProcessing(true);
+                    const slug = data.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                    const jobData = { ...data, slug };
+                    try {
+                      if (selectedJob) {
+                        await updateDoc(doc(firestore, 'job_posts', selectedJob.id), jobData);
+                        toast.success("Job updated");
+                      } else {
+                        await addDoc(collection(firestore, 'job_posts'), jobData);
+                        toast.success("Job posted");
+                      }
+                      resetForm();
+                      setDialogOpen(false);
+                      fetchJobs();
+                    } catch (error) {
+                      console.error(error);
+                      toast.error("Failed to save job");
+                    } finally {
+                      setIsProcessing(false);
+                    }
+                  }}
+                  isSubmitting={isProcessing}
+                  isEdit={!!selectedJob}
+                  onClose={() => {
+                    resetForm();
+                    setDialogOpen(false);
+                  }}
+                />
+              </div>
+            </DialogPrimitive.Content>
+          </DialogPortal>
+        )}
       </Dialog>
       {/* Share Dialog */}
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>

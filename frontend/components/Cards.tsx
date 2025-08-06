@@ -13,28 +13,28 @@ const products = [
     name: "Signature Beard Oil",
     description: "A luxurious blend of natural oils for beard nourishment",
     price: "₹45",
-    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`
+    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.webp`
   },
   {
     id: 2,
     name: "Premium Hair Pomade",
     description: "Strong hold with natural shine for classic styling",
     price: "₹35",
-    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`
+    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.webp`
   },
   {
     id: 3,
     name: "Facial Moisturizer",
     description: "Hydrating formula with anti-aging properties",
     price: "₹55",
-    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`
+    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.webp`
   },
   {
     id: 4,
     name: "Aftershave Balm",
     description: "Soothing post-shave care with natural ingredients",
     price: "₹40",
-    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.jpeg`
+    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.webp`
   }
 ];
 

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import BootstrapDropdown from "@/components/ui/BootstrapDropdown";
 import TipTapEditor, { TipTapEditorHandle } from "@/app/admin/components/TipTapEditor";
-import { Code, Cpu, User, Users } from "lucide-react";
+import { Code, Cpu, User, Users, X } from "lucide-react";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { uploadJobPostImagesToFirebase } from '@/lib/firebase';
 import { Timestamp } from 'firebase/firestore';
@@ -57,7 +57,7 @@ class TipTapEditorErrorBoundary extends React.Component<ErrorBoundaryProps, Erro
   }
 }
 
-export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { job?: any, onSubmit: (data: any) => void, isSubmitting?: boolean, isEdit?: boolean }) {
+export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit, onClose }: { job?: any, onSubmit: (data: any) => void, isSubmitting?: boolean, isEdit?: boolean, onClose?: () => void }) {
   const [title, setTitle] = useState(job?.title || "");
   const [department, setDepartment] = useState(job?.department || "");
   const [type, setType] = useState(job?.type || "");
@@ -70,6 +70,26 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
   const [section, setSection] = useState(1); // 1: fields, 2: editor
   const [useFallbackEditor, setUseFallbackEditor] = useState(false);
   const editorRef = useRef<TipTapEditorHandle>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced onChange handler for TipTap editor
+  const handleEditorChange = useCallback((content: string) => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(() => {
+      setDescription(content);
+    }, 300); // 300ms debounce
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Update form fields when job changes
   useEffect(() => {
@@ -100,47 +120,16 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Prevent submission if form is not ready
-    if (isSubmitting) {
-      return;
-    }
-    
-    // Validate required fields
-    if (!title.trim()) {
-      toast.error('Job title is required');
-      return;
-    }
-    
-    if (!department.trim()) {
-      toast.error('Department is required');
-      return;
-    }
-    
-    if (!type.trim()) {
-      toast.error('Job type is required');
-      return;
-    }
-    
-    if (!location.trim()) {
-      toast.error('Location is required');
-      return;
-    }
-    
-    if (!salary.trim()) {
-      toast.error('Salary is required');
-      return;
-    }
-    
-    if (!description.trim()) {
-      toast.error('Job description is required');
-      return;
-    }
+    if (isSubmitting) return;
+    if (!title.trim()) return toast.error('Job title is required');
+    if (!department.trim()) return toast.error('Department is required');
+    if (!type.trim()) return toast.error('Job type is required');
+    if (!location.trim()) return toast.error('Location is required');
+    if (!salary.trim()) return toast.error('Salary is required');
+    if (!description.trim()) return toast.error('Job description is required');
     
     let html = description;
     let images: File[] = [];
-    
-    // If using fallback editor, use the description directly
     if (useFallbackEditor) {
       html = description;
       images = [];
@@ -148,27 +137,19 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
       try {
         const editorHtml = editorRef.current.getHTML();
         const editorImages = editorRef.current.getImages();
-        // Only use editor content if it's not empty
-        if (editorHtml && editorHtml.trim() !== '') {
-          html = editorHtml;
-        }
-        if (editorImages && editorImages.length > 0) {
-          images = editorImages;
-        }
+        if (editorHtml && editorHtml.trim() !== '') html = editorHtml;
+        if (editorImages && editorImages.length > 0) images = editorImages;
       } catch (error) {
         console.error('Error accessing editor ref:', error);
-        // Fallback to description if ref fails
         html = description;
         images = [];
       }
     }
-    // Upload images to Firebase and replace local URLs
     let htmlWithUrls = html;
     if (images.length > 0) {
       const slug = title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
       const firebaseUrls = await uploadJobPostImagesToFirebase(images, slug);
       images.forEach((file, idx) => {
-        // Find the local object URL in the HTML
         const matches = Array.from(html.matchAll(/src=["'](blob:[^"']+)["']/g));
         const localMatch = matches.find(match => Array.isArray(match) && typeof match[1] === 'string' && match[1].includes(file.name)) as RegExpMatchArray | undefined;
         if (localMatch && localMatch[1]) {
@@ -176,7 +157,7 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
         }
       });
     }
-    // Add created_at only for new jobs
+    // Compose jobData to match parent expectations
     const jobData: any = { 
       title, 
       department, 
@@ -186,28 +167,17 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
       description: htmlWithUrls,
     };
     
-    // Only add application_form_link if it has a value
-    const trimmedApplicationFormLink = applicationFormLink.trim();
-    if (trimmedApplicationFormLink) {
-      jobData.application_form_link = trimmedApplicationFormLink;
+    // Only add optional fields if they have values
+    if (applicationFormLink.trim()) {
+      jobData.application_form_link = applicationFormLink.trim();
     }
     
-    // Add seats_available if it has a value
-    const trimmedSeatsAvailable = seatsAvailable.trim();
-    if (trimmedSeatsAvailable) {
-      jobData.seats_available = parseInt(trimmedSeatsAvailable);
+    if (seatsAvailable.trim()) {
+      jobData.seats_available = parseInt(seatsAvailable.trim());
     }
     
-    // Add is_closed field
     jobData.is_closed = isJobClosed;
     
-    if (!isEdit) {
-      jobData.created_at = Timestamp.now();
-      // Set auto-delete timestamp to 7 days from now
-      const sevenDaysFromNow = new Date();
-      sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-      jobData.auto_delete_at = Timestamp.fromDate(sevenDaysFromNow);
-    }
     onSubmit(jobData);
   };
 
@@ -222,26 +192,81 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full h-full flex flex-col bg-white space-y-4 sm:space-y-6">
-      <DialogHeader className="flex-shrink-0">
-        <DialogTitle className="text-lg sm:text-xl md:text-2xl font-bold">
+    <div className="w-full h-full flex flex-col bg-white">
+      {/* Header */}
+      <div className="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3">
+        <div className="flex items-center justify-between">
+          <DialogTitle className="text-lg font-bold text-gray-900">
           {isEdit ? "Edit Job" : "Post a New Job"}
         </DialogTitle>
-      </DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="text-xs text-gray-500">
+              <span className="text-red-500 font-bold">⚠️</span> Required fields marked with <span className="text-red-500 font-bold">*</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                // Reset form and close dialog
+                setTitle("");
+                setDepartment("");
+                setType("");
+                setLocation("");
+                setSalary("");
+                setDescription("");
+                setApplicationFormLink("");
+                setSeatsAvailable("");
+                setIsJobClosed(false);
+                setSection(1);
+                // Close the dialog using the onClose prop
+                if (onClose) {
+                  onClose();
+                }
+              }}
+              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
       
-      {/* Desktop and Large Tablet: two-column layout */}
-      <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 flex-1 min-h-0">
-        <div className="space-y-3 lg:space-y-4 overflow-y-auto">
+      {/* Form Content */}
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+        {/* Desktop Layout */}
+        <div className="hidden lg:flex flex-1 overflow-hidden">
+          {/* Left Column - Basic Info */}
+          <div className="w-1/2 border-r border-gray-200 p-4 overflow-y-auto scrollbar-hide">
+            <div className="space-y-4">
+              {/* Job Title */}
           <div>
-            <label className="block font-semibold mb-2 text-sm lg:text-base">Job Title <span className="text-red-500">*</span></label>
-            <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Frontend Developer" className="rounded-xl bg-gray-50 focus:bg-white text-sm lg:text-base" required />
+                <label className="block font-semibold mb-2 text-sm text-gray-700">
+                  Job Title <span className="text-red-500">*</span>
+                </label>
+                <Input 
+                  value={title} 
+                  onChange={e => setTitle(e.target.value)} 
+                  placeholder="e.g. Frontend Developer" 
+                  className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
+                  required 
+                />
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Department & Type */}
+              <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold mb-2 text-sm lg:text-base">Department <span className="text-red-500">*</span></label>
+                  <label className="block font-semibold mb-2 text-sm text-gray-700">
+                    Department <span className="text-red-500">*</span>
+                  </label>
               <BootstrapDropdown
-                trigger={<span className="flex items-center gap-2 text-sm lg:text-base">{departmentIcon(department)}{department || "Select department"}</span>}
+                    trigger={
+                      <div className="flex items-center justify-between w-full px-3 py-2 border border-gray-300 rounded-lg bg-white hover:border-blue-500">
+                        <span className="flex items-center gap-2 text-sm">
+                          {departmentIcon(department)}
+                          {department || "Select department"}
+                        </span>
+                      </div>
+                    }
                 items={[
                   { label: "Software Development", onClick: () => setDepartment("Software Development") },
                   { label: "AI/ML", onClick: () => setDepartment("AI/ML") },
@@ -250,100 +275,140 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
                   { label: "Social and Outreach", onClick: () => setDepartment("Social and Outreach") },
                   { label: "Sales and Marketing", onClick: () => setDepartment("Sales and Marketing") },
                 ]}
-                className="w-full rounded-xl bg-white border-gray-200"
+                    className="w-full"
               />
             </div>
             <div>
-              <label className="block font-semibold mb-2 text-sm lg:text-base">Type <span className="text-red-500">*</span></label>
+                  <label className="block font-semibold mb-2 text-sm text-gray-700">
+                    Type <span className="text-red-500">*</span>
+                  </label>
               <BootstrapDropdown
-                trigger={<span className="flex items-center gap-2 text-sm lg:text-base">{type || "Select type"}</span>}
+                    trigger={
+                      <div className="flex items-center justify-between w-full px-3 py-2 border border-gray-300 rounded-lg bg-white hover:border-blue-500">
+                        <span className="text-sm">{type || "Select type"}</span>
+                      </div>
+                    }
                 items={[
                   { label: "Internship", onClick: () => setType("Internship") },
                   { label: "Full-time", onClick: () => setType("Full-time") },
                 ]}
-                className="w-full rounded-xl bg-white border-gray-200"
+                    className="w-full"
               />
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Location & Salary */}
+              <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold mb-2 text-sm lg:text-base">Location <span className="text-red-500">*</span></label>
-              <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Remote, Bangalore" className="rounded-xl bg-gray-50 focus:bg-white text-sm lg:text-base" required />
+                  <label className="block font-semibold mb-2 text-sm text-gray-700">
+                    Location <span className="text-red-500">*</span>
+                  </label>
+                  <Input 
+                    value={location} 
+                    onChange={e => setLocation(e.target.value)} 
+                    placeholder="e.g. Remote, Bangalore" 
+                    className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
+                    required 
+                  />
             </div>
             <div>
-              <label className="block font-semibold mb-2 text-sm lg:text-base">Salary <span className="text-red-500">*</span></label>
-              <Input value={salary} onChange={e => setSalary(e.target.value)} placeholder="e.g. 20 LPA, Performance" className="rounded-xl bg-gray-50 focus:bg-white text-sm lg:text-base" required />
+                  <label className="block font-semibold mb-2 text-sm text-gray-700">
+                    Salary <span className="text-red-500">*</span>
+                  </label>
+                  <Input 
+                    value={salary} 
+                    onChange={e => setSalary(e.target.value)} 
+                    placeholder="e.g. 20 LPA, Performance" 
+                    className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
+                    required 
+                  />
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Optional Fields */}
+              <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold mb-2 text-sm lg:text-base">Seats Available</label>
+                  <label className="block font-semibold mb-2 text-sm text-gray-700">
+                    Seats Available
+                  </label>
               <Input 
                 type="number" 
                 min="1" 
                 value={seatsAvailable} 
                 onChange={e => setSeatsAvailable(e.target.value)} 
                 placeholder="5" 
-                className="rounded-xl bg-gray-50 focus:bg-white text-sm lg:text-base" 
+                    className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
               />
-              <p className="text-xs text-gray-500 mt-1">Leave empty for unlimited applications.</p>
+                  <p className="text-xs text-gray-500 mt-1">Leave empty for unlimited</p>
             </div>
             <div>
-              <label className="block font-semibold mb-2 text-sm lg:text-base">Application Form Link</label>
+                  <label className="block font-semibold mb-2 text-sm text-gray-700">
+                    Application Form Link
+                  </label>
               <Input 
                 value={applicationFormLink} 
                 onChange={e => setApplicationFormLink(e.target.value)} 
                 placeholder="https://forms.google.com/..." 
-                className="rounded-xl bg-gray-50 focus:bg-white text-sm lg:text-base" 
+                    className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
               />
-              <p className="text-xs text-gray-500 mt-1">Optional external form link.</p>
+                  <p className="text-xs text-gray-500 mt-1">Optional external form</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
-            <div className="flex items-center gap-2">
+              {/* Job Status */}
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <input
                 type="checkbox"
                 id="isJobClosed"
                 checked={isJobClosed}
                 onChange={(e) => setIsJobClosed(e.target.checked)}
-                className="rounded border-gray-300 text-black focus:ring-black"
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <label htmlFor="isJobClosed" className="text-sm font-medium text-gray-700">
                 Close this job opening
               </label>
-            </div>
             {isJobClosed && (
               <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
-                Applications will be disabled
+                    Applications disabled
               </span>
             )}
+              </div>
           </div>
         </div>
         
-        <div className="space-y-3 lg:space-y-4 flex flex-col h-full min-h-0">
-          <div className="flex-1 flex flex-col min-h-0">
-            <label className="block font-semibold mb-2 text-sm lg:text-base">Job Description <span className="text-red-500">*</span></label>
+          {/* Right Column - Description */}
+          <div className="w-1/2 p-4 flex flex-col">
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              <label className="block font-semibold mb-2 text-sm text-gray-700">
+                Job Description <span className="text-red-500">*</span>
+              </label>
             {useFallbackEditor ? (
-              <div className="flex-1 min-h-0">
+                <div className="h-full">
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Write job details..."
-                  className="h-full min-h-[200px] max-h-[400px] p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm lg:text-base"
-                />
-                <p className="text-xs text-gray-500 mt-1">Using simple text editor. <button type="button" onClick={() => setUseFallbackEditor(false)} className="text-blue-600 underline">Try rich editor again</button></p>
+                    placeholder="Write detailed job description..."
+                    className="w-full h-full min-h-[300px] p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Using simple text editor. 
+                    <button 
+                      type="button" 
+                      onClick={() => setUseFallbackEditor(false)} 
+                      className="text-blue-600 underline ml-1"
+                    >
+                      Try rich editor
+                    </button>
+                  </p>
               </div>
             ) : (
-              <div className="flex-1 min-h-0">
+                <div className="h-full border border-gray-300 rounded-lg overflow-hidden">
                 <TipTapEditorErrorBoundary>
                   <TipTapEditor 
                     ref={editorRef} 
                     content={description} 
-                    onChange={setDescription} 
-                    placeholder="Write job details..."
+                      onChange={handleEditorChange} 
+                      placeholder="Write detailed job description..."
                   />
                 </TipTapEditorErrorBoundary>
               </div>
@@ -352,51 +417,60 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
         </div>
       </div>
       
-      {/* Required fields note for desktop */}
-      <div className="hidden md:block flex-shrink-0">
-        <p className="text-xs text-gray-600 text-left mt-2 mb-2">
-          <span className="text-red-500 font-bold">⚠️</span> Fields marked with an asterisk (<span className="text-red-500 font-bold">*</span>) are compulsory to be filled
-        </p>
-      </div>
-      
-      {/* Sticky footer for desktop button */}
-      <div className="hidden md:block flex-shrink-0 sticky bottom-0 left-0 w-full bg-white pt-3 z-10">
-        <Button
-          type="submit"
-          className="w-full bg-black text-white text-base lg:text-lg py-3 rounded-xl font-bold shadow hover:bg-gray-900 hover:scale-[1.02] transition-all"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (isEdit ? "Updating..." : "Posting...") : (isEdit ? "Update Job" : "Post Job")}
-        </Button>
-      </div>
-      
-      {/* Mobile and Small Tablet: multi-step layout */}
-      <div className="md:hidden flex-1 min-h-0 overflow-y-auto">
-        {/* Progress indicator */}
-        <div className="flex items-center justify-center mb-4 flex-shrink-0">
-          <div className="flex items-center space-x-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${section === 1 ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'}`}>
+        {/* Mobile Layout */}
+        <div className="lg:hidden flex-1 flex flex-col overflow-hidden">
+          {/* Progress Indicator */}
+          <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200">
+            <div className="flex items-center justify-center space-x-4">
+              <div className={`flex items-center space-x-2 ${section === 1 ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${section === 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
               1
             </div>
-            <div className="w-8 h-1 bg-gray-200 rounded"></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${section === 2 ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'}`}>
-              2
-            </div>
+                <span className="text-xs font-medium">Basic Info</span>
+              </div>
+              <div className="w-6 h-1 bg-gray-200 rounded"></div>
+              <div className={`flex items-center space-x-2 ${section === 2 ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${section === 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                  2
+                </div>
+                <span className="text-xs font-medium">Description</span>
+              </div>
           </div>
         </div>
         
+          {/* Mobile Form Content */}
+          <div className="flex-1 overflow-y-auto scrollbar-hide">
         {section === 1 && (
-          <div className="space-y-3 flex-1 min-h-0">
+              <div className="p-4 space-y-4">
+                {/* Job Title */}
             <div>
-              <label className="block font-semibold mb-2 text-sm">Job Title <span className="text-red-500">*</span></label>
-              <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Frontend Developer" className="rounded-xl bg-gray-50 focus:bg-white text-sm" required />
+                  <label className="block font-semibold mb-2 text-sm text-gray-700">
+                    Job Title <span className="text-red-500">*</span>
+                  </label>
+                  <Input 
+                    value={title} 
+                    onChange={e => setTitle(e.target.value)} 
+                    placeholder="e.g. Frontend Developer" 
+                    className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
+                    required 
+                  />
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Department & Type */}
+                <div className="grid grid-cols-1 gap-3">
               <div>
-                <label className="block font-semibold mb-2 text-sm">Department <span className="text-red-500">*</span></label>
+                    <label className="block font-semibold mb-2 text-sm text-gray-700">
+                      Department <span className="text-red-500">*</span>
+                    </label>
                 <BootstrapDropdown
-                  trigger={<span className="flex items-center gap-2 text-sm">{departmentIcon(department)}{department || "Select department"}</span>}
+                      trigger={
+                        <div className="flex items-center justify-between w-full px-3 py-2 border border-gray-300 rounded-lg bg-white hover:border-blue-500">
+                          <span className="flex items-center gap-2 text-sm">
+                            {departmentIcon(department)}
+                            {department || "Select department"}
+                          </span>
+                        </div>
+                      }
                   items={[
                     { label: "Software Development", onClick: () => setDepartment("Software Development") },
                     { label: "AI/ML", onClick: () => setDepartment("AI/ML") },
@@ -405,89 +479,169 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
                     { label: "Social and Outreach", onClick: () => setDepartment("Social and Outreach") },
                     { label: "Sales and Marketing", onClick: () => setDepartment("Sales and Marketing") },
                   ]}
-                  className="w-full rounded-xl bg-white border-gray-200"
+                      className="w-full"
                 />
               </div>
               <div>
-                <label className="block font-semibold mb-2 text-sm">Type <span className="text-red-500">*</span></label>
+                    <label className="block font-semibold mb-2 text-sm text-gray-700">
+                      Type <span className="text-red-500">*</span>
+                    </label>
                 <BootstrapDropdown
-                  trigger={<span className="flex items-center gap-2 text-sm">{type || "Select type"}</span>}
+                      trigger={
+                        <div className="flex items-center justify-between w-full px-3 py-2 border border-gray-300 rounded-lg bg-white hover:border-blue-500">
+                          <span className="text-sm">{type || "Select type"}</span>
+                        </div>
+                      }
                   items={[
                     { label: "Internship", onClick: () => setType("Internship") },
                     { label: "Full-time", onClick: () => setType("Full-time") },
                   ]}
-                  className="w-full rounded-xl bg-white border-gray-200"
+                      className="w-full"
                 />
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Location & Salary */}
+                <div className="grid grid-cols-1 gap-3">
               <div>
-                <label className="block font-semibold mb-2 text-sm">Location <span className="text-red-500">*</span></label>
-                <Input value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. Remote, Bangalore" className="rounded-xl bg-gray-50 focus:bg-white text-sm" required />
+                    <label className="block font-semibold mb-2 text-sm text-gray-700">
+                      Location <span className="text-red-500">*</span>
+                    </label>
+                    <Input 
+                      value={location} 
+                      onChange={e => setLocation(e.target.value)} 
+                      placeholder="e.g. Remote, Bangalore" 
+                      className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
+                      required 
+                    />
               </div>
               <div>
-                <label className="block font-semibold mb-2 text-sm">Salary <span className="text-red-500">*</span></label>
-                <Input value={salary} onChange={e => setSalary(e.target.value)} placeholder="e.g. 20 LPA, Performance" className="rounded-xl bg-gray-50 focus:bg-white text-sm" required />
+                    <label className="block font-semibold mb-2 text-sm text-gray-700">
+                      Salary <span className="text-red-500">*</span>
+                    </label>
+                    <Input 
+                      value={salary} 
+                      onChange={e => setSalary(e.target.value)} 
+                      placeholder="e.g. 20 LPA, Performance" 
+                      className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
+                      required 
+                    />
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Optional Fields */}
+                <div className="grid grid-cols-1 gap-3">
               <div>
-                <label className="block font-semibold mb-2 text-sm">Seats Available</label>
+                    <label className="block font-semibold mb-2 text-sm text-gray-700">
+                      Seats Available
+                    </label>
                 <Input 
                   type="number" 
                   min="1" 
                   value={seatsAvailable} 
                   onChange={e => setSeatsAvailable(e.target.value)} 
                   placeholder="5" 
-                  className="rounded-xl bg-gray-50 focus:bg-white text-sm" 
+                      className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
                 />
-                <p className="text-xs text-gray-500 mt-1">Leave empty for unlimited applications.</p>
+                    <p className="text-xs text-gray-500 mt-1">Leave empty for unlimited</p>
               </div>
               <div>
-                <label className="block font-semibold mb-2 text-sm">Application Form Link</label>
+                    <label className="block font-semibold mb-2 text-sm text-gray-700">
+                      Application Form Link
+                    </label>
                 <Input 
                   value={applicationFormLink} 
                   onChange={e => setApplicationFormLink(e.target.value)} 
                   placeholder="https://forms.google.com/..." 
-                  className="rounded-xl bg-gray-50 focus:bg-white text-sm" 
+                      className="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
                 />
-                <p className="text-xs text-gray-500 mt-1">Optional external form link.</p>
+                    <p className="text-xs text-gray-500 mt-1">Optional external form</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
-              <div className="flex items-center gap-2">
+                {/* Job Status */}
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <input
                   type="checkbox"
                   id="isJobClosedMobile"
                   checked={isJobClosed}
                   onChange={(e) => setIsJobClosed(e.target.checked)}
-                  className="rounded border-gray-300 text-black focus:ring-black"
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <label htmlFor="isJobClosedMobile" className="text-sm font-medium text-gray-700">
                   Close this job opening
                 </label>
-              </div>
               {isJobClosed && (
                 <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
-                  Applications will be disabled
+                      Applications disabled
                 </span>
               )}
             </div>
+              </div>
+            )}
             
-            {/* Required fields note for mobile page 1 */}
-            <div className="mt-3 mb-2 flex-shrink-0">
-              <p className="text-xs text-gray-600 text-left">
-                <span className="text-red-500 font-bold">⚠️</span> Fields marked with an asterisk (<span className="text-red-500 font-bold">*</span>) are compulsory to be filled
+            {section === 2 && (
+              <div className="p-4 h-full flex flex-col">
+                <div className="flex-1">
+                  <label className="block font-semibold mb-2 text-sm text-gray-700">
+                    Job Description <span className="text-red-500">*</span>
+                  </label>
+                  {useFallbackEditor ? (
+                    <div className="h-full">
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Write detailed job description..."
+                        className="w-full h-full min-h-[250px] p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-2">
+                        Using simple text editor. 
+                        <button 
+                          type="button" 
+                          onClick={() => setUseFallbackEditor(false)} 
+                          className="text-blue-600 underline ml-1"
+                        >
+                          Try rich editor
+                        </button>
               </p>
             </div>
-            
-            <div className="pt-3 flex-shrink-0">
+                  ) : (
+                    <div className="h-full border border-gray-300 rounded-lg overflow-hidden">
+                      <TipTapEditorErrorBoundary>
+                        <TipTapEditor 
+                          ref={editorRef} 
+                          content={description} 
+                          onChange={handleEditorChange} 
+                          placeholder="Write detailed job description..."
+                        />
+                      </TipTapEditorErrorBoundary>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </form>
+      
+      {/* Footer with Submit Button - Fixed at Bottom */}
+      <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-3">
+        <div className="flex items-center justify-between">
+          {/* Mobile Navigation */}
+          <div className="lg:hidden flex gap-2">
+            {section === 2 && (
               <Button 
                 type="button" 
-                className="w-full bg-black text-white text-base py-3 rounded-xl shadow hover:bg-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
+                variant="outline" 
+                onClick={() => setSection(1)}
+                className="px-3 py-1 text-xs"
+              >
+                Back
+              </Button>
+            )}
+            {section === 1 && (
+              <Button 
+                type="button" 
                 onClick={() => {
                   // Validate required fields before allowing next
                   if (!title.trim()) {
@@ -513,59 +667,26 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit }: { j
                   setSection(2);
                 }}
                 disabled={!title.trim() || !department.trim() || !type.trim() || !location.trim() || !salary.trim()}
+                className="px-3 py-1 text-xs"
               >
                 Next
               </Button>
-            </div>
+            )}
           </div>
-        )}
-        
-        {section === 2 && (
-          <div className="space-y-3 flex-1 min-h-0 flex flex-col">
-            <div className="flex-1 flex flex-col min-h-0">
-              <label className="block font-semibold mb-2 text-sm">Job Description <span className="text-red-500">*</span></label>
-              {useFallbackEditor ? (
-                <div className="flex-1 min-h-0">
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Write job details..."
-                    className="h-full min-h-[200px] max-h-[300px] p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Using simple text editor. <button type="button" onClick={() => setUseFallbackEditor(false)} className="text-blue-600 underline">Try rich editor again</button></p>
-                </div>
-              ) : (
-                <div className="flex-1 min-h-0">
-                  <TipTapEditorErrorBoundary>
-                    <TipTapEditor 
-                      ref={editorRef} 
-                      content={description} 
-                      onChange={setDescription} 
-                      placeholder="Write job details..."
-                    />
-                  </TipTapEditorErrorBoundary>
-                </div>
-              )}
-            </div>
-            
-            {/* Required fields note for mobile page 2 */}
-            <div className="mt-3 mb-2 flex-shrink-0">
-              <p className="text-xs text-gray-600 text-left">
-                <span className="text-red-500 font-bold">⚠️</span> Fields marked with an asterisk (<span className="text-red-500 font-bold">*</span>) are compulsory to be filled
-              </p>
-            </div>
-            
-            <div className="flex gap-2 pt-3 flex-shrink-0">
-              <Button type="button" variant="outline" className="w-1/2 rounded-xl text-sm" onClick={() => setSection(1)}>
-                Back
-              </Button>
-              <Button type="submit" className="w-1/2 bg-black text-white text-base py-3 rounded-xl shadow hover:bg-gray-900 transition-all" disabled={isSubmitting}>
+          
+          {/* Submit Button - Hidden on mobile first page, shown on second page and desktop */}
+          <div className={`flex-1 lg:flex-none lg:ml-auto ${section === 1 ? 'lg:block hidden' : 'block'}`}>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
+              onClick={handleSubmit}
+            >
                 {isSubmitting ? (isEdit ? "Updating..." : "Posting...") : (isEdit ? "Update Job" : "Post Job")}
               </Button>
             </div>
           </div>
-        )}
       </div>
-    </form>
+    </div>
   );
 } 

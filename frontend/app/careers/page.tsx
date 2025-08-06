@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { firestore } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Briefcase, Brain, Users, User, Globe, HeartHandshake, Search, Loader2, Info, MapPin, BadgeDollarSign, Clock, Users as UsersIcon, Share2, Copy, Twitter, Linkedin, Facebook, Mail, Link as LinkIcon, MessageCircle } from "lucide-react";
@@ -46,6 +46,8 @@ const DEPARTMENT_GRADIENTS: Record<string, string> = {
   'Default': 'linear-gradient(135deg, #f8fafc 0%, #f3f4f6 100%)',
 };
 
+const JOB_IDS = ["NzkmZO56Ml7m9oAwc93C"];
+
 // Component that uses useSearchParams
 function CareersContent() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -65,22 +67,22 @@ function CareersContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const fetchJobs = async () => {
+    const fetchJobsByIds = async () => {
       try {
-        const q = query(collection(firestore, "job_posts"), orderBy("created_at", "desc"));
-        const querySnapshot = await getDocs(q);
-        const jobsData = querySnapshot.docs.map(docSnap => ({ ...(docSnap.data() as Omit<Job, 'id'>), id: docSnap.id }));
-        
-        // Filter out expired jobs (auto_delete_at has passed)
-        const currentTime = new Date();
-        const activeJobs = jobsData.filter(job => {
-          if (!job.auto_delete_at) return true; // Keep jobs without auto-delete
-          
-          const deleteTime = job.auto_delete_at.toDate ? job.auto_delete_at.toDate() : new Date(job.auto_delete_at);
-          return deleteTime > currentTime;
-        });
-        
-        setJobs(activeJobs);
+        console.log('🔍 Fetching jobs by IDs from Firestore...');
+        const jobsData: Job[] = [];
+        for (const id of JOB_IDS) {
+          const jobRef = doc(firestore, "job_posts", id);
+          const jobSnap = await getDoc(jobRef);
+          if (jobSnap.exists()) {
+            const data = jobSnap.data();
+            console.log('📄 Job data:', { id: jobSnap.id, ...data });
+            jobsData.push({ ...(data as Omit<Job, 'id'>), id: jobSnap.id });
+          } else {
+            console.warn(`⚠️ Job with ID ${id} not found.`);
+          }
+        }
+        setJobs(jobsData);
         
         // Check availability for each job
         const availabilityPromises = jobsData.map(async (job) => {
@@ -96,30 +98,24 @@ function CareersContent() {
         
         setJobAvailability(availabilityMap);
       } catch (error) {
-        console.error("Failed to fetch jobs from Firestore:", error);
-        setJobs([]);
+        console.error("❌ Failed to fetch jobs by IDs from Firestore:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     // Set up real-time listeners for job posts
     const jobsQuery = query(collection(firestore, "job_posts"), orderBy("created_at", "desc"));
     const unsubscribeJobs = onSnapshot(jobsQuery, (snapshot) => {
+      console.log('🔄 Real-time update received:', snapshot.docs.length, 'jobs');
       setIsRealtimeLoading(true);
       const jobsData = snapshot.docs.map(docSnap => ({ ...(docSnap.data() as Omit<Job, 'id'>), id: docSnap.id }));
       
-      // Filter out expired jobs
-      const currentTime = new Date();
-      const activeJobs = jobsData.filter(job => {
-        if (!job.auto_delete_at) return true;
-        const deleteTime = job.auto_delete_at.toDate ? job.auto_delete_at.toDate() : new Date(job.auto_delete_at);
-        return deleteTime > currentTime;
-      });
-      
-      setJobs(activeJobs);
+      console.log('✅ Real-time all jobs:', jobsData.length);
+      setJobs(jobsData);
       
       // Update availability for each job
-      activeJobs.forEach(async (job) => {
+      jobsData.forEach(async (job) => {
         const availability = await checkJobAvailability(job.id, job.seats_available, job.is_closed);
         setJobAvailability(prev => ({
           ...prev,
@@ -128,7 +124,7 @@ function CareersContent() {
       });
       setIsRealtimeLoading(false);
     }, (error) => {
-      console.error("Error listening to job posts:", error);
+      console.error("❌ Error listening to job posts:", error);
       setIsRealtimeLoading(false);
     });
 
@@ -146,15 +142,18 @@ function CareersContent() {
         }
       });
 
-      // Update availability for each job
-      jobs.forEach(async (job) => {
-        const applicationsCount = applicationsByJob[job.id] || 0;
-        const isAvailable = !job.is_closed && (!job.seats_available || applicationsCount < job.seats_available);
-        
-        setJobAvailability(prev => ({
-          ...prev,
-          [job.id]: { isAvailable, applicationsCount }
-        }));
+      // Update availability for current jobs
+      setJobAvailability(prev => {
+        const newAvailability = { ...prev };
+        Object.keys(newAvailability).forEach(jobId => {
+          const applicationsCount = applicationsByJob[jobId] || 0;
+          const job = jobs.find(j => j.id === jobId);
+          if (job) {
+            const isAvailable = !job.is_closed && (!job.seats_available || applicationsCount < job.seats_available);
+            newAvailability[jobId] = { isAvailable, applicationsCount };
+          }
+        });
+        return newAvailability;
       });
       setIsRealtimeLoading(false);
     }, (error) => {
@@ -163,14 +162,27 @@ function CareersContent() {
     });
 
     // Initial fetch
-    fetchJobs();
+    fetchJobsByIds();
 
     // Cleanup listeners on unmount
     return () => {
       unsubscribeJobs();
       unsubscribeApplications();
     };
-  }, [jobs]); // Add jobs as dependency to ensure updates when jobs change
+  }, []); // Remove jobs dependency to prevent infinite loop
+
+  // Update job availability when jobs change
+  useEffect(() => {
+    if (jobs.length > 0) {
+      jobs.forEach(async (job) => {
+        const availability = await checkJobAvailability(job.id, job.seats_available, job.is_closed);
+        setJobAvailability(prev => ({
+          ...prev,
+          [job.id]: { isAvailable: availability.isAvailable, applicationsCount: availability.applicationsCount }
+        }));
+      });
+    }
+  }, [jobs]);
 
   // Check for jobId in URL params and open dialog if found
   useEffect(() => {
