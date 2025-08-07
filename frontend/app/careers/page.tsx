@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { firestore } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy, onSnapshot, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, onSnapshot, doc, getDoc, limit } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Briefcase, Brain, Users, User, Globe, HeartHandshake, Search, Loader2, Info, MapPin, BadgeDollarSign, Clock, Users as UsersIcon, Share2, Copy, Twitter, Linkedin, Facebook, Mail, Link as LinkIcon, MessageCircle } from "lucide-react";
@@ -46,8 +46,6 @@ const DEPARTMENT_GRADIENTS: Record<string, string> = {
   'Default': 'linear-gradient(135deg, #f8fafc 0%, #f3f4f6 100%)',
 };
 
-const JOB_IDS = ["NzkmZO56Ml7m9oAwc93C"];
-
 // Component that uses useSearchParams
 function CareersContent() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -67,21 +65,100 @@ function CareersContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const fetchJobsByIds = async () => {
+    const fetchAllJobs = async () => {
       try {
-        console.log('🔍 Fetching jobs by IDs from Firestore...');
-        const jobsData: Job[] = [];
-        for (const id of JOB_IDS) {
-          const jobRef = doc(firestore, "job_posts", id);
-          const jobSnap = await getDoc(jobRef);
-          if (jobSnap.exists()) {
-            const data = jobSnap.data();
-            console.log('📄 Job data:', { id: jobSnap.id, ...data });
-            jobsData.push({ ...(data as Omit<Job, 'id'>), id: jobSnap.id });
-          } else {
-            console.warn(`⚠️ Job with ID ${id} not found.`);
-          }
+        console.log('🔍 Fetching all jobs from Firestore...');
+        
+        // Check if Firebase is properly initialized
+        if (!firestore) {
+          console.error('❌ Firestore is not initialized');
+          setJobs([]);
+          setLoading(false);
+          return;
         }
+        
+        console.log('🔧 Firebase config check:', {
+          hasFirestore: !!firestore,
+          collection: collection(firestore, "job_posts")
+        });
+        
+        // Test if we can access the collection at all
+        try {
+          const testCollection = collection(firestore, "job_posts");
+          console.log('✅ Collection reference created successfully');
+          
+          // Try to get a single document to test permissions
+          const testQuery = query(testCollection, limit(1));
+          const testSnapshot = await getDocs(testQuery);
+          console.log('✅ Collection access test:', testSnapshot.size, 'documents found');
+        } catch (error) {
+          console.error('❌ Collection access test failed:', error);
+        }
+        
+        // First, let's try without ordering to see if there are any documents at all
+        const basicQuery = query(collection(firestore, "job_posts"));
+        const basicSnapshot = await getDocs(basicQuery);
+        
+        console.log('📊 Basic query results:', basicSnapshot.docs.length, 'documents');
+        console.log('🆔 All document IDs:', basicSnapshot.docs.map(doc => doc.id));
+        
+        // Log raw data from all documents
+        if (basicSnapshot.docs.length > 0) {
+          console.log('🔍 All raw document data:');
+          basicSnapshot.docs.forEach((doc, index) => {
+            console.log(`Document ${index + 1} (${doc.id}):`, doc.data());
+          });
+        }
+        
+        // Now try with ordering
+        let querySnapshot;
+        try {
+          const jobsQuery = query(collection(firestore, "job_posts"), orderBy("created_at", "desc"));
+          querySnapshot = await getDocs(jobsQuery);
+          console.log('📊 Ordered query results:', querySnapshot.docs.length, 'documents');
+        } catch (error) {
+          console.log('⚠️ Ordered query failed, using basic query:', error);
+          querySnapshot = basicSnapshot; // Use the basic query results
+        }
+        
+        // Log all document IDs for debugging
+        console.log('🆔 Document IDs found:', querySnapshot.docs.map(doc => doc.id));
+        
+        // Log raw data from first document if exists
+        if (querySnapshot.docs.length > 0) {
+          console.log('🔍 Raw document data:', querySnapshot.docs[0].data());
+        }
+        
+        // Filter out expired jobs (auto_delete_at has passed)
+        const currentTime = new Date();
+        const jobsData = querySnapshot.docs
+          .map(docSnap => ({ ...(docSnap.data() as Omit<Job, 'id'>), id: docSnap.id }))
+          .filter(job => {
+            if (!job.auto_delete_at) return true; // Keep jobs without auto-delete
+            
+            const deleteTime = job.auto_delete_at.toDate ? job.auto_delete_at.toDate() : new Date(job.auto_delete_at);
+            return deleteTime > currentTime;
+          });
+        
+        console.log('📋 Jobs after filtering:', jobsData.length);
+        console.log('📋 Job details after filtering:', jobsData.map(job => ({ id: job.id, title: job.title, created_at: job.created_at })));
+        
+        console.log('📄 Found jobs:', jobsData.length);
+        
+        if (jobsData.length === 0) {
+          console.log('⚠️ No active job posts found in the database');
+          console.log('💡 To add job posts, go to /admin/career');
+          
+          // In development, offer to create a test job
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🔧 Development mode: You can create a test job at /admin/career');
+          }
+        } else {
+          console.log('📋 Job titles:', jobsData.map(job => job.title));
+          // Log first job structure for debugging
+          console.log('🔍 First job structure:', jobsData[0]);
+        }
+        
         setJobs(jobsData);
         
         // Check availability for each job
@@ -98,7 +175,13 @@ function CareersContent() {
         
         setJobAvailability(availabilityMap);
       } catch (error) {
-        console.error("❌ Failed to fetch jobs by IDs from Firestore:", error);
+        console.error("❌ Failed to fetch jobs from Firestore:", error);
+        console.error("Error details:", {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        });
+        // Set empty jobs array on error to show appropriate UI
+        setJobs([]);
       } finally {
         setLoading(false);
       }
@@ -109,9 +192,19 @@ function CareersContent() {
     const unsubscribeJobs = onSnapshot(jobsQuery, (snapshot) => {
       console.log('🔄 Real-time update received:', snapshot.docs.length, 'jobs');
       setIsRealtimeLoading(true);
-      const jobsData = snapshot.docs.map(docSnap => ({ ...(docSnap.data() as Omit<Job, 'id'>), id: docSnap.id }));
       
-      console.log('✅ Real-time all jobs:', jobsData.length);
+      // Filter out expired jobs (auto_delete_at has passed)
+      const currentTime = new Date();
+      const jobsData = snapshot.docs
+        .map(docSnap => ({ ...(docSnap.data() as Omit<Job, 'id'>), id: docSnap.id }))
+        .filter(job => {
+          if (!job.auto_delete_at) return true; // Keep jobs without auto-delete
+          
+          const deleteTime = job.auto_delete_at.toDate ? job.auto_delete_at.toDate() : new Date(job.auto_delete_at);
+          return deleteTime > currentTime;
+        });
+      
+      console.log('✅ Real-time filtered jobs:', jobsData.length);
       setJobs(jobsData);
       
       // Update availability for each job
@@ -162,7 +255,7 @@ function CareersContent() {
     });
 
     // Initial fetch
-    fetchJobsByIds();
+    fetchAllJobs();
 
     // Cleanup listeners on unmount
     return () => {
@@ -343,8 +436,44 @@ function CareersContent() {
         {!loading && filteredJobs.length === 0 && (
           <div className="text-center py-20">
             <Briefcase className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No positions found</h3>
-            <p className="text-gray-500">Try adjusting your search criteria or check back later for new opportunities.</p>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              {jobs.length === 0 ? "No open positions at the moment" : "No positions match your search"}
+            </h3>
+            <p className="text-gray-500 mb-4">
+              {jobs.length === 0 
+                ? "We're always looking for talented individuals to join our team. Check back soon for new opportunities!" 
+                : "Try adjusting your search criteria or department filter."
+              }
+            </p>
+            {jobs.length === 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                <div className="flex items-center">
+                  <Info className="h-5 w-5 text-blue-500 mr-2" />
+                  <div className="text-sm text-blue-700">
+                    <p className="font-semibold">Want to join our team?</p>
+                    <p>Send us your resume at <a href="mailto:careers@emiliobeaufort.com" className="underline">careers@emiliobeaufort.com</a></p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Admin hint for debugging */}
+            {process.env.NODE_ENV === 'development' && jobs.length === 0 && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg max-w-md mx-auto">
+                <div className="text-xs text-yellow-700">
+                  <p className="font-semibold">Debug Info:</p>
+                  <p>No job posts found in database. To add test jobs, visit <a href="/admin/career" className="underline">Admin Career Panel</a></p>
+                  <div className="mt-2">
+                    <Button 
+                      onClick={() => window.open('/admin/career', '_blank')}
+                      className="text-xs px-3 py-1 bg-yellow-600 text-white hover:bg-yellow-700"
+                    >
+                      Open Admin Panel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -387,6 +516,13 @@ function CareersContent() {
                   
                   {/* Job Title */}
                   <div className={`text-xl font-bold text-premium mb-2 line-clamp-2 min-h-[2.5em] ${job.is_closed ? 'mt-12' : ''}`}>{job.title}</div>
+                  
+                  {/* Debug: Show document ID in development */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div className="text-xs text-gray-400 mb-2">
+                      ID: {job.id}
+                    </div>
+                  )}
                   {/* Department and tags */}
                   <div className="flex items-center gap-2 mb-4 text-xs text-gray-500 font-semibold flex-wrap">
                     {job.department && <span className="flex items-center gap-1"><Briefcase className="h-4 w-4 mr-1 text-gray-400" />{job.department}</span>}

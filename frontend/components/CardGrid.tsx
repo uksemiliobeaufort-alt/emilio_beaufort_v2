@@ -78,7 +78,7 @@ export default function CardGrid() {
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         loading="lazy"
                         onError={(e) => {
-                          console.error('Image failed to load:', card.image);
+                          // Hide the image on error without logging to console
                           e.currentTarget.style.display = 'none';
                         }}
                       />
@@ -95,7 +95,7 @@ export default function CardGrid() {
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         loading="lazy"
                         onError={(e) => {
-                          console.error('Image failed to load:', card.image);
+                          // Hide the image on error without logging to console
                           e.currentTarget.style.display = 'none';
                         }}
                       />
@@ -112,7 +112,7 @@ export default function CardGrid() {
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         loading="lazy"
                         onError={(e) => {
-                          console.error('Image failed to load:', card.image);
+                          // Hide the image on error without logging to console
                           e.currentTarget.style.display = 'none';
                         }}
                       />

@@ -2,29 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
-// import { Navbar } from '@/components/Navbar';
+import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import Journal from './journal/page';
 import CardGrid from '@/components/CardGrid';
 import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
 import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
 import { getImageUrl, getFounderImageUrl } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Leaf, Globe, Shield, BadgePercent, Crown, Award, ChevronUp } from 'lucide-react';
+import AnimatedBackground from '@/components/AnimatedBackground';
 import CookieConsent from '@/components/CookieConsent';
 import FeedbackFormDialog from '@/components/ui/FeedbackFormDialog';
 import { safeMap } from "@/lib/utils";
 import WhyChooseSection from '@/components/WhyChooseSection';
 import { trackEngagement, trackUserBehavior } from '@/lib/analytics';
 import TeamMemberSocialLinks from '@/components/TeamMemberSocialLinks';
-import Image from "next/image";
-import dynamic from 'next/dynamic';
-// Lazy-load non-critical components
-// const AnimatedBackground = dynamic(() => import('@/components/AnimatedBackground'), { ssr: false });
-// const Chatbot = dynamic(() => import('@/components/Chatbot'), { ssr: false });
-// const PartnersMarquee = dynamic(() => import('@/components/PartnersMarquee'), { ssr: false });
-const Journal = dynamic(() => import('./journal/page'), { ssr: false });
+import PartnersMarquee from "@/components/PartnersMarquee";
+import Chatbot from "@/components/Chatbot";
 
 // Auto Feedback Trigger Component
 function AutoFeedbackTrigger() {
@@ -208,7 +205,6 @@ function InteractiveBackground() {
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
   const router = useRouter();
   // const analytics = useAnalytics();
     const [showFullPhilosophy, setShowFullPhilosophy] = useState(false);
@@ -345,7 +341,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-premium">
-      {/* <Navbar /> */}
+      <AnimatedBackground />
+      <Navbar />
 
       {/* Cookie Consent Popup */}
       <CookieConsent />
@@ -357,40 +354,17 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-premium">
-        {/* Fallback background in case image fails to load */}
+        {/* Fallback background in case video fails to load */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#B7A16C] to-[#9a8a5a] z-0" />
         
-        {/* Image Loading State */}
-        {imageLoading && (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#B7A16C] to-[#9a8a5a] z-10 transition-opacity duration-1000">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-pulse text-white text-lg font-medium">Loading...</div>
-            </div>
-          </div>
-        )}
-        
-        {/* WebP Image background */}
-        <Image
-          src="/fallback-hero.jpg"
-          alt="Emilio Beaufort Hero Background"
-          fill
-          className="absolute inset-0 w-full h-full object-cover z-0 opacity-0 transition-opacity duration-1000"
-          priority
-          quality={90}
-          sizes="100vw"
-          onLoad={() => {
-            setTimeout(() => {
-              setImageLoading(false);
-            }, 100);
-          }}
-          onError={(e) => {
-            console.error('Fallback hero image failed to load:', e);
-            setImageLoading(false);
-          }}
-          style={{
-            opacity: imageLoading ? 0 : 1,
-            transition: 'opacity 1000ms ease-in-out'
-          }}
+        {/* Video background */}
+        <video
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          src={getImageUrl("product-images", "heroVideo.mp4")}
+          autoPlay
+          muted
+          loop
+          playsInline
         />
         {/* Optional overlay for readability */}
         <div className="absolute inset-0 bg-black/30 z-10" />
@@ -972,7 +946,6 @@ export default function Home() {
               the intersection of style, culture, and the pursuit of excellence.
             </p>
           </motion.div> */}
-          {/* Use dynamic Journal import */}
           <Journal />
         </div>
       </section>
@@ -1317,7 +1290,7 @@ export default function Home() {
           <h2 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">Our Partners</h2>
           <p className="text-sm sm:text-sm md:text-base lg:text-lg text-gray-600">We proudly collaborate with these distinguished brands.</p>
         </div>
-        {/* <PartnersMarquee /> */}
+        <PartnersMarquee />
       </section>
 
       {/* Inspirational Quote Above Footer */}
@@ -1343,7 +1316,7 @@ export default function Home() {
         {showScrollToTop && (
           <motion.button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 bg-gradient-to-r from-gray-800 to-black text-white p-3 sm:p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+            className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 bg-gradient-to-r from-[#8B4513] to-[#D4AF37] text-white p-3 sm:p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             initial={{ opacity: 0, y: 20 }}
@@ -1357,7 +1330,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Chatbot Support System */}
-      {/* <Chatbot /> */}
+      <Chatbot />
     </div>
   );
 }

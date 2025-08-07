@@ -178,6 +178,11 @@ export default function JobPostForm({ job, onSubmit, isSubmitting, isEdit, onClo
     
     jobData.is_closed = isJobClosed;
     
+    // Add created_at timestamp for new jobs (not for edits)
+    if (!isEdit) {
+      jobData.created_at = new Date();
+    }
+    
     onSubmit(jobData);
   };
 

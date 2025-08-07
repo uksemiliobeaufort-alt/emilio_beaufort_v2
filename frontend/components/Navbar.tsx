@@ -89,12 +89,12 @@ export function Navbar() {
     setIsOpen(false);
     
     if (isHomePage) {
-      const alliancesSection = document.querySelector('#alliances');
-      if (alliancesSection) {
-        alliancesSection.scrollIntoView({ behavior: 'smooth' });
+      const partnershipSection = document.querySelector('#partnership');
+      if (partnershipSection) {
+        partnershipSection.scrollIntoView({ behavior: 'smooth' });
       }
     } else {
-      await router.push('/#alliances');
+      await router.push('/#partnership');
     }
   };
 

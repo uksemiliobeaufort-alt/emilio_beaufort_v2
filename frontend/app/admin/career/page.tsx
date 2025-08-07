@@ -127,7 +127,13 @@ export default function AdminCareersPage() {
         await updateDoc(doc(firestore, 'job_posts', selectedJob.id), jobData);
         toast.success('Job updated');
       } else {
-        await addDoc(collection(firestore, 'job_posts'), { ...jobData, created_at: Timestamp.now() });
+        const newJobData = { 
+          ...jobData, 
+          created_at: Timestamp.now(),
+          is_closed: false // Ensure job is not closed by default
+        };
+        console.log('Creating new job with data:', newJobData);
+        await addDoc(collection(firestore, 'job_posts'), newJobData);
         toast.success('Job posted');
       }
       resetForm();
@@ -324,30 +330,42 @@ export default function AdminCareersPage() {
             >
               {/* Content Container */}
               <div className="h-full w-full overflow-hidden flex flex-col">
-                <JobPostForm
-                  job={selectedJob}
-                  onSubmit={async (data) => {
-                    setIsProcessing(true);
-                    const slug = data.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-                    const jobData = { ...data, slug };
-                    try {
-                      if (selectedJob) {
-                        await updateDoc(doc(firestore, 'job_posts', selectedJob.id), jobData);
-                        toast.success("Job updated");
-                      } else {
-                        await addDoc(collection(firestore, 'job_posts'), jobData);
-                        toast.success("Job posted");
-                      }
-                      resetForm();
-                      setDialogOpen(false);
-                      fetchJobs();
-                    } catch (error) {
-                      console.error(error);
-                      toast.error("Failed to save job");
-                    } finally {
-                      setIsProcessing(false);
-                    }
-                  }}
+                                 <JobPostForm
+                   job={selectedJob}
+                   onSubmit={async (data) => {
+                     setIsProcessing(true);
+                     const slug = data.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                     const jobData = { ...data, slug };
+                     
+                     console.log('Job form submitted with data:', jobData);
+                     
+                     try {
+                       if (selectedJob) {
+                         // For updates, don't include created_at
+                         const { created_at, ...updateData } = jobData;
+                         await updateDoc(doc(firestore, 'job_posts', selectedJob.id), updateData);
+                         toast.success("Job updated");
+                       } else {
+                         // For new jobs, ensure created_at is a Firebase Timestamp
+                         const newJobData = {
+                           ...jobData,
+                           created_at: Timestamp.now(),
+                           is_closed: false
+                         };
+                         console.log('Creating new job with data:', newJobData);
+                         await addDoc(collection(firestore, 'job_posts'), newJobData);
+                         toast.success("Job posted");
+                       }
+                       resetForm();
+                       setDialogOpen(false);
+                       fetchJobs();
+                     } catch (error) {
+                       console.error(error);
+                       toast.error("Failed to save job");
+                     } finally {
+                       setIsProcessing(false);
+                     }
+                   }}
                   isSubmitting={isProcessing}
                   isEdit={!!selectedJob}
                   onClose={() => {

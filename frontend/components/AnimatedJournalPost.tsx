@@ -34,6 +34,12 @@ export default function AnimatedJournalPost({ post }: AnimatedJournalPostProps) 
           alt={post.title}
           fill
           className="object-cover"
+          onError={(e) => {
+            // Hide the image on error and show a fallback
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            // You could also show a fallback icon here
+          }}
         />
       </motion.div>
 

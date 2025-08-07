@@ -375,23 +375,42 @@ export function ProductDetailDialog({
               {images.length > 0 ? (
                 <div className="relative w-full h-full max-w-[350px] lg:max-w-[450px] max-h-[350px] lg:max-h-[450px]
                   flex items-center justify-center p-8">
-                  <Image
-                    src={images[selectedImageIndex]}
-                    alt={product.name}
-                    fill
-                    className="object-contain transition-transform duration-500 hover:scale-105"
-                    priority
-                    onError={(e) => {
-                      console.error(
-                        "Failed to load product image:",
-                        images[selectedImageIndex]
-                      );
-                      e.currentTarget.style.display = "none";
-                      e.currentTarget.parentElement?.nextElementSibling?.classList.remove(
-                        "hidden"
-                      );
-                    }}
-                  />
+                  {/* Check if the image URL is from Firebase Storage and use regular img tag as fallback */}
+                  {images[selectedImageIndex].includes('firebasestorage.googleapis.com') || images[selectedImageIndex].includes('emilio-beaufort.firebasestorage.app') ? (
+                    <img
+                      src={images[selectedImageIndex]}
+                      alt={product.name}
+                      className="w-full h-full object-contain transition-transform duration-500 hover:scale-105"
+                      onError={(e) => {
+                        console.error(
+                          "Failed to load product image:",
+                          images[selectedImageIndex]
+                        );
+                        e.currentTarget.style.display = "none";
+                        e.currentTarget.parentElement?.nextElementSibling?.classList.remove(
+                          "hidden"
+                        );
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      src={images[selectedImageIndex]}
+                      alt={product.name}
+                      fill
+                      className="object-contain transition-transform duration-500 hover:scale-105"
+                      priority
+                      onError={(e) => {
+                        console.error(
+                          "Failed to load product image:",
+                          images[selectedImageIndex]
+                        );
+                        e.currentTarget.style.display = "none";
+                        e.currentTarget.parentElement?.nextElementSibling?.classList.remove(
+                          "hidden"
+                        );
+                      }}
+                    />
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center text-gray-400">

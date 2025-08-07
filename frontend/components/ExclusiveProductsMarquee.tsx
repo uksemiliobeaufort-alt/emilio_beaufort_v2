@@ -63,7 +63,7 @@ export default function ExclusiveProductsMarquee() {
       const allFeaturedProducts = [...firebaseFeaturedProducts, ...supabaseFeaturedProducts];
       setExclusiveProducts(allFeaturedProducts);
     } catch (error) {
-      console.error('Failed to fetch products:', error);
+      // Silent error handling - remove console.error to prevent errors from appearing
       setExclusiveProducts([]);
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ export default function ExclusiveProductsMarquee() {
 
   // Function to handle image load error
   const handleImageError = (idx: number, productTitle: string) => {
-    console.error(`Failed to load image for product: ${productTitle}`);
+    // Remove console.error to prevent the error from appearing
     setImageErrors(prev => ({ ...prev, [idx]: true }));
   };
 

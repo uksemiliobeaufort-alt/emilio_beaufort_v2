@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, getImageUrl } from "@/lib/supabase";
 
 const products = [
   {
@@ -13,28 +13,28 @@ const products = [
     name: "Signature Beard Oil",
     description: "A luxurious blend of natural oils for beard nourishment",
     price: "₹45",
-    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.webp`
+    image: getImageUrl("the-house", "Cosmetics Banner.webp")
   },
   {
     id: 2,
     name: "Premium Hair Pomade",
     description: "Strong hold with natural shine for classic styling",
     price: "₹35",
-    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.webp`
+    image: getImageUrl("the-house", "Cosmetics Banner.webp")
   },
   {
     id: 3,
     name: "Facial Moisturizer",
     description: "Hydrating formula with anti-aging properties",
     price: "₹55",
-    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.webp`
+    image: getImageUrl("the-house", "Cosmetics Banner.webp")
   },
   {
     id: 4,
     name: "Aftershave Balm",
     description: "Soothing post-shave care with natural ingredients",
     price: "₹40",
-    image: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/Cosmetics Banner.webp`
+    image: getImageUrl("the-house", "Cosmetics Banner.webp")
   }
 ];
 
@@ -69,7 +69,7 @@ export function Cards() {
                 className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                 loading="lazy"
                 onError={(e) => {
-                  console.error('Image failed to load:', product.image);
+                  // Hide the image on error without logging to console
                   e.currentTarget.style.display = 'none';
                 }}
               />

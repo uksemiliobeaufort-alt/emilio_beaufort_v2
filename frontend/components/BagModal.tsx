@@ -102,7 +102,19 @@ export default function BagModal({ open, onClose, onBuyNow }: BagModalProps) {
               <div className="space-y-4 max-h-80 overflow-y-auto">
                 {bagItems.map(item => (
                   <div key={item.id} className="flex items-center gap-4 border-b pb-3">
-                    <Image src={item.imageUrl} alt={item.name} width={60} height={60} className="rounded-lg object-cover" />
+                    <Image 
+                      src={item.imageUrl} 
+                      alt={item.name} 
+                      width={60} 
+                      height={60} 
+                      className="rounded-lg object-cover"
+                      onError={(e) => {
+                        // Hide the image on error and show a fallback
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        // You could also show a fallback icon here
+                      }}
+                    />
                     <div className="flex-1">
                       <div className="font-semibold text-premium-dark text-base sm:text-base md:text-lg">{item.name}</div>
                       <div className="text-gray-600 text-xs sm:text-sm md:text-base">₹{item.price.toFixed(2)} x {item.quantity}</div>
