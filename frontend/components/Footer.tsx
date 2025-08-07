@@ -202,6 +202,7 @@ export function Footer() {
   const router = useRouter();
   const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -214,34 +215,29 @@ export function Footer() {
   const handleBackToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const handleChatbotToggle = () => {
+    setIsChatbotOpen(!isChatbotOpen);
+  };
   
   return (
     <>
       <footer className="bg-premium-dark border-t border-premium py-8 sm:py-12 lg:py-16">
-        <div className="container-premium">
-          {/* Mobile: Single column, Tablet: 2 columns, Desktop: 3 columns */}
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 sm:gap-8 lg:gap-12 mb-8 sm:mb-10 lg:mb-12">
+                  <div className="container-premium">
+            {/* Mobile: Single column, Tablet: 2 columns, Desktop: 3 columns */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-8 lg:gap-12 mb-6 sm:mb-10 lg:mb-12">
             {/* Brand Section */}
             <div className="text-center sm:text-left">
               <h3 className="heading-premium text-xl sm:text-2xl lg:text-2xl text-white mb-6">Emilio Beaufort</h3>
-              <p className="body-premium text-gray-300 leading-relaxed mb-8 text-sm sm:text-base">
-                Where luxury meets precision. Crafting exceptional grooming experiences for the discerning gentleman.
+              <p className="body-premium text-gray-300 leading-relaxed mb-6 text-sm sm:text-base">
+                Where luxury meets precision. Crafting exceptional grooming experiences for the discerning gentleman. We supply raw human hair and wigs within India to Salons, Wig makers, Beauty retailers, Online store owners, and Cosmetic brands. Fast delivery across major Indian cities. Payment via UPI, NEFT or advance invoice.
               </p>
-              {/* Divider for mobile only */}
-              <div className="block sm:hidden border-t border-gray-700 my-8"></div>
-              {/* Domestic Supply Section */}
-              <div className="border-t border-gray-700 pt-8">
-                <h4 className="font-sans-semibold text-white mb-6 text-base sm:text-lg">Domestic Supply (India)</h4>
-                <p className="body-premium text-gray-300 leading-relaxed text-xs sm:text-sm">
-                  We supply raw human hair and wigs within India to Salons, Wig makers, Beauty retailers, Online store owners, and Cosmetic brands. Fast delivery across major Indian cities. Payment via UPI, NEFT or advance invoice.
-                </p>
-              </div>
             </div>
 
-            {/* Quick Links */}
-            <div className="text-center sm:text-center lg:text-center">
-              <h4 className="font-sans-semibold text-white mb-8 text-base sm:text-lg">Quick Links</h4>
-              <nav className="flex flex-col space-y-4 items-center">
+                          {/* Quick Links */}
+              <div className="text-center sm:text-center lg:text-center">
+                <h4 className="font-sans-semibold text-white mb-4 sm:mb-8 text-base sm:text-lg">Quick Links</h4>
+                             <nav className="flex flex-col space-y-1 sm:space-y-2 items-center">
                 {[
                   { name: 'Philosophy', href: '#philosophy', isExternal: false },
                   { name: 'The House', href: '#house', isExternal: false },
@@ -254,21 +250,21 @@ export function Footer() {
                     {link.isExternal ? (
                       <Link
                         href={link.href}
-                        className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-2 px-0 min-h-[44px] flex items-center"
+                        className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-1 sm:py-2 px-0 min-h-[44px] flex items-center footer-link-underline"
                       >
                         {link.name}
                       </Link>
                     ) : link.isFeedback ? (
                       <button
                         onClick={() => setIsFeedbackFormOpen(true)}
-                        className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-2 px-0 min-h-[44px] flex items-center"
+                        className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-1 sm:py-2 px-0 min-h-[44px] flex items-center footer-link-underline"
                       >
                         {link.name}
                       </button>
                     ) : (
                       <button
                         onClick={() => document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' })}
-                        className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-2 px-0 min-h-[44px] flex items-center"
+                        className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-1 sm:py-2 px-0 min-h-[44px] flex items-center footer-link-underline"
                       >
                         {link.name}
                       </button>
@@ -282,11 +278,11 @@ export function Footer() {
 
             {/* Contact */}
             <div className="text-center sm:text-left lg:col-span-1 sm:col-span-2 lg:col-span-1">
-              <h4 className="font-sans-semibold text-white mb-8 text-base sm:text-lg">Connect</h4>
-              <p className="body-premium text-gray-300 mb-8 text-sm sm:text-base">
+              <h4 className="font-sans-semibold text-white mb-4 sm:mb-8 text-base sm:text-lg">Connect</h4>
+              <p className="body-premium text-gray-300 mb-4 sm:mb-8 text-sm sm:text-base">
                 Follow us for the latest updates and insights into luxury grooming.
               </p>
-              <div className="flex flex-wrap justify-center sm:justify-start gap-4 mb-8">
+              <div className="flex flex-wrap justify-center sm:justify-start gap-4 mb-4 sm:mb-8">
                 {[
                   { icon: Instagram, href: 'https://www.instagram.com/emiliobeaufort_official?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==', label: 'Instagram' },
                   { icon: Twitter, href: 'https://x.com/Emilio_Beaufort?t=0p7UVvP0DjaMiqT50ydDEg&s=09', label: 'Twitter' },
@@ -304,14 +300,14 @@ export function Footer() {
                 ))}
               </div>
               {/* Contact Information */}
-              <div className="space-y-6">
-                <h5 className="font-sans-semibold text-white text-sm mb-6">Contact</h5>
-                <div className="space-y-4 text-gray-300 text-sm">
+              <div className="space-y-4 sm:space-y-6">
+                <h5 className="font-sans-semibold text-white text-sm mb-3 sm:mb-6">Contact</h5>
+                <div className="space-y-2 sm:space-y-4 text-gray-300 text-sm">
                   <div>
                     <span className="font-sans-medium">WhatsApp: </span>
                     <a 
                       href="https://wa.me/918962648358" 
-                      className="hover:text-gold transition-premium"
+                      className="hover:text-gold transition-premium footer-link-underline"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -322,7 +318,7 @@ export function Footer() {
                     <span className="font-sans-medium">Email: </span>
                     <a 
                       href="mailto:hello@emiliobeaufort.com" 
-                      className="hover:text-gold transition-premium"
+                      className="hover:text-gold transition-premium footer-link-underline"
                     >
                       hello@emiliobeaufort.com
                     </a>
@@ -333,21 +329,28 @@ export function Footer() {
           </div>
 
           {/* Bottom Bar */}
-          <div className="flex flex-col sm:flex-row justify-between items-center border-t border-gray-700 pt-8 mt-8 gap-4 sm:gap-0">
+          <div className="flex flex-col sm:flex-row justify-between items-center border-t border-gray-700 pt-4 sm:pt-8 mt-4 sm:mt-8 gap-4 sm:gap-0">
             <p className="body-premium text-gray-400 text-sm text-center sm:text-left">
               © {currentYear} Emilio Beaufort. All rights reserved.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-sm">
-              <Link href="/privacy-policy" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta py-2 sm:py-0">
+              <Link href="/privacy-policy" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta py-2 sm:py-0 footer-link-underline">
                 Privacy Policy
               </Link>
-              <a href="#" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta py-2 sm:py-0">
+              <a href="#" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta py-2 sm:py-0 footer-link-underline">
                 Terms of Service
               </a>
-              <Link href="/cookie-policy" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta py-2 sm:py-0">
+              <Link href="/cookie-policy" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta py-2 sm:py-0 footer-link-underline">
                 Cookie Policy
               </Link>
             </div>
+          </div>
+          
+          {/* Brand Name at the End */}
+          <div className="border-t border-gray-700 pt-4 sm:pt-6 mt-4 sm:mt-6 text-center">
+            <h2 className="heading-premium text-2xl sm:text-3xl lg:text-4xl text-white font-bold tracking-wider">
+              EMILIO BEAUFORT
+            </h2>
           </div>
         </div>
 
@@ -358,14 +361,69 @@ export function Footer() {
           isAutoTriggered={false}
         />
       </footer>
+      {/* Back to Top Button - Left Bottom */}
       {showBackToTop && (
         <button
           onClick={handleBackToTop}
-          className="fixed bottom-6 right-6 z-50 bg-premium-dark text-white p-3 rounded-full shadow-lg border border-premium-dark transition-all duration-200 hover:shadow-2xl hover:scale-110 hover:bg-gradient-to-br hover:from-[#B7A16C] hover:to-[#fffbe6] hover:text-black"
+          className="fixed bottom-6 left-6 z-50 bg-premium-dark text-white p-3 rounded-full shadow-lg border border-premium-dark transition-all duration-200 hover:shadow-2xl hover:scale-110 hover:bg-gradient-to-br hover:from-[#B7A16C] hover:to-[#fffbe6] hover:text-black"
           aria-label="Back to Top"
         >
           <ArrowUp size={24} />
         </button>
+      )}
+
+      {/* Chatbot Button - Right Bottom */}
+      <button
+        onClick={handleChatbotToggle}
+        className="fixed bottom-6 right-6 z-50 bg-premium-dark text-white p-3 rounded-full shadow-lg border border-premium-dark transition-all duration-200 hover:shadow-2xl hover:scale-110 hover:bg-gradient-to-br hover:from-[#B7A16C] hover:to-[#fffbe6] hover:text-black"
+        aria-label="Chat with us"
+      >
+        <MessageCircle size={24} />
+      </button>
+
+      {/* Chatbot Dialog - Placeholder for future implementation */}
+      {isChatbotOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-end p-6">
+          <div className="bg-white rounded-lg shadow-2xl w-80 h-[500px] max-w-full max-h-full flex flex-col">
+            <div className="bg-premium-dark text-white p-4 rounded-t-lg flex justify-between items-center">
+              <h3 className="font-sans-semibold">Chat with us</h3>
+              <button
+                onClick={handleChatbotToggle}
+                className="text-white hover:text-gray-300 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 p-4 bg-gray-50 overflow-y-auto">
+              <div className="text-center text-gray-500 mt-8">
+                <MessageCircle size={48} className="mx-auto mb-4 text-gray-400" />
+                <p className="text-sm">Chat feature coming soon!</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  For now, please contact us via WhatsApp or Email
+                </p>
+              </div>
+            </div>
+            {/* Typing Area */}
+            <div className="border-t border-gray-200 p-4 bg-white">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Type your message..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gold focus:border-transparent text-sm"
+                  disabled
+                />
+                <button
+                  className="bg-premium-dark text-white p-2 rounded-lg hover:bg-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

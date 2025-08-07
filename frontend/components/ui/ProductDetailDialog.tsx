@@ -342,11 +342,11 @@ export function ProductDetailDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-          w-full max-w-4xl md:max-w-6xl lg:max-w-[1100px] max-h-screen p-0 overflow-y-auto
-          rounded-3xl shadow-2xl bg-white/95 backdrop-blur-sm border border-gray-100"
-        showCloseButton={false}
+                      <DialogContent
+                  className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                    w-full max-w-4xl md:max-w-6xl lg:max-w-[1100px] max-h-[90vh] sm:max-h-[85vh] md:max-h-[80vh] lg:max-h-screen p-0 overflow-y-auto
+                    rounded-3xl shadow-2xl bg-white/95 backdrop-blur-sm border border-gray-100"
+                  showCloseButton={false}
       >
         {/* Accessibility */}
         <DialogTitle className="sr-only">{product.name} - Product Details</DialogTitle>
@@ -357,24 +357,24 @@ export function ProductDetailDialog({
 
         {/* Close Button */}
         <button
-          className="absolute top-6 right-6 z-30 p-3 rounded-full bg-white/90
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 p-2 sm:p-3 rounded-full bg-white/90
             backdrop-blur-sm shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 hover:scale-110"
           onClick={() => onOpenChange(false)}
           type="button"
         >
-          <X className="w-5 h-5 text-gray-600" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
         </button>
 
         {/* Layout: Left - Images, Right - Details */}
-        <div className="flex flex-col lg:flex-row h-full overflow-hidden">
+        <div className="flex flex-col lg:flex-row h-full overflow-y-auto">
 
           {/* Left: Images */}
-          <div className="w-full lg:w-1/2 bg-gradient-to-br from-gray-50 via-white to-gray-100 p-8 lg:p-10">
-            <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden mb-8
-              h-[400px] lg:h-[500px] flex items-center justify-center border border-gray-100">
+          <div className="w-full lg:w-1/2 bg-gradient-to-br from-gray-50 via-white to-gray-100 p-4 sm:p-6 lg:p-10">
+            <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden mb-6 lg:mb-8
+              h-[300px] sm:h-[350px] md:h-[400px] lg:h-[500px] flex items-center justify-center border border-gray-100">
               {images.length > 0 ? (
-                <div className="relative w-full h-full max-w-[350px] lg:max-w-[450px] max-h-[350px] lg:max-h-[450px]
-                  flex items-center justify-center p-8">
+                <div className="relative w-full h-full max-w-[250px] sm:max-w-[300px] md:max-w-[350px] lg:max-w-[450px] max-h-[250px] sm:max-h-[300px] md:max-h-[350px] lg:max-h-[450px]
+                  flex items-center justify-center p-4 sm:p-6 lg:p-8">
                   <Image
                     src={images[selectedImageIndex]}
                     alt={product.name}
@@ -409,10 +409,10 @@ export function ProductDetailDialog({
                         (prev) => (prev > 0 ? prev - 1 : images.length - 1)
                       )
                     }
-                    className="absolute left-6 top-1/2 -translate-y-1/2 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-xl
+                    className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-xl
                       hover:bg-white hover:shadow-2xl transition-all duration-300 hover:scale-110"
                   >
-                    <ArrowLeft className="w-5 h-5" />
+                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                   <button
                     onClick={() =>
@@ -420,18 +420,18 @@ export function ProductDetailDialog({
                         (prev) => (prev < images.length - 1 ? prev + 1 : 0)
                       )
                     }
-                    className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-xl
+                    className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-xl
                       hover:bg-white hover:shadow-2xl transition-all duration-300 hover:scale-110"
                   >
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </>
               )}
 
               {/* Image Counter */}
               {images.length > 1 && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2
-                  bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
+                <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2
+                  bg-black/70 backdrop-blur-sm text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium">
                   {selectedImageIndex + 1} / {images.length}
                 </div>
               )}
@@ -440,10 +440,10 @@ export function ProductDetailDialog({
 
           {/* Right: Details */}
           <div
-            className="w-full lg:w-1/2 overflow-y-auto max-h-[50vh] lg:max-h-[98vh]
+            className="w-full lg:w-1/2 overflow-y-auto
               scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
           >
-            <div className="p-8 lg:p-10 space-y-8">
+            <div className="p-4 sm:p-6 lg:p-10 space-y-6 lg:space-y-8">
               {loading ? (
                 <div className="flex items-center justify-center py-20">
                   <div className="animate-spin rounded-full h-12 w-12 border-3 border-black border-t-transparent"></div>
@@ -471,7 +471,7 @@ export function ProductDetailDialog({
                     </div>
 
                     {/* Enhanced Product Title */}
-                    <h1 className="text-3xl lg:text-4xl font-bold text-black leading-tight">
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black leading-tight">
                       {product.name}
                     </h1>
 
@@ -503,7 +503,7 @@ export function ProductDetailDialog({
                     <div className="space-y-6">
                       <div className="flex items-baseline gap-4">
                         <span className="text-lg text-gray-600 font-medium">₹</span>
-                        <span className="text-5xl lg:text-6xl font-light text-black">
+                        <span className="text-4xl sm:text-5xl lg:text-6xl font-light text-black">
                           {selectedVariantPriceInfo.displayPrice.toLocaleString("en-IN")}
                         </span>
                         {(() => {

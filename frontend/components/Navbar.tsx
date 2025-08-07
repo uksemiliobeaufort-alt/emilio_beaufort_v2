@@ -311,12 +311,12 @@ export function Navbar() {
   };
 
   return (
-    <motion.nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-premium ${
-        isScrolled 
-          ? 'bg-white/95 backdrop-blur-md border-b border-premium shadow-premium' 
-          : 'bg-transparent'
-      }`}
+         <motion.nav
+       className={`fixed ${isScrolled ? 'top-0' : 'top-10'} left-0 right-0 z-50 transition-premium ${
+         isScrolled 
+           ? 'bg-white/95 backdrop-blur-md border-b border-premium shadow-premium' 
+           : 'bg-transparent'
+       }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}

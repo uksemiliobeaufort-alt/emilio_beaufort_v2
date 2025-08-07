@@ -154,6 +154,27 @@
     color: #D4AF37;
   }
 
+  /* Footer link underline effect - grows from one corner to the other */
+  .footer-link-underline {
+    position: relative;
+    text-decoration: none;
+  }
+
+  .footer-link-underline::after {
+    content: '';
+    position: absolute;
+    bottom: 0px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: #D4AF37;
+    transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .footer-link-underline:hover::after {
+    width: 100%;
+  }
+
   /* Premium scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
@@ -757,6 +778,19 @@
 /* Conic gradient for rotating shine effect */
 .bg-gradient-conic {
   background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.4), transparent, transparent);
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
 }
 
 @keyframes gradientMove {

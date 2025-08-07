@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 // import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
+
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Journal from './journal/page';
@@ -822,8 +822,6 @@ export default function Home() {
       <div className="w-full flex flex-col items-center justify-center bg-white py-2">
         <span className="block font-semibold text-xl md:text-2xl text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>Founder's Office</span>
       </div>
-
-      <Footer />
 
       <PartnershipFormDialog
         isOpen={isPartnershipFormOpen}
