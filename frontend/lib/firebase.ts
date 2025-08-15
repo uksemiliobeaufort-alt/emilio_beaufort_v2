@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, FirebaseStorage } from 'firebase/storage';
 import { getFirestore, collection, addDoc, Timestamp, getDocs, Firestore } from 'firebase/firestore';
 import { doc, getDoc } from "firebase/firestore";
@@ -27,11 +28,13 @@ console.log("Firebase config check:", {
 let app: any;
 let storage: FirebaseStorage;
 let firestore: Firestore;
+let auth: Auth;
 
 try {
   app = initializeApp(firebaseConfig);
   storage = getStorage(app);
   firestore = getFirestore(app);
+  auth = getAuth(app);
   console.log("Firebase initialized successfully");
 } catch (error) {
   console.error("Failed to initialize Firebase:", error);
@@ -66,7 +69,7 @@ export const testFirebaseConnection = async () => {
   }
 };
 
-export { storage, firestore };
+export { storage, firestore, auth };
 
 // Helper function to generate unique filename
 const generateFileName = (originalName: string, productId: string, imageType: 'main' | 'gallery'): string => {

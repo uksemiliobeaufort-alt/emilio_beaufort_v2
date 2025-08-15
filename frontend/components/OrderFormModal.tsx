@@ -4,8 +4,9 @@ import { X, Check, ChevronRight, ArrowLeft, CreditCard, MapPin, User } from 'luc
 import { toast } from 'sonner';
 import { initiateRazorpayPayment, createOrder, verifyPayment } from '@/lib/razorpay';
 import { useBag } from './BagContext';
+import Script from 'next/script';
 
-interface SimpleCheckoutFormProps {
+interface OrderFormModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit?: (data: any) => void;
@@ -15,9 +16,13 @@ type FormStep = 'customer' | 'shipping' | 'review';
 
 interface FormData {
   // Customer Details
-  name: string;
+  businessName: string;
+  personalName: string;
   email: string;
   phone: string;
+  // Business Details
+  gstNumber: string;
+  companyType: string;
   // Shipping Details
   address: string;
   city: string;
@@ -27,12 +32,15 @@ interface FormData {
   notes: string;
 }
 
-export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutFormProps) {
+export default function OrderFormModal({ open, onClose }: OrderFormModalProps) {
   const [currentStep, setCurrentStep] = useState<FormStep>('customer');
   const [formData, setFormData] = useState<FormData>({
-    name: '',
+    businessName: '',
+    personalName: '',
     email: '',
     phone: '',
+    gstNumber: '',
+    companyType: '',
     address: '',
     city: '',
     state: '',
@@ -50,14 +58,14 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
     { id: 'review', title: 'Review', shortTitle: 'Payment', icon: CreditCard }
   ];
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleNext = () => {
     if (currentStep === 'customer') {
-      if (!formData.name || !formData.email || !formData.phone) {
+      if (!formData.businessName || !formData.personalName || !formData.email || !formData.phone) {
         toast.error('Please fill in all customer details');
         return;
       }
@@ -81,10 +89,72 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
     if (currentStep === 'review') setCurrentStep('shipping');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Only proceed if we're on the review step and user explicitly clicked Place Order
+    // Only proceed if we're on the review step and user explicitly clicked Submit Inquiry
+    if (currentStep !== 'review') {
+      return;
+    }
+    
+    setIsProcessingPayment(true);
+    
+    try {
+      const total = bagItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      
+      // Save inquiry to Supabase via API (without payment)
+      try {
+        const inquiryResponse = await fetch('/api/purchase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpay_order_id: 'INQUIRY_' + Date.now(), // Generate inquiry ID
+            razorpay_payment_id: 'PENDING', // Mark as pending payment
+            personalName: formData.personalName,
+            email: formData.email,
+            phone: formData.phone,
+            businessName: formData.businessName,
+            gstNumber: formData.gstNumber,
+            companyType: formData.companyType,
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+            notes: formData.notes,
+            items: bagItems,
+            total
+          })
+        });
+
+        if (inquiryResponse.ok) {
+          const inquiryData = await inquiryResponse.json();
+          console.log('Inquiry saved to database:', inquiryData);
+          
+          toast.success('Thank you for your inquiry!');
+          toast.success('Our sales team will contact you within 4-5 working days for further steps.');
+          
+          clearBag();
+          onClose();
+        } else {
+          console.error('Failed to save inquiry to database:', await inquiryResponse.text());
+          toast.error('Failed to submit inquiry. Please try again.');
+        }
+      } catch (err) {
+        console.error('Failed to save inquiry to Supabase:', err);
+        toast.error('Failed to submit inquiry. Please try again.');
+      }
+    } catch (error) {
+      console.error('Inquiry submission error:', error);
+      toast.error('Failed to submit inquiry. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  // Preserved Razorpay payment function for future use
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (currentStep !== 'review') {
       return;
     }
@@ -102,7 +172,7 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
         name: 'Emilio Beaufort',
         description: `Order: ${orderSummary}`,
         userInfo: {
-          name: formData.name,
+          name: formData.personalName,
           contact: formData.phone,
           email: formData.email,
         },
@@ -129,9 +199,12 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
                 body: JSON.stringify({
                   razorpay_order_id: orderId,
                   razorpay_payment_id: response.razorpay_payment_id,
-                  name: formData.name,
+                  personalName: formData.personalName,
                   email: formData.email,
                   phone: formData.phone,
+                  businessName: formData.businessName,
+                  gstNumber: formData.gstNumber,
+                  companyType: formData.companyType,
                   address: formData.address,
                   city: formData.city,
                   state: formData.state,
@@ -157,46 +230,13 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
             
             clearBag();
             onClose();
-            setIsProcessingPayment(false);
-            
-            // Redirect to products page after success message is shown
-            setTimeout(() => {
-              window.location.href = '/products';
-            }, 2000); // 2 second delay to ensure user sees success message
           } else {
-            toast.error('Payment verification failed. Please contact support.');
-            setIsProcessingPayment(false);
+            toast.error('Payment verification failed. Please try again.');
           }
         },
         onFailure: (error: any) => {
-          console.log('Payment failed details:', error);
-          
-          let errorMessage = 'Payment failed. Please try again.';
-          
-          if (error?.reason === 'international_transaction_not_allowed' || error?.description?.includes('International cards are not supported')) {
-            errorMessage = 'Only Indian cards are supported. Please use an Indian card or UPI.';
-            setTimeout(() => {
-              toast.info('Try UPI payment or Indian test cards: 4111111111111111 (Visa) or 5555555555554444 (Mastercard)', {
-                duration: 8000
-              });
-            }, 1000);
-          } else if (error?.description?.includes('not supported') || error?.reason?.includes('card_not_supported')) {
-            errorMessage = 'This card is not supported. Please try UPI, a different card, or net banking.';
-            setTimeout(() => {
-              toast.info('Recommended: Use UPI (success@razorpay) or try net banking from your bank', {
-                duration: 6000
-              });
-            }, 1000);
-          } else if (error?.description) {
-            errorMessage = error.description;
-          } else if (error?.reason === 'cancelled') {
-            errorMessage = 'Payment was cancelled';
-            onClose(); // Close the form if user cancels Razorpay
-          } else if (error?.reason) {
-            errorMessage = error.reason;
-          }
-          
-          toast.error(errorMessage);
+          console.error('Payment failed:', error);
+          toast.error('Payment failed. Please try again.');
           setIsProcessingPayment(false);
         }
       });
@@ -220,11 +260,24 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
           <div className="space-y-4 sm:space-y-5 md:space-y-6">
             <div className="grid gap-4 sm:gap-5 md:gap-6">
               <div className="col-span-full">
-                <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">Full Name</label>
+                <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">Business Name</label>
                 <input
                   type="text"
-                  name="name"
-                  value={formData.name}
+                  name="businessName"
+                  value={formData.businessName}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-3 sm:px-4 sm:py-3.5 md:px-4 md:py-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#B7A16C] focus:border-transparent transition-all duration-200 text-sm sm:text-base bg-white"
+                  placeholder="Enter your business name"
+                  required
+                />
+              </div>
+
+              <div className="col-span-full">
+                <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">Personal Name</label>
+                <input
+                  type="text"
+                  name="personalName"
+                  value={formData.personalName}
                   onChange={handleInputChange}
                   className="w-full px-3 py-3 sm:px-4 sm:py-3.5 md:px-4 md:py-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#B7A16C] focus:border-transparent transition-all duration-200 text-sm sm:text-base bg-white"
                   placeholder="Enter your full name"
@@ -269,6 +322,39 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
                     />
                   </div>
                   <p className="text-xs sm:text-sm text-gray-500 mt-1.5 ml-1">Enter 10 digit mobile number</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+                <div>
+                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">GST Number (Optional)</label>
+                  <input
+                    type="text"
+                    name="gstNumber"
+                    value={formData.gstNumber}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-3 sm:px-4 sm:py-3.5 md:px-4 md:py-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#B7A16C] focus:border-transparent transition-all duration-200 text-sm sm:text-base bg-white"
+                    placeholder="22AAAAA0000A1Z5"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">Company Type</label>
+                  <select
+                    name="companyType"
+                    value={formData.companyType}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-3 sm:px-4 sm:py-3.5 md:px-4 md:py-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#B7A16C] focus:border-transparent transition-all duration-200 text-sm sm:text-base bg-white"
+                  >
+                    <option value="">Select company type</option>
+                    <option value="Proprietorship">Proprietorship</option>
+                    <option value="Partnership">Partnership</option>
+                    <option value="Private Limited">Private Limited</option>
+                    <option value="Public Limited">Public Limited</option>
+                    <option value="LLP">LLP</option>
+                    <option value="Individual">Individual</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -320,16 +406,23 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
                 </div>
               </div>
 
-              <div className="col-span-full sm:col-span-2 lg:col-span-1">
-                <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">PIN Code</label>
+              <div>
+                <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1.5 sm:mb-2">Pincode</label>
                 <input
                   type="text"
                   name="pincode"
                   value={formData.pincode}
-                  onChange={handleInputChange}
+                  onChange={e => {
+                    // Only allow digits, max 6
+                    let val = e.target.value.replace(/\D/g, '');
+                    if (val.length > 6) val = val.slice(0, 6);
+                    setFormData(prev => ({ ...prev, pincode: val }));
+                  }}
                   className="w-full px-3 py-3 sm:px-4 sm:py-3.5 md:px-4 md:py-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#B7A16C] focus:border-transparent transition-all duration-200 text-sm sm:text-base bg-white"
-                  placeholder="Enter PIN code"
+                  placeholder="Enter 6 digit pincode"
+                  maxLength={6}
                   required
+                  inputMode="numeric"
                 />
               </div>
             </div>
@@ -344,9 +437,32 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
               <div className="divide-y divide-gray-200">
                 {bagItems.map(item => (
                   <div key={item.id} className="py-2.5 sm:py-3 md:py-4 flex justify-between items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 text-sm sm:text-base md:text-lg truncate">{item.name}</h4>
-                      <p className="text-xs sm:text-sm md:text-base text-gray-500">Quantity: {item.quantity}</p>
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {/* Product Image */}
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-18 lg:h-18 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200">
+                        <img 
+                          src={item.imageUrl} 
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Hide the image on error and show a fallback
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.parentElement!.innerHTML = `
+                              <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                              </div>
+                            `;
+                          }}
+                        />
+                      </div>
+                      {/* Product Details */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 text-sm sm:text-base md:text-lg truncate">{item.name}</h4>
+                        <p className="text-xs sm:text-sm md:text-base text-gray-500">Quantity: {item.quantity}</p>
+                      </div>
                     </div>
                     <p className="font-medium text-gray-900 text-sm sm:text-base md:text-lg">₹{(item.price * item.quantity).toFixed(2)}</p>
                   </div>
@@ -361,17 +477,35 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-4">
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">Shipping Details</h3>
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">Business Details</h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-5 text-xs sm:text-sm md:text-base">
                 <div>
-                  <p className="text-gray-500 font-medium">Name</p>
-                  <p className="font-medium text-gray-900 truncate mt-0.5">{formData.name}</p>
+                  <p className="text-gray-500 font-medium">Business Name</p>
+                  <p className="font-medium text-gray-900 truncate mt-0.5">{formData.businessName}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 font-medium">Personal Name</p>
+                  <p className="font-medium text-gray-900 truncate mt-0.5">{formData.personalName}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 font-medium">Company Type</p>
+                  <p className="font-medium text-gray-900 truncate mt-0.5">{formData.companyType || 'Not specified'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 font-medium">GST Number</p>
+                  <p className="font-medium text-gray-900 truncate mt-0.5">{formData.gstNumber || 'Not provided'}</p>
                 </div>
                 <div>
                   <p className="text-gray-500 font-medium">Contact</p>
-                  <p className="font-medium text-gray-900 truncate mt-0.5">{formData.phone}</p>
+                  <p className="font-medium text-gray-900 truncate mt-0.5">+91 {formData.phone}</p>
                   <p className="font-medium text-gray-900 truncate">{formData.email}</p>
                 </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-4">
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900">Shipping Details</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-5 text-xs sm:text-sm md:text-base">
                 <div className="lg:col-span-2">
                   <p className="text-gray-500 font-medium">Address</p>
                   <p className="font-medium text-gray-900 break-words mt-0.5">{formData.address}</p>
@@ -397,18 +531,22 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-0 sm:p-2 md:p-4 lg:p-6 xl:p-8 overflow-hidden"
-      onClick={handleBackdropClick}
-    >
+    <>
+      {/* Razorpay script */}
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
+      
       <div 
-        className="bg-white flex flex-col h-auto max-h-[85vh] w-full max-w-none sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto m-0 rounded-none shadow-none sm:rounded-lg md:rounded-xl lg:rounded-2xl sm:shadow-lg md:shadow-xl lg:shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-0 sm:p-2 md:p-4 lg:p-6 xl:p-8 overflow-hidden"
+        onClick={handleBackdropClick}
       >
-        {/* Header */}
-        <div className="relative bg-[#B7A16C] text-white px-4 py-2.5 sm:px-5 sm:py-3 md:px-6 md:py-4 lg:px-8 lg:py-5 flex-shrink-0 w-full">
-          <div className="flex justify-between items-center">
-            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold">Checkout</h2>
+        <div 
+          className="bg-white flex flex-col h-auto max-h-[85vh] w-full max-w-none sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-3xl mx-auto m-0 rounded-none shadow-none sm:rounded-lg md:rounded-xl lg:rounded-2xl sm:shadow-lg md:shadow-xl lg:shadow-2xl overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="relative bg-[#B7A16C] text-white px-4 py-2.5 sm:px-5 sm:py-3 md:px-6 md:py-4 lg:px-8 lg:py-5 flex-shrink-0 w-full">
+            <div className="flex justify-between items-center">
+            <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold">Fill Order Form</h2>
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -421,9 +559,9 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
           </div>
         </div>
 
-        {/* Progress Steps */}
-        <div className="px-2 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 lg:px-8 lg:py-4 border-b border-gray-200 flex-shrink-0 w-full">
-          <div className="flex items-center justify-between w-full">
+          {/* Progress Steps */}
+          <div className="px-2 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 lg:px-8 lg:py-4 border-b border-gray-200 flex-shrink-0 w-full">
+            <div className="flex items-center justify-between w-full">
             {steps.map((step, index) => {
               const currentStepIndex = steps.findIndex(s => s.id === currentStep);
               return (
@@ -451,20 +589,21 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
                         block text-xs sm:text-sm md:text-base font-medium truncate
                         ${currentStep === step.id ? 'text-[#B7A16C]' : 'text-gray-500'}
                       `}>
-                        <span className="hidden sm:inline">{step.title}</span>
-                        <span className="sm:hidden">{step.shortTitle}</span>
+                        {step.title}
+                      </span>
+                      <span className={`
+                        block text-xs sm:text-xs md:text-sm truncate
+                        ${currentStep === step.id ? 'text-[#B7A16C]' : 'text-gray-400'}
+                      `}>
+                        {step.shortTitle}
                       </span>
                     </div>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className="flex-shrink-0 mx-1 sm:mx-2 md:mx-3">
-                      <div className="h-[2px] w-4 sm:w-6 md:w-8 lg:w-12 bg-gray-200">
-                        <div 
-                          className={`h-full bg-[#B7A16C] transition-all duration-300 
-                          ${currentStepIndex > index ? 'w-full' : 'w-0'}`} 
-                        />
-                      </div>
-                    </div>
+                    <div className={`
+                      flex-1 h-0.5 mx-2 sm:mx-3 md:mx-4 transition-all duration-200
+                      ${currentStepIndex > index ? 'bg-[#B7A16C]' : 'bg-gray-200'}
+                    `} />
                   )}
                 </React.Fragment>
               );
@@ -472,64 +611,64 @@ export default function SimpleCheckoutForm({ open, onClose }: SimpleCheckoutForm
           </div>
         </div>
 
-        {/* Form Content */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="overflow-y-auto p-4 sm:p-5 md:p-6">
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 md:space-y-5 w-full">
-              {renderStepContent()}
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-5 md:p-6 lg:p-8">
+            {renderStepContent()}
+            
+            {/* Navigation Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 sm:mt-8 lg:mt-10">
+              {currentStep !== 'customer' && (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 sm:px-5 sm:py-3.5 md:px-6 md:py-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-medium w-full sm:w-auto text-sm sm:text-base md:text-lg min-h-[44px] sm:min-h-[48px] md:min-h-[52px]"
+                  disabled={isProcessingPayment}
+                >
+                  <ArrowLeft size={16} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                  Back
+                </button>
+              )}
               
-              {/* Navigation Buttons */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 pt-4 sm:pt-5 md:pt-6 w-full">
-                {currentStep !== 'customer' && (
-                  <button
-                    type="button"
-                    onClick={handleBack}
-                    className="flex items-center justify-center gap-2 px-4 py-3 sm:px-5 sm:py-3.5 md:px-6 md:py-4 border-2 border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium w-full sm:w-auto text-sm sm:text-base md:text-lg min-h-[44px] sm:min-h-[48px] md:min-h-[52px]"
-                    disabled={isProcessingPayment}
-                  >
-                    <ArrowLeft size={16} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
-                    Back
-                  </button>
-                )}
-                {currentStep === 'review' ? (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleSubmit(e as any);
-                    }}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 sm:px-5 sm:py-3.5 md:px-6 md:py-4 bg-[#B7A16C] text-white rounded-lg hover:bg-[#9A8756] transition-colors duration-200 font-medium disabled:opacity-50 w-full sm:w-auto text-sm sm:text-base md:text-lg min-h-[44px] sm:min-h-[48px] md:min-h-[52px]"
-                    disabled={isProcessingPayment}
-                  >
-                    {isProcessingPayment ? (
-                      <>
-                        <span className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 border-b-2 border-white"></span>
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        Place Order
-                        <CreditCard size={16} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleNext}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 sm:px-5 sm:py-3.5 md:px-6 md:py-4 bg-[#B7A16C] text-white rounded-lg hover:bg-[#9A8756] transition-colors duration-200 font-medium w-full sm:w-auto text-sm sm:text-base md:text-lg min-h-[44px] sm:min-h-[48px] md:min-h-[52px]"
-                    disabled={isProcessingPayment}
-                  >
-                    Continue
-                    <ChevronRight size={16} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
-                  </button>
-                )}
-              </div>
+              {currentStep === 'review' ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSubmit(e as any);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 sm:px-5 sm:py-3.5 md:px-6 md:py-4 bg-[#B7A16C] text-white rounded-lg hover:bg-[#9A8756] transition-colors duration-200 font-medium disabled:opacity-50 w-full sm:w-auto text-sm sm:text-base md:text-lg min-h-[44px] sm:min-h-[48px] md:min-h-[52px]"
+                  disabled={isProcessingPayment}
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <span className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 border-b-2 border-white"></span>
+                      Processing...
+                    </>
+                                     ) : (
+                     <>
+                       Submit Inquiry
+                       <CreditCard size={16} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                     </>
+                   )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 sm:px-5 sm:py-3.5 md:px-6 md:py-4 bg-[#B7A16C] text-white rounded-lg hover:bg-[#9A8756] transition-colors duration-200 font-medium w-full sm:w-auto text-sm sm:text-base md:text-lg min-h-[44px] sm:min-h-[48px] md:min-h-[52px]"
+                  disabled={isProcessingPayment}
+                >
+                  Continue
+                  <ChevronRight size={16} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                </button>
+              )}
+            </div>
             </form>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
-} 
+}

@@ -13,6 +13,8 @@ import Image from "next/image";
 import { X, Star, Package, ArrowLeft, ArrowRight, CheckCircle, Sparkles, Award, MessageCircle, Info, ShoppingBag, Heart, Share2, Shield, RotateCcw, Headphones, Box, Mail, Phone } from "lucide-react";
 import confetti from 'canvas-confetti';
 import { useBag } from '@/components/BagContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 import { useState, useEffect, useMemo } from 'react';
 import { Badge } from "@/components/ui/badge";
@@ -91,6 +93,8 @@ export function ProductDetailDialog({
   showAddToCartButton = true,
 }: ProductDetailDialogProps) {
   const [detailedProduct, setDetailedProduct] = useState<HairExtensionProduct | Cosmetics | null>(null);
+  const { user } = useAuth();
+  const router = useRouter();
 
   const [loading, setLoading] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -136,15 +140,42 @@ export function ProductDetailDialog({
     setIsWishlisted(prev => !prev);
   };
 
-
-
-  // In your handleAddToBag function, add after adding products to bag:
-  const handleAddToBagUpdated = () => {
-    if (!product || product.isSoldOut || !bagContext) return;
-
+  // Check authentication before adding to bag
+  const handleAddToBag = () => {
+    if (product.isSoldOut || !bagContext) return;
+    
+    // Check if user is authenticated (with fallback to localStorage)
+    const isUserLoggedIn = user || (typeof window !== 'undefined' && localStorage.getItem('authUser'));
+    
+    console.log('🔍 Add to Bag Debug:', {
+      user: user,
+      localStorageUser: typeof window !== 'undefined' ? localStorage.getItem('authUser') : 'N/A',
+      isUserLoggedIn: isUserLoggedIn
+    });
+    
+    if (!isUserLoggedIn) {
+      // Store product information for automatic addition after login
+      const productToAdd = {
+        id: product.id,
+        name: product.name,
+        imageUrl: product.imageUrl,
+        price: selectedVariant?.price ?? product.price,
+        variant: `${selectedVariant?.length} ${selectedVariant?.topper_size}`,
+        color: selectedColor?.name,
+        quantity: quantity
+      };
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('pendingProduct', JSON.stringify(productToAdd));
+      }
+      
+      onOpenChange(false); // Close the product detail dialog
+      router.push('/auth?from=products'); // Redirect to auth page
+      return;
+    }
+    
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
     const price = selectedVariant?.price ?? product.price;
-
     for (let i = 0; i < quantity; i++) {
       bagContext.addToBag({
         id: product.id,
@@ -159,6 +190,8 @@ export function ProductDetailDialog({
     setShowAddedAlert(true);
     setTimeout(() => setShowAddedAlert(false), 2500);
   };
+
+
 
 
   useEffect(() => {
@@ -319,21 +352,6 @@ export function ProductDetailDialog({
       ? mappedColors[selectedColorIdx]
       : ({} as ColorType);
 
-  const handleAddToBag = () => {
-    if (product.isSoldOut || !bagContext) return;
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-    const price = selectedVariant?.price ?? product.price;
-    for (let i = 0; i < quantity; i++) {
-      bagContext.addToBag({
-        id: product.id,
-        name: product.name,
-        imageUrl: product.imageUrl,
-        price,
-        variant: `${selectedVariant?.length} ${selectedVariant?.topper_size}`,
-        color: selectedColor?.name,
-      });
-    }
-  };
   console.log("Rendering with variants:", variants);
 
 
@@ -1168,6 +1186,8 @@ export function ProductDetailDialog({
           </div>
         </DialogContent>
       </Dialog>
+
+
     </Dialog>
   );
 }

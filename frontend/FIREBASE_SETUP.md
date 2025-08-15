@@ -1,8 +1,8 @@
 # Firebase Setup Guide
 
-## Issue: Firebase Data Not Fetching
+## Issue: Firebase Data Not Fetching & reCAPTCHA Hostname Error
 
-The ProductDetailDialog is not fetching data from Firebase because the Firebase configuration is missing or incomplete.
+The ProductDetailDialog is not fetching data from Firebase and phone authentication is failing with "Hostname match not found" error because the Firebase configuration is missing or incomplete.
 
 ## Steps to Fix:
 
@@ -27,17 +27,33 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 5. Click on the web app or create a new one
 6. Copy the configuration values
 
-### 3. Verify Firebase Collection
+### 3. Fix reCAPTCHA Hostname Error
+To fix the "Hostname match not found" error for phone authentication:
+
+1. **Go to Firebase Console** → Authentication → Settings
+2. **Scroll down to "Authorized domains"**
+3. **Add your domains:**
+   - `localhost` (for development)
+   - `127.0.0.1` (for development)
+   - Your production domain (e.g., `yourdomain.com`)
+4. **Save the changes**
+
+### 4. Enable Phone Authentication
+1. **Go to Firebase Console** → Authentication → Sign-in method
+2. **Enable "Phone" provider**
+3. **Configure reCAPTCHA settings** if needed
+
+### 5. Verify Firebase Collection
 Make sure you have a `hair_extensions` collection in Firestore with the test document ID: `TNW6ncPc6cQ81DLntQ4u`
 
-### 4. Check Browser Console
+### 6. Check Browser Console
 After setting up the environment variables:
 1. Restart your development server
 2. Open browser console
 3. Look for Firebase initialization messages
 4. Check for any error messages
 
-### 5. Test Firebase Connection
+### 7. Test Firebase Connection
 The code now includes better error handling and debugging. Check the console for:
 - "Firebase config check" - shows which environment variables are set
 - "Firebase initialized successfully" - confirms Firebase is working
@@ -49,6 +65,8 @@ The code now includes better error handling and debugging. Check the console for
 2. **Wrong Project ID**: Make sure you're using the correct Firebase project
 3. **Firestore Rules**: Ensure your Firestore rules allow reading the `hair_extensions` collection
 4. **Document Doesn't Exist**: The test document ID might not exist in your Firebase project
+5. **reCAPTCHA Hostname Error**: Domain not added to authorized domains in Firebase Console
+6. **Phone Authentication Disabled**: Phone provider not enabled in Firebase Console
 
 ## Debugging Steps:
 
@@ -57,7 +75,16 @@ The code now includes better error handling and debugging. Check the console for
 3. Test Firebase connection with a simple document read
 4. Check Firestore rules and permissions
 5. Verify the document exists in your Firebase project
+6. Ensure your domain is in the authorized domains list
+7. Check that phone authentication is enabled
 
 ## Alternative: Use Supabase Instead
 
-If Firebase setup is problematic, you can modify the ProductDetailDialog to use Supabase for all products instead of Firebase for hair extensions. 
+If Firebase setup is problematic, you can modify the ProductDetailDialog to use Supabase for all products instead of Firebase for hair extensions.
+
+## Quick Test
+
+After setup, try:
+1. Phone authentication with a valid number (e.g., +911234567890)
+2. Check if reCAPTCHA loads without errors
+3. Verify OTP is sent successfully 

@@ -9,6 +9,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import HtmlContent from "@/components/ui/HtmlContent";
 import Head from "next/head";
 import Link from "next/link";
+import { BlogHeaderAd, BlogContentAd, BlogFooterAd } from "@/components/GoogleAdSense";
 
 interface BlogPost {
   id: string;
@@ -158,6 +159,9 @@ export default function BlogPostPage({ params }: Props) {
               </p>
             </div>
 
+            {/* Header Ad */}
+            <BlogHeaderAd />
+
             <div className="relative w-full aspect-video rounded-md overflow-hidden mb-10">
               <Image
                 src={getPostImage(post)}
@@ -177,6 +181,9 @@ export default function BlogPostPage({ params }: Props) {
               />
             </div>
 
+            {/* Content Ad after main content */}
+            <BlogContentAd />
+
             {/* Show tags at the bottom as clickable links, just above the back button */}
             {(post.tags && post.tags.length > 0) && (
               <div className="flex flex-wrap gap-2 mb-8">
@@ -195,6 +202,9 @@ export default function BlogPostPage({ params }: Props) {
               <span className="mr-2 text-sm font-medium">←</span>
               <span className="text-sm font-medium group-hover:underline">Back to Journal</span>
             </button>
+
+            {/* Footer Ad */}
+            <BlogFooterAd />
           </article>
         </div>
       </main>

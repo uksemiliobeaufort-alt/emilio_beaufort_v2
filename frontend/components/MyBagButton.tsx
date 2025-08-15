@@ -1,7 +1,9 @@
 import { ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import BagModal from './BagModal';
+import OrderFormModal from './OrderFormModal';
 import { useBag } from './BagContext';
+import { useState } from 'react';
 
 interface MyBagButtonProps {
   open: boolean;
@@ -10,6 +12,8 @@ interface MyBagButtonProps {
 }
 
 export default function MyBagButton({ open, setOpen, onBuyNow }: MyBagButtonProps) {
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  
   // Get the real bag count from context
   let bagItems = [];
   let totalItems = 0;
@@ -43,7 +47,18 @@ export default function MyBagButton({ open, setOpen, onBuyNow }: MyBagButtonProp
         )}
       </button>
     )}
-    <BagModal open={open} onClose={() => setOpen(false)} onBuyNow={onBuyNow} />
+    <BagModal 
+      open={open} 
+      onClose={() => setOpen(false)} 
+      onBuyNow={() => {
+        setShowOrderForm(true);
+        setOpen(false); // Close the bag modal when opening order form
+      }} 
+    />
+    <OrderFormModal 
+      open={showOrderForm} 
+      onClose={() => setShowOrderForm(false)} 
+    />
     </>
   );
 } 

@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { BlogHeaderAd, BlogContentAd, BlogFooterAd } from "@/components/GoogleAdSense";
 
 export default function BlogsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -102,6 +103,9 @@ export default function BlogsPage() {
           </Button>
         </div>
 
+        {/* Header Ad */}
+        <BlogHeaderAd />
+
         {/* Add Post Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="sm:max-w-md">
@@ -160,48 +164,56 @@ export default function BlogsPage() {
         {loading ? (
           <div className="text-center text-gray-500">Loading...</div>
         ) : posts.length > 0 ? (
-          <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post) => (
-              <motion.div
-                key={post.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <Link href={`/journal/${post.slug}`}>
-                  <Card className="overflow-hidden hover:shadow-lg cursor-pointer group transition">
-                    <div className="relative aspect-[4/3]">
-                      <img
-                        src={post.featuredImageUrl || defaultImageUrl}
-                        alt={post.title}
-                        className="object-cover w-full h-full group-hover:scale-105 transition-transform"
-                      />
-                    </div>
-                    <CardContent className="p-5">
-                      <h3 className="font-bold text-xl mb-1 group-hover:text-gray-900 transition">
-                        {post.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 line-clamp-3">
-                        {post.content?.slice(0, 100)}...
-                      </p>
-                      <p className="text-xs text-gray-400 mt-4">
-                        {new Date(post.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </p>
-                      <div className="mt-4 pt-4 border-t">
-                        <Button className="w-full bg-black text-white hover:bg-gray-800">
-                          Read More
-                        </Button>
+          <>
+            <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {posts.map((post, index) => (
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <Link href={`/journal/${post.slug}`}>
+                    <Card className="overflow-hidden hover:shadow-lg cursor-pointer group transition">
+                      <div className="relative aspect-[4/3]">
+                        <img
+                          src={post.featuredImageUrl || defaultImageUrl}
+                          alt={post.title}
+                          className="object-cover w-full h-full group-hover:scale-105 transition-transform"
+                        />
                       </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+                      <CardContent className="p-5">
+                        <h3 className="font-bold text-xl mb-1 group-hover:text-gray-900 transition">
+                          {post.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 line-clamp-3">
+                          {post.content?.slice(0, 100)}...
+                        </p>
+                        <p className="text-xs text-gray-400 mt-4">
+                          {new Date(post.createdAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </p>
+                        <div className="mt-4 pt-4 border-t">
+                          <Button className="w-full bg-black text-white hover:bg-gray-800">
+                            Read More
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Content Ad after first few posts */}
+            {posts.length > 3 && <BlogContentAd />}
+
+            {/* Footer Ad */}
+            <BlogFooterAd />
+          </>
         ) : (
           <p className="text-center text-gray-500">No blog posts found.</p>
         )}

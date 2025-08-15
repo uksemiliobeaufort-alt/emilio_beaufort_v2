@@ -5,6 +5,7 @@ import { collection, getDocs, query } from 'firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { BlogHeaderAd, BlogContentAd, BlogFooterAd } from "@/components/GoogleAdSense";
 
 interface BlogPost {
   id: string;
@@ -76,6 +77,10 @@ export default function TagArchivePage({ params }: { params: { tag: string } }) 
     <div className="min-h-screen bg-white py-10 px-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold mb-4">Posts tagged with <span className="text-blue-600">#{tag}</span></h1>
+
+        {/* Header Ad */}
+        <BlogHeaderAd />
+
         {loading ? (
           <div className="text-center text-gray-500">Loading...</div>
         ) : paginatedPosts.length > 0 ? (
@@ -116,6 +121,10 @@ export default function TagArchivePage({ params }: { params: { tag: string } }) 
                 </Link>
               ))}
             </div>
+
+            {/* Content Ad after posts */}
+            <BlogContentAd />
+
             {/* Pagination Controls */}
             <div className="flex justify-center gap-2 mb-8">
               <Button
@@ -145,6 +154,9 @@ export default function TagArchivePage({ params }: { params: { tag: string } }) 
                 Next
               </Button>
             </div>
+
+            {/* Footer Ad */}
+            <BlogFooterAd />
           </>
         ) : (
           <div className="text-center text-gray-500">No posts found for this tag.</div>

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ProductDetailDialog } from '@/components/ui/ProductDetailDialog';
 import { RippleButton } from '@/components/ui/RippleButton';
 import MyBagButton from '@/components/MyBagButton';
-import SimpleCheckoutForm from '@/components/SimpleCheckoutForm';
+import OrderFormModal from '@/components/OrderFormModal';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { safeMap } from "@/lib/utils";
 import { supabase } from '@/lib/supabase';
@@ -17,6 +17,7 @@ import { Package, Search } from 'lucide-react';
 import { getHairExtensionsFromFirebase } from '@/lib/firebase';
 import { firestore } from '@/lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Mapping function to convert Supabase Product to API Product format
 const mapSupabaseProductToAPIProduct = (supabaseProduct: SupabaseProduct): Product => {
@@ -47,6 +48,7 @@ function ProductsPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
 
   // New: Bag and Checkout modal state
   const [bagOpen, setBagOpen] = useState(false);
@@ -54,6 +56,21 @@ function ProductsPageContent() {
 
   // Handler to open checkout and close bag
   const handleBuyNow = () => {
+    // Check if user is authenticated (with fallback to localStorage)
+    const isUserLoggedIn = user || (typeof window !== 'undefined' && localStorage.getItem('authUser'));
+    
+    console.log('🔍 Products Buy Now Debug:', {
+      user: user,
+      localStorageUser: typeof window !== 'undefined' ? localStorage.getItem('authUser') : 'N/A',
+      isUserLoggedIn: isUserLoggedIn
+    });
+    
+    if (!isUserLoggedIn) {
+      // Redirect to auth page
+      router.push('/auth?from=bag');
+      return;
+    }
+    
     setBagOpen(false);
     setCheckoutOpen(true);
   };
@@ -62,6 +79,17 @@ function ProductsPageContent() {
   const handleCheckoutClose = () => {
     setCheckoutOpen(false);
   };
+
+  // Check if user just returned from auth page and should open checkout
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const shouldOpenCheckout = localStorage.getItem('openCheckoutAfterAuth');
+      if (shouldOpenCheckout === 'true') {
+        localStorage.removeItem('openCheckoutAfterAuth');
+        setCheckoutOpen(true);
+      }
+    }
+  }, []);
 
   // Fetch products for selected category
   const fetchProducts = async () => {
@@ -240,7 +268,7 @@ function ProductsPageContent() {
         }}
       />
       <MyBagButton open={bagOpen} setOpen={setBagOpen} onBuyNow={handleBuyNow} />
-      <SimpleCheckoutForm open={checkoutOpen} onClose={handleCheckoutClose} />
+              <OrderFormModal open={checkoutOpen} onClose={handleCheckoutClose} />
       <div className="max-w-7xl mx-auto px-6 sm:px-4 pt-28 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 50 }}

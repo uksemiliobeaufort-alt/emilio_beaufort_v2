@@ -9,6 +9,7 @@ import { BagProvider } from '@/components/BagContext';
 import { Toaster as ReactHotToastToaster } from 'react-hot-toast';
 import ConditionalAutoFeedback from '@/components/ConditionalAutoFeedback';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import Script from 'next/script';
 
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -21,6 +22,9 @@ export const metadata = {
   title: "Emilio Beaufort | Luxury Temple Hair Extensions & Grooming",
   description: "Discover Emilio Beaufort's luxury temple hair extensions and grooming products. Learn what is temple hair, explore our hair extension blog, and shop premium hair from India.",
   keywords: "temple hair, hair extension, emilio beaufort, temple hair blog, what is temple hair, luxury grooming, indian hair extensions, premium hair, hair extension blog, luxury hair care",
+  other: {
+    "google-adsense-account": "ca-pub-5512739027608050"
+  },
   icons: {
     icon: faviconUrl,
     shortcut: faviconUrl,
@@ -56,7 +60,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5512739027608050"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+      </head>
       <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>
         
         <BagProvider>

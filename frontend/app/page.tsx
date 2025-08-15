@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
-import { Navbar } from '@/components/Navbar';
+// import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -22,7 +22,6 @@ import { trackEngagement, trackUserBehavior } from '@/lib/analytics';
 import TeamMemberSocialLinks from '@/components/TeamMemberSocialLinks';
 import PartnersMarquee from "@/components/PartnersMarquee";
 import Chatbot from "@/components/Chatbot";
-
 // Auto Feedback Trigger Component
 function AutoFeedbackTrigger() {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
@@ -342,7 +341,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-premium">
       <AnimatedBackground />
-      <Navbar />
+      {/* <Navbar /> */}
 
       {/* Cookie Consent Popup */}
       <CookieConsent />
@@ -360,7 +359,7 @@ export default function Home() {
         {/* Video background */}
         <video
           className="absolute inset-0 w-full h-full object-cover z-0"
-          src={getImageUrl("product-images", "heroVideo.mp4")}
+          src="https://mzvuuvtckcimzemivltz.supabase.co/storage/v1/object/public/product-images/heroVideo.mp4"
           autoPlay
           muted
           loop

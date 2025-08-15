@@ -1,5 +1,7 @@
 "use client";
 import { useBag } from './BagContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useState } from 'react';
 import { X } from 'lucide-react';
@@ -14,6 +16,8 @@ interface BagModalProps {
 
 export default function BagModal({ open, onClose, onBuyNow }: BagModalProps) {
   const { bagItems, removeFromBag, clearBag, addToBag } = useBag();
+  const { user } = useAuth();
+  const router = useRouter();
   const [limitMessage, setLimitMessage] = useState('');
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [pendingAddItem, setPendingAddItem] = useState<any>(null);
@@ -34,11 +38,32 @@ export default function BagModal({ open, onClose, onBuyNow }: BagModalProps) {
     setPendingAddItem(null);
   };
 
+  // Check authentication before proceeding to checkout
+  const handleBuyNow = () => {
+    // Check if user is authenticated (with fallback to localStorage)
+    const isUserLoggedIn = user || (typeof window !== 'undefined' && localStorage.getItem('authUser'));
+    
+    console.log('🔍 Bag Buy Now Debug:', {
+      user: user,
+      localStorageUser: typeof window !== 'undefined' ? localStorage.getItem('authUser') : 'N/A',
+      isUserLoggedIn: isUserLoggedIn
+    });
+    
+    if (!isUserLoggedIn) {
+      onClose(); // Close the bag modal
+      router.push('/auth?from=bag'); // Redirect to auth page
+      return;
+    }
+    onBuyNow();
+  };
+
   if (!open) return null;
   return (
     <>
       {/* Razorpay script */}
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
+      
+
       {showLimitModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative animate-fadeIn text-center">
@@ -52,16 +77,16 @@ export default function BagModal({ open, onClose, onBuyNow }: BagModalProps) {
             <h3 className="text-lg font-bold mb-4 text-premium">Bag Limit</h3>
             <div className="mb-6 text-premium-dark">You have hit the bag limit.<br />{limitMessage}</div>
             <div className="flex flex-col gap-3 mt-4">
-              <button
-                className="w-full bg-black text-white py-2 rounded-lg font-bold hover:bg-premium-dark transition mb-2"
-                onClick={() => {
-                  setShowLimitModal(false);
-                  setPendingAddItem(null);
-                  onBuyNow();
-                }}
-              >
-                Buy Now
-              </button>
+                                <button
+                    className="w-full bg-black text-white py-2 rounded-lg font-bold hover:bg-premium-dark transition mb-2"
+                    onClick={() => {
+                      setShowLimitModal(false);
+                      setPendingAddItem(null);
+                      handleBuyNow();
+                    }}
+                  >
+                    Fill Order Form
+                  </button>
               <button
                 className="w-full bg-gray-100 text-black py-2 rounded-lg font-semibold border border-gray-300 hover:bg-gray-200 transition"
                 onClick={handleIgnoreAndAdd}
@@ -158,9 +183,9 @@ export default function BagModal({ open, onClose, onBuyNow }: BagModalProps) {
                   <button
                     className="w-full sm:w-auto flex-1 px-4 sm:px-8 py-2 rounded-lg font-bold text-base sm:text-lg"
                     style={{ background: '#000', color: '#fff', border: 'none', outline: 'none', boxShadow: 'none' }}
-                    onClick={onBuyNow}
+                    onClick={handleBuyNow}
                   >
-                    Buy Now
+                    Fill Order Form
                   </button>
                 </div>
               </div>
@@ -168,6 +193,7 @@ export default function BagModal({ open, onClose, onBuyNow }: BagModalProps) {
           </div>
         </SheetContent>
       </Sheet>
+
       <style jsx>{`
         .animate-fadeIn {
           animation: fadeIn 0.2s;

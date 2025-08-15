@@ -1,11 +1,15 @@
 import { BagProvider } from '@/components/BagContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import type { AppProps } from 'next/app';
 
-function MyApp({ Component, pageProps }) {
+function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <BagProvider>
-      <Component {...pageProps} />
-    </BagProvider>
+    <AuthProvider>
+      <BagProvider>
+        <Component {...pageProps} />
+      </BagProvider>
+    </AuthProvider>
   );
 }
 
-export default MyApp; 
+export default MyApp;

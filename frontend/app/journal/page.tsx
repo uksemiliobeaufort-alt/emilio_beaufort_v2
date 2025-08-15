@@ -11,7 +11,7 @@ import { collection, getDocs, query } from 'firebase/firestore';
 import { useRouter } from "next/navigation";
 import { Share2, Copy, MessageCircle, Linkedin, Twitter, Facebook, Check, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-
+import { BlogHeaderAd, BlogContentAd, BlogFooterAd } from "@/components/GoogleAdSense";
 
 interface BlogPost {
   id: string;
@@ -191,6 +191,10 @@ export default function JournalPage() {
               Discover the world of temple hair and hair extensions—real stories, expert tips, and inspiration from the Emilio Beaufort community. Explore our blog for honest advice, transformations, and everything you need to feel confident and beautiful.
             </p>
           </div>
+
+          {/* Header Ad */}
+          <BlogHeaderAd />
+
           {/* Responsive Journal Cards */}
           <div className="mt-8">
             {posts.length > 0 ? (
@@ -323,7 +327,7 @@ export default function JournalPage() {
                   <p className="text-center text-sm text-gray-600 mt-2 font-medium">Show More</p>
                 </div>
 
-                {/* Desktop/Tablet Marquee (unchanged) */}
+                {/* Desktop/Tablet Marquee */}
                 <div className="hidden sm:flex items-center gap-6">
                   {/* Marquee Container */}
                   <div className="flex-1 overflow-hidden">
@@ -470,6 +474,9 @@ export default function JournalPage() {
                     <p className="text-center text-sm text-gray-600 mt-2 font-medium">Show More</p>
                   </motion.div>
                 </div>
+
+                {/* Content Ad after marquee */}
+                <BlogContentAd />
               </>
             ) : (
               <div className="text-center text-gray-600 mt-10">
