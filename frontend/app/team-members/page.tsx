@@ -1,180 +1,192 @@
-"use client";
+'use client';
 
-import { useSearchParams, useRouter } from "next/navigation";
-import { useMemo, useState, Suspense } from "react";
-import { getFounderImageUrl } from "@/lib/supabase";
-import Script from "next/script";
-import { safeMap } from "@/lib/utils";
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { supabase } from '@/lib/supabase';
+import { Linkedin, Instagram, Users } from 'lucide-react';
+import { FaXTwitter } from 'react-icons/fa6';
 
-const ALL_TEAM_MEMBERS = [
-  { name: "Priya Sharma", role: "Lead Product Designer", category: "Design", description: "Expert in user experience and luxury product design, blending tradition with innovation.", location: "Mumbai, India", gradient: "from-yellow-500 via-orange-400 to-pink-500", imageUrl: "https://randomuser.me/api/portraits/women/65.jpg" },
-  { name: "Liam O'Connor", role: "Senior Engineer", category: "Developers", description: "Full-stack developer with a passion for scalable systems.", location: "Dublin, Ireland", gradient: "from-blue-900 via-blue-400 to-blue-900", imageUrl: "https://randomuser.me/api/portraits/men/44.jpg" },
-  { name: "Ava Müller", role: "Marketing Lead", category: "Marketing", description: "Brand storyteller and digital marketing strategist.", location: "Berlin, Germany", gradient: "from-gray-700 via-gray-400 to-gray-700", imageUrl: "https://randomuser.me/api/portraits/women/68.jpg" },
-  { name: "Noah Kim", role: "Product Manager", category: "Sales", description: "Drives product vision and cross-functional teams.", location: "Seoul, South Korea", gradient: "from-green-700 via-green-300 to-green-700", imageUrl: "https://randomuser.me/api/portraits/men/56.jpg" },
-  { name: "Sofia Rossi", role: "Customer Success", category: "Sales", description: "Ensures every client has a premium experience.", location: "Rome, Italy", gradient: "from-pink-700 via-pink-300 to-pink-700", imageUrl: "https://randomuser.me/api/portraits/women/77.jpg" },
-  { name: "Lucas Dubois", role: "Supply Chain Lead", category: "Sales", description: "Logistics and operations expert.", location: "Lyon, France", gradient: "from-purple-700 via-purple-300 to-purple-700", imageUrl: "https://randomuser.me/api/portraits/men/60.jpg" },
-  { name: "Maya Patel", role: "QA Specialist", category: "Developers", description: "Quality is her obsession.", location: "Delhi, India", gradient: "from-red-700 via-red-300 to-red-700", imageUrl: "https://randomuser.me/api/portraits/women/21.jpg" },
-  { name: "Oliver Smith", role: "Finance Manager", category: "Marketing", description: "Numbers and strategy.", location: "London, UK", gradient: "from-gray-900 via-gray-400 to-gray-900", imageUrl: "https://randomuser.me/api/portraits/men/33.jpg" },
-  { name: "Emma Johansson", role: "UX Researcher", category: "Design", description: "User insights for better products.", location: "Stockholm, Sweden", gradient: "from-blue-700 via-blue-300 to-blue-700", imageUrl: "https://randomuser.me/api/portraits/women/39.jpg" },
-  { name: "Ethan Lee", role: "Data Analyst", category: "Marketing", description: "Turning data into decisions.", location: "San Francisco, USA", gradient: "from-green-900 via-green-400 to-green-900", imageUrl: "https://randomuser.me/api/portraits/men/45.jpg" },
-];
+type TeamMember = {
+  id: string;
+  name: string | null;
+  designation: string | null;
+  description: string | null;
+  image_url: string | null;
+  linkedin: string | null;
+  twitter: string | null;
+  instagram: string | null;
+  department: string | null;
+};
 
-const PAGE_SIZE = 6;
+const roleColors: Record<string, string> = {
+  All: '#000000',
+  "IT Department": '#2f8deb',
+  "Founder's Office": '#e7b923',
+  "Sales Department": '#028139',
+  "HR Department": '#a05edd',
+  "Marketing Department": '#ff7f50',
+};
 
-function TeamMembersContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const page = parseInt(searchParams?.get("page") || "1", 10);
+const getRoleColor = (department?: string | null): string => {
+  if (!department) return roleColors.All;
+  return roleColors[department] || roleColors.All;
+};
 
-  const filteredMembers = useMemo(() => {
-    if (selectedCategory === "All") return ALL_TEAM_MEMBERS;
-    return ALL_TEAM_MEMBERS.filter((m) => m.category === selectedCategory);
-  }, [selectedCategory]);
+const TeamMembersSection = () => {
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [filter, setFilter] = useState('All');
 
-  const paginatedMembers = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE;
-    return filteredMembers.slice(start, start + PAGE_SIZE);
-  }, [filteredMembers, page]);
+  const fetchTeamMembers = async () => {
+    const { data, error } = await supabase.from('team_members').select('*');
+    if (!error && data) {
+      setTeamMembers(data as TeamMember[]);
+    }
+  };
 
-  const totalPages = Math.ceil(filteredMembers.length / PAGE_SIZE);
+  useEffect(() => {
+    fetchTeamMembers();
+  }, []);
+
+  const filteredMembers =
+    filter === 'All'
+      ? teamMembers
+      : teamMembers.filter((member) => (member.department || '') === filter);
+
+  const filters = [
+    'All',
+    "IT Department",
+    "Founder's Office",
+    "Sales Department",
+    "HR Department",
+    "Marketing Department",
+  ];
 
   return (
-    <div className="min-h-screen bg-white py-12 px-4">
-      <h1 className="text-4xl font-serif font-bold text-center mb-10 text-premium">Our Team Members</h1>
+    <div className="bg-gradient-to-br from-white via-[#fdfdfd] to-[#f7f7f7] pt-20 md:pt-24 pb-16 px-4">
+      <div className="max-w-7xl mx-auto text-center">
+        <h1 className="text-5xl font-serif font-extrabold text-gray-900 mb-6 md:mb-8">
+          Meet the Team
+        </h1>
+        <p className="text-gray-500 text-lg mb-12 md:mb-14 font-light">
+        A dedicated team behind every refined Emilio Beaufort experience.
+       </p>
 
-      {/* Category Buttons  */}
-      <div className="flex justify-center mb-10">
-        <div className="flex flex-wrap gap-3">
-          {safeMap(["All", "Developers", "Design", "Marketing", "Sales"], (category) => (
+        <div className="flex justify-center gap-4 mb-10 md:mb-12 flex-wrap">
+          {filters.map((f) => (
             <button
-              key={category}
-              onClick={() => {
-                setSelectedCategory(category);
-                router.push("/team-members?page=1");
-              }}
-              className={`px-5 py-2 rounded-full font-semibold transition-all duration-200 border ${
-                selectedCategory === category
-                  ? "bg-black text-white shadow-md scale-105 border-[#B7A16C]"
-                  : "bg-white text-black border-gray-300 hover:border-[#B7A16C] hover:scale-105"
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-full border text-sm font-medium transition duration-200 ${
+                filter === f
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
               }`}
             >
-              {category}
+              {f}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Member Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {safeMap(paginatedMembers, (member, idx) => (
-          <div
-            key={member.name + idx}
-            className="relative h-[460px] bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:scale-[1.015] transition-all duration-300"
+        {filteredMembers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 border border-gray-200 rounded-2xl bg-white/70">
+            <Users className="text-gray-400 mb-3" size={32} />
+            <h3 className="text-gray-900 font-semibold">No team members to show</h3>
+            <p className="text-gray-500 text-sm mt-1">Check back soon as we grow the team.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
+            {filteredMembers.map((member) => {
+              const roleColor = getRoleColor(member.department);
 
-          >
-            <div className={`absolute inset-0 bg-gradient-to-br ${member.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl p-1`}>
-              <div className="w-full h-full bg-white rounded-3xl"></div>
-            </div>
-            <div className="relative z-10 p-6 sm:p-8 h-full flex flex-col justify-between">
-              <div className="text-center flex-1">
-                <div className="relative mb-6">
-                  <div className={`w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br ${member.gradient} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-500 shadow-lg group-hover:shadow-xl overflow-hidden`}>
-                    {/* Team Member Image from Supabase */}
-                    <img
-                      src={getFounderImageUrl(member.name)}
-                      alt={`${member.name} - ${member.role}`}
-                      className="w-full h-full object-cover rounded-full"
-                      onError={(e) => {
-                        // Fallback to initials if image fails to load
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          const fallback = document.createElement('div');
-                          fallback.className = 'w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center';
-                          fallback.innerHTML = `<span class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-600">${(member.name || '').split(' ').map(n => n[0]).join('')}</span>`;
-                          parent.appendChild(fallback);
-                        }
+              return (
+                <div
+                  key={member.id}
+                  className="bg-white rounded-[2rem] p-8 flex flex-col items-center justify-between text-center relative transition-all duration-300"
+                  style={{
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.03)';
+                    e.currentTarget.style.boxShadow = `0 0 20px ${roleColor}`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
+                  }}
+                >
+                  {member.image_url && (
+                    <Image
+                      src={member.image_url}
+                      alt={member.name || 'Team Member'}
+                      width={120}
+                      height={120}
+                      className="rounded-full object-cover mb-4"
+                      style={{
+                        border: `3px solid ${roleColor}`,
                       }}
                     />
+                  )}
+                  <h2 className="text-xl font-serif font-extrabold text-gray-900">
+                    {member.name}
+                  </h2>
+                  <p className="text-md font-semibold my-2" style={{ color: roleColor }}>
+                    {member.designation}
+                  </p>
+                  <p className="text-gray-600 text-sm font-light leading-relaxed mb-6 max-w-xs">
+                    {member.description}
+                  </p>
+
+                  <div className="flex gap-4 justify-center">
+                    {member.linkedin && (
+                      <a
+                        href={member.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-[#F5F5F5] hover:bg-[#E0DFDC] p-2 rounded-full text-black transition"
+                      >
+                        <Linkedin size={20} />
+                      </a>
+                    )}
+                    {member.twitter && (
+                      <a
+                        href={member.twitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-[#F5F5F5] hover:bg-[#E0DFDC] p-2 rounded-full text-black transition"
+                      >
+                        <FaXTwitter size={20} />
+                      </a>
+                    )}
+                    {member.instagram && (
+                      <a
+                        href={member.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-[#F5F5F5] hover:bg-[#E0DFDC] p-2 rounded-full text-black transition"
+                      >
+                        <Instagram size={20} />
+                      </a>
+                    )}
                   </div>
-                  <div className={`absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br ${member.gradient} rounded-full opacity-0 group-hover:opacity-30 group-hover:scale-150 transition-all duration-700`}></div>
-                </div>
-                <h4 className="font-serif font-bold text-lg sm:text-xl md:text-2xl text-premium mb-2 group-hover:text-[#B7A16C] transition-colors duration-300">
-                  {member.name}
-                </h4>
-                <p className="text-[#B7A16C] font-semibold text-sm sm:text-base mb-3 group-hover:scale-105 transition-transform duration-300">
-                  {member.role}
-                </p>
-              </div>
 
-              {/* Description + Social Icons */}
-              <div className="text-center flex-shrink-0">
-                <p className="text-gray-600 text-sm leading-relaxed mb-4 group-hover:text-gray-700 transition-colors duration-300">
-                  {member.description}
-                </p>
-                <div className="flex justify-center gap-4">
-                  <a href="https://linkedin.com/company/emiliobeaufort" target="_blank" rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-[#B7A16C] hover:text-white transition">
-                    <i className="fab fa-linkedin-in text-sm"></i>
-                  </a>
-                  <a href="https://twitter.com/emiliobeaufort" target="_blank" rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-[#B7A16C] hover:text-white transition">
-                    <i className="fab fa-x-twitter text-sm"></i>
-                  </a>
-                  <a href="https://instagram.com/emiliobeaufort" target="_blank" rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-[#B7A16C] hover:text-white transition">
-                    <i className="fab fa-instagram text-sm"></i>
-                  </a>
+                  <div
+                    className="absolute top-0 right-0 w-16 h-16 rounded-bl-full"
+                    style={{ backgroundColor: roleColor }}
+                  />
+                  <div
+                    className="absolute bottom-0 left-0 w-16 h-16 rounded-tr-full"
+                    style={{ backgroundColor: roleColor }}
+                  />
                 </div>
-              </div>
-            </div>
-
-            {/* Decorative Circles */}
-            <div className={`absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br ${member.gradient} rounded-full opacity-10 group-hover:opacity-20 group-hover:scale-150 transition-all duration-700`}></div>
-            <div className={`absolute -bottom-4 -left-4 w-12 h-12 bg-gradient-to-br ${member.gradient} rounded-full opacity-10 group-hover:opacity-20 group-hover:scale-150 transition-all duration-700`}></div>
+              );
+            })}
           </div>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-center mt-10 gap-4">
-        <button
-          className="px-6 py-2 rounded-full bg-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition"
-          onClick={() => router.push(`/team-members?page=${page - 1}`)}
-          disabled={page <= 1}
-        >
-          Previous
-        </button>
-        <span className="px-4 py-2 text-gray-600 font-medium">Page {page} of {totalPages}</span>
-        <button
-          className="px-6 py-2 rounded-full bg-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition"
-          onClick={() => router.push(`/team-members?page=${page + 1}`)}
-          disabled={page >= totalPages}
-        >
-          Next
-        </button>
+        )}
       </div>
     </div>
   );
-}
+};
 
-export default function TeamMembersPage() {
-  return (
-    <>
-      <Script
-        src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"
-        strategy="beforeInteractive"
-        crossOrigin="anonymous"
-      />
-      <Suspense fallback={
-        <div className="min-h-screen bg-white flex items-center justify-center">
-          <div className="text-2xl font-serif text-gray-900">Loading team members...</div>
-        </div>
-      }>
-        <TeamMembersContent />
-      </Suspense>
-    </>
-  );
-}
+export default TeamMembersSection;
+
+

@@ -3,7 +3,6 @@ import { Inter, Playfair_Display } from "next/font/google";
 import { Toaster } from "sonner";
 import PageTransitionProgressBar from "@/components/PageTransitionProgressBar";
 import ConditionalNavbar from "@/components/ConditionalNavbar";
-// import { Footer } from "@/components/Footer";
 import { Suspense } from "react";
 import { BagProvider } from '@/components/BagContext';
 import { Toaster as ReactHotToastToaster } from 'react-hot-toast';
@@ -11,17 +10,16 @@ import ConditionalAutoFeedback from '@/components/ConditionalAutoFeedback';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import Script from 'next/script';
 
-
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
-// Construct favicon URL from Supabase bucket
-const faviconUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/the-house/favicon.ico`;
+// Updated favicon URL
+const faviconUrl = "https://mzvuuvtckcimzemivltz.supabase.co/storage/v1/object/public/the-house/favicon.ico";
 
 export const metadata = {
-  title: "Emilio Beaufort | Luxury Temple Hair Extensions & Grooming",
-  description: "Discover Emilio Beaufort's luxury temple hair extensions and grooming products. Learn what is temple hair, explore our hair extension blog, and shop premium hair from India.",
-  keywords: "temple hair, hair extension, emilio beaufort, temple hair blog, what is temple hair, luxury grooming, indian hair extensions, premium hair, hair extension blog, luxury hair care",
+  title: "Luxury Temple Hair Extensions | Emilio Beaufort | Shop Premium Indian Hair",
+  description: "Explore Emilio Beaufort's collection of ethically sourced, luxury temple hair extensions. Discover the difference with our premium Indian hair and grooming products. Shop now.",
+  keywords: "luxury temple hair extensions, premium indian hair, ethically sourced hair, temple hair, hair extension, emilio beaufort, indian hair extensions, luxury grooming, hair extension blog, natural hair extensions, premium hair care, virgin hair extensions, authentic temple hair",
   other: {
     "google-adsense-account": "ca-pub-5512739027608050"
   },
@@ -31,8 +29,8 @@ export const metadata = {
     apple: faviconUrl,
   },
   openGraph: {
-    title: "Emilio Beaufort | Luxury Temple Hair Extensions & Grooming",
-    description: "Discover Emilio Beaufort's luxury temple hair extensions and grooming products. Learn what is temple hair, explore our hair extension blog, and shop premium hair from India.",
+    title: "Luxury Temple Hair Extensions | Emilio Beaufort | Shop Premium Indian Hair",
+    description: "Explore Emilio Beaufort's collection of ethically sourced, luxury temple hair extensions. Discover the difference with our premium Indian hair and grooming products. Shop now.",
     url: "https://emiliobeaufort.com/",
     type: "website",
     images: [
@@ -46,8 +44,8 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Emilio Beaufort | Luxury Temple Hair Extensions & Grooming",
-    description: "Discover Emilio Beaufort's luxury temple hair extensions and grooming products. Learn what is temple hair, explore our hair extension blog, and shop premium hair from India.",
+    title: "Luxury Temple Hair Extensions | Emilio Beaufort | Shop Premium Indian Hair",
+    description: "Explore Emilio Beaufort's collection of ethically sourced, luxury temple hair extensions. Discover the difference with our premium Indian hair and grooming products. Shop now.",
     images: [faviconUrl],
     creator: "@emiliobeaufort"
   },
@@ -70,7 +68,6 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>
-        
         <BagProvider>
           <ConditionalNavbar />
           <main>

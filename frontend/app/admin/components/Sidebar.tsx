@@ -61,6 +61,11 @@ const sidebarItems = [
     ]
   },
   {
+    name: 'Team Members',
+    href: '/admin/teamMembers',
+    icon: <Users className="h-4 w-4" />
+  },
+  {
     name: 'Admin Users',
     href: '/admin/users',
     icon: <Settings className="h-4 w-4" />,

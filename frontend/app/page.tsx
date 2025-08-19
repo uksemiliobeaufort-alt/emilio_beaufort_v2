@@ -17,7 +17,7 @@ import AnimatedBackground from '@/components/AnimatedBackground';
 import CookieConsent from '@/components/CookieConsent';
 import FeedbackFormDialog from '@/components/ui/FeedbackFormDialog';
 import { safeMap } from "@/lib/utils";
-import WhyChooseSection from '@/components/WhyChooseSection';
+import WhyChooseSection from '@/components/WhyChooseSection'; 
 import { trackEngagement, trackUserBehavior } from '@/lib/analytics';
 import TeamMemberSocialLinks from '@/components/TeamMemberSocialLinks';
 import PartnersMarquee from "@/components/PartnersMarquee";
@@ -876,7 +876,7 @@ export default function Home() {
           </motion.div>
 
 
-          {/* <motion.div
+          <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -899,7 +899,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Button>
-          </motion.div> */}
+          </motion.div>
         </div>
       </section>
 
