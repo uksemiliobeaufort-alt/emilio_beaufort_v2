@@ -206,7 +206,6 @@ export default function TeamMemberForm() {
               placeholder="Write a short bio..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              required
             />
           </div>
 
