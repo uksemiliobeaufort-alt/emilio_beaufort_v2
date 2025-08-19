@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { supabase, STORAGE_BUCKETS } from '@/lib/supabase';
 import { auth } from '@/lib/auth';
 import { safeMap } from "@/lib/utils";
+import { FounderCard } from '@/components/admin/FounderCard';
 
 interface Founder {
   name: string;
@@ -159,72 +160,19 @@ export default function FoundersPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {safeMap(founders, (founder) => (
-            <Card key={founder.name} className="overflow-hidden">
-              <CardHeader>
-                <CardTitle className="text-lg">{founder.name}</CardTitle>
-                <p className="text-sm text-gray-600">{founder.role}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Current Image Preview */}
-                  <div className="flex justify-center">
-                    <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                      {founder.imageUrl ? (
-                        <img
-                          src={founder.imageUrl}
-                          alt={founder.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.innerHTML = `<span class="text-2xl font-bold text-gray-600">${(founder.name || '').split(' ').map(n => n[0]).join('')}</span>`;
-                            }
-                          }}
-                        />
-                      ) : (
-                        <span className="text-2xl font-bold text-gray-600">
-                          {(founder.name || '').split(' ').map(n => n[0]).join('')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Upload Controls */}
-                  <div className="space-y-2">
-                    <Label htmlFor={`upload-${founder.name}`} className="text-sm font-medium">
-                      Upload Image
-                    </Label>
-                    <Input
-                      id={`upload-${founder.name}`}
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(founder.name, e)}
-                      disabled={uploading === founder.name}
-                      className="text-sm"
+          
+                  {safeMap(founders, (founder) => (
+                    <FounderCard
+                       key={founder.name}
+                       name={founder.name}
+                       role={founder.role}
+                       imageUrl={founder.imageUrl}
+                        uploading={uploading === founder.name}
+                        onUpload={(file) => handleImageUpload(founder.name, file)}
+                         onDelete={() => deleteImage(founder.name)}
                     />
-                    {uploading === founder.name && (
-                      <p className="text-sm text-blue-600">Uploading...</p>
-                    )}
-                  </div>
+                    ))}
 
-                  {/* Delete Button */}
-                  {founder.imageUrl && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deleteImage(founder.name)}
-                      className="w-full"
-                    >
-                      Delete Image
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
         </div>
 
         <div className="mt-8 p-4 bg-blue-50 rounded-lg">

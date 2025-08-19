@@ -309,7 +309,7 @@ export default function AdminDashboard() {
       setStats({
         totalProducts: totalProductsCount,
         totalPosts: postsCount,
-        totalPartnershipInquiries: inquiriesCount
+        totalPartnershipInquiries: inquiriesCount??0
       });
     } catch (error) {
       console.error('Error in fetchDashboardStats:', error);

@@ -301,6 +301,9 @@ function AdminBlogsPageContent() {
       </div>
 
       {/* Add/Edit Post Dialog */}
+      {/*added condition rendering in the below line  */}
+      {dialogOpen && (
+
       <Dialog open={dialogOpen} onOpenChange={(open) => {
         if (!open) resetForm();
         setDialogOpen(open);
@@ -468,9 +471,11 @@ function AdminBlogsPageContent() {
           </div>
         </DialogContent>
       </Dialog>
+      )}
+
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+       {/*<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Blog Post</DialogTitle>
@@ -500,7 +505,43 @@ function AdminBlogsPageContent() {
             </Button>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog>*/}
+
+{/*changed above small code for reducing DOM size conditional rendering  */}
+      {deleteDialogOpen && (
+  <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>Delete Blog Post</DialogTitle>
+      </DialogHeader>
+      <p>Are you sure you want to delete this blog post? This action cannot be undone.</p>
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => setDeleteDialogOpen(false)}
+          disabled={isProcessing}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="destructive"
+          onClick={handleDeletePost}
+          disabled={isProcessing}
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Deleting...
+            </>
+          ) : (
+            'Delete'
+          )}
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+)}
+
 
       {/* Posts Grid */}
       {loading ? (

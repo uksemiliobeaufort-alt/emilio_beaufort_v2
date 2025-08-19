@@ -7,6 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { auth } from '@/lib/auth';
 
+
+function Alert({ message }: { message: string }) {
+  if (!message) return null;
+  const isSuccess = message.includes('✅');
+  return (
+    <div className={`p-3 rounded-lg text-sm ${isSuccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+      {message}
+    </div>
+  );
+}
+
+
+
+
 export default function AdminDebug() {
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [activeEmails, setActiveEmails] = useState<string[]>([]);
@@ -188,17 +202,10 @@ export default function AdminDebug() {
               <Button onClick={testLogin} disabled={loading} className="w-full">
                 {loading ? '🔄 Testing...' : '🧪 Test Login'}
               </Button>
+                <Alert message={testResult} />{/* ----changed code here--- */}
               
-              {testResult && (
-                <div className={`p-3 rounded-lg text-sm ${
-                  testResult.includes('✅') 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {testResult}
-                </div>
-              )}
             </div>
+
           </CardContent>
         </Card>
 
@@ -236,15 +243,7 @@ export default function AdminDebug() {
                 ➕ Add Admin User
               </Button>
               
-              {addUserResult && (
-                <div className={`p-3 rounded-lg text-sm ${
-                  addUserResult.includes('✅') 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {addUserResult}
-                </div>
-              )}
+              <Alert message={addUserResult} />
             </div>
           </CardContent>
         </Card>
@@ -298,7 +297,6 @@ export default function AdminDebug() {
             </div>
           </CardContent>
         </Card>
-
         {/* Instructions */}
         <Card>
           <CardHeader>
@@ -336,3 +334,5 @@ export default function AdminDebug() {
     </div>
   );
 } 
+
+

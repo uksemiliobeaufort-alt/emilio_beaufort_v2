@@ -39,12 +39,24 @@ const sidebarItems = [
       { name: 'Accepted', href: '/admin/partnerships/accepted' }
     ]
   },
-  {
+  /*{
     name: 'Products',
     href: '/admin/products',
     icon: <ShoppingBag className="h-4 w-4" />,
     permission: 'manage_products'
-  },
+  },*/
+
+{
+  name: 'Products',
+  href: '/admin/products', // <-- Make parent clickable
+  icon: <ShoppingBag className="h-4 w-4" />,
+  permission: 'manage_products',
+  subItems: [
+    { name: 'View Orders', href: '/admin/products/orders' }
+  ]
+},
+
+
   {
     name: 'Blog Posts',
     href: '/admin/blogs',
@@ -103,7 +115,7 @@ export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarPro
           flex flex-col
         `}
       >
-        {/* Logo - Hidden on Mobile since it's in the header */}
+        {/* Logo - Hidden on Mobile since it's in the header -------------------
         <div className="h-16 hidden lg:flex items-center px-6 border-b border-gray-200 bg-white">
           <span className="text-lg font-semibold text-gray-900">Admin Panel</span>
         </div>
@@ -118,11 +130,24 @@ export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarPro
                 fallback={null}
               >
                 {item.subItems ? (
-                  <div>
-                    <div className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700">
-                      <span className="flex items-center justify-center w-5 text-gray-500">{item.icon}</span>
-                      <span>{item.name}</span>
-                    </div>
+                  
+                    <>
+
+                    <button
+                        onClick={() => {
+                          if (item.href) handleNavigation(item.href);
+                                 }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-100 active:bg-gray-200"
+                                    >
+                       <span className="flex items-center justify-center w-5 text-gray-500">
+                           {item.icon}
+                          </span>
+                        <span>{item.name}</span>
+                     </button>
+
+
+
+
                     <div className="ml-8 space-y-1">
                       {item.subItems.map((sub) => (
                         <button
@@ -134,7 +159,8 @@ export default function Sidebar({ isSidebarOpen, isMobile, onClose }: SidebarPro
                         </button>
                       ))}
                     </div>
-                  </div>
+                  
+                  </>
                 ) : (
                   <button
                     onClick={() => handleNavigation(item.href)}

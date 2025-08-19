@@ -358,7 +358,7 @@ const MenuBar = ({ editor, onAddImage }: { editor: any, onAddImage: (file: File,
         <PopoverContent className="w-48">
           <div className="grid grid-cols-5 gap-2">
             {presetColors.map((color) => (
-              <button
+              <button 
                 key={color}
                 className="w-6 h-6 rounded border-2 border-gray-300 hover:border-gray-400"
                 style={{ backgroundColor: color }}
