@@ -17,7 +17,7 @@ import AnimatedBackground from '@/components/AnimatedBackground';
 import CookieConsent from '@/components/CookieConsent';
 import FeedbackFormDialog from '@/components/ui/FeedbackFormDialog';
 import { safeMap } from "@/lib/utils";
-import WhyChooseSection from '@/components/WhyChooseSection';
+import WhyChooseSection from '@/components/WhyChooseSection'; 
 import { trackEngagement, trackUserBehavior } from '@/lib/analytics';
 import TeamMemberSocialLinks from '@/components/TeamMemberSocialLinks';
 import PartnersMarquee from "@/components/PartnersMarquee";
@@ -312,20 +312,20 @@ export default function Home() {
       twitter: "/",
       instagram: "/"
     },
-    {
-      name: "Dr. Bani Prasad Bhattacharjee",
-      role: "Legal Advisor",
-      description: "Oversees legal compliance and regulatory matters at Emilio Beaufort.",
-      gradient: "from-gray-600 via-slate-600 to-zinc-600",
-      linkedin: "/",
-      twitter: "/",
-      instagram: "/"
-    },
+    // {
+    //   name: "Dr. Bani Prasad Bhattacharjee",
+    //   role: "Legal Advisor",
+    //   description: "Oversees legal compliance and regulatory matters at Emilio Beaufort.",
+    //   gradient: "from-gray-600 via-slate-600 to-zinc-600",
+    //   linkedin: "/",
+    //   twitter: "/",
+    //   instagram: "/"
+    // },
     // New founder card for Rahul Pandey
     {
       name: "Rahul Pandey",
       role: "Tech Lead and Project Coordinator",
-      description: "AI Automation Consultant || Project Technical Coordinator @Emilio Beaufort || CoFounder - Anteratic Solutions || Certified Web Dev",
+      description: "AI Automation Consultant | Technical Coordinator @ Emilio Beaufort | Co-Founder, Anteratic Solutions | Certified Web Developer",
       gradient: "from-cyan-500 via-blue-500 to-indigo-500",
       linkedin: "https://www.linkedin.com/in/rahulpandey187/",
       twitter: "https://x.com/rahulpandey187",
@@ -432,9 +432,9 @@ export default function Home() {
         {/* Animated Background Layers */}
         <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100"></div>
 
-        {/* Floating Particles */}
+        {/* Floating Particles - Reduced count and faster animation */}
         <div className="absolute inset-0 overflow-hidden">
-          {[...Array(20)].map((_, i) => (
+          {[...Array(8)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute w-2 h-2 bg-[#D4AF37]/20 rounded-full"
@@ -443,14 +443,14 @@ export default function Home() {
                 top: `${Math.random() * 100}%`,
               }}
               animate={{
-                y: [0, -30, 0],
-                opacity: [0.3, 0.8, 0.3],
-                scale: [1, 1.2, 1],
+                y: [0, -20, 0],
+                opacity: [0.3, 0.6, 0.3],
+                scale: [1, 1.1, 1],
               }}
               transition={{
-                duration: 3 + Math.random() * 2,
+                duration: 2 + Math.random() * 1,
                 repeat: Infinity,
-                delay: Math.random() * 2,
+                delay: Math.random() * 1,
               }}
             />
           ))}
@@ -464,15 +464,15 @@ export default function Home() {
           }}></div>
         </div>
 
-        {/* Glowing Orbs */}
+        {/* Glowing Orbs - Faster animation */}
         <motion.div
           className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-[#D4AF37]/10 to-[#B7A16C]/10 rounded-full blur-3xl"
           animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0.5, 0.3],
           }}
           transition={{
-            duration: 4,
+            duration: 2.5,
             repeat: Infinity,
             ease: "easeInOut"
           }}
@@ -480,350 +480,185 @@ export default function Home() {
         <motion.div
           className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-l from-[#B7A16C]/10 to-[#D4AF37]/10 rounded-full blur-3xl"
           animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.4, 0.7, 0.4],
+            scale: [1.1, 1, 1.1],
+            opacity: [0.4, 0.6, 0.4],
           }}
           transition={{
-            duration: 5,
+            duration: 3,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: 1
+            delay: 0.5
           }}
         />
 
-        {/* Interactive Cursor Trail */}
+        {/* Interactive Cursor Trail - Reduced count and faster */}
         <div className="absolute inset-0 pointer-events-none">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(3)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 bg-[#D4AF37]/30 rounded-full"
               animate={{
-                x: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000],
-                y: [0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500],
+                x: [0, 200, 400, 600, 800, 1000],
+                y: [0, 100, 200, 300, 400, 500],
                 opacity: [0, 1, 0],
               }}
               transition={{
-                duration: 8 + i * 2,
+                duration: 4 + i * 1,
                 repeat: Infinity,
-                delay: i * 0.5,
+                delay: i * 0.3,
               }}
             />
           ))}
         </div>
 
         <div className="container-premium relative z-10">
-          {/* Main Heading with Sophisticated Elegance */}
+          {/* Main Heading - Single Animation */}
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             viewport={{ once: true }}
             className="text-center mb-12 sm:mb-16"
           >
             {/* Elegant Decorative Line */}
-            <motion.div
-              className="absolute left-1/2 transform -translate-x-1/2 -top-8 w-32 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              transition={{ duration: 1, delay: 0.3 }}
-              viewport={{ once: true }}
-            />
+            <div className="absolute left-1/2 transform -translate-x-1/2 -top-8 w-32 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
 
-            <motion.h2
-              className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-tight sm:leading-[0.9] tracking-tight relative"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 1 }}
-              viewport={{ once: true }}
-            >
+            <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-tight sm:leading-[0.9] tracking-tight relative">
               <span className="relative inline-block">
-                {/* Main Title with Elegant Animation */}
-                <motion.span
-                  className="block gradient-text-animate"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 1, delay: 0.2 }}
-                  viewport={{ once: true }}
-                  whileHover={{ scale: 1.02 }}
-                >
+                {/* Main Title */}
+                <span className="block gradient-text-animate">
                   Philosophy
-                </motion.span>
+                </span>
 
-                {/* Subtitle with Refined Effect */}
-                <motion.span
-                  className="block text-premium font-bold"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 1, delay: 0.4 }}
-                  viewport={{ once: true }}
-                  whileHover={{ scale: 1.02 }}
-                >
+                {/* Subtitle */}
+                <span className="block text-premium font-bold">
                   & About Us
-                </motion.span>
+                </span>
 
-                {/* Sophisticated Underline */}
-                <motion.div
-                  className="absolute -bottom-2 sm:-bottom-4 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent"
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
-                  transition={{ duration: 1.2, delay: 0.6 }}
-                  viewport={{ once: true }}
-                />
+                {/* Underline */}
+                <div className="absolute -bottom-2 sm:-bottom-4 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
               </span>
-            </motion.h2>
+            </h2>
 
-            {/* Elegant Subtitle */}
-            <motion.p
-              className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto mb-6 font-light"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.8 }}
-              viewport={{ once: true }}
-            >
+            {/* Subtitle */}
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto mb-6 font-light">
               Discover what sets us apart as India's most trusted source for premium raw human hair.
-            </motion.p>
+            </p>
           </motion.div>
 
-          {/* Main Content with Animated Text Reveal */}
+          {/* Main Content - Single Animation */}
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             viewport={{ once: true }}
             className="max-w-6xl mx-auto mb-12"
           >
             <div className="body-premium text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-gray-800 relative text-justify">
               <div className={`${!showFullPhilosophy ? 'line-clamp-6 lg:line-clamp-none' : ''} space-y-4`}>
-                {/* Animated Paragraphs with Proper Text Alignment */}
-                <motion.div
-                  initial={{ opacity: 0, x: -50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  viewport={{ once: true }}
-                  className="relative magnetic-hover"
-                >
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.3 }}
-                    viewport={{ once: true }}
-                    className="inline"
-                  >
+                {/* Paragraphs - Ready to Display */}
+                <div className="relative magnetic-hover">
+                  <span className="inline">
                     They say he arrived quietly, carrying nothing but the single belief that luxury should not belong to a select few but to all who value it. That belief became{' '}
-                  </motion.span>
-                  <motion.strong
-                    className="text-premium font-bold relative ripple-effect inline"
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-                    viewport={{ once: true }}
-                    whileHover={{
-                      scale: 1.05,
-                      transition: { duration: 0.3 }
-                    }}
-                  >
+                  </span>
+                  <strong className="text-premium font-bold relative ripple-effect inline">
                     Emilio Beaufort
-                  </motion.strong>
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.7 }}
-                    viewport={{ once: true }}
-                    className="inline"
-                  >
+                  </strong>
+                  <span className="inline">
                     . He built not just a company, but a philosophy.
-                  </motion.span>
-                </motion.div>
+                  </span>
+                </div>
 
-                <motion.div
-                  initial={{ opacity: 0, x: 50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                  viewport={{ once: true }}
-                  className="relative magnetic-hover"
-                >
-                  <motion.strong
-                    className="text-gold font-bold relative ripple-effect inline"
-                    initial={{ opacity: 0, scale: 0.8, y: -20 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-                    viewport={{ once: true }}
-                    whileHover={{
-                      scale: 1.05,
-                      transition: { duration: 0.3 }
-                    }}
-                  >
+                <div className="relative magnetic-hover">
+                  <strong className="text-gold font-bold relative ripple-effect inline">
                     Slow Beauty
-                  </motion.strong>
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.8 }}
-                    viewport={{ once: true }}
-                    className="inline"
-                  >
+                  </strong>
+                  <span className="inline">
                     . The art of creating products with patience and precision. From premium hair extensions to refined grooming essentials, every Emilio Beaufort creation begins with the finest ethically sourced materials.
-                  </motion.span>
-                </motion.div>
+                  </span>
+                </div>
 
-                <motion.div
-                  initial={{ opacity: 0, x: -50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, delay: 0.6 }}
-                  viewport={{ once: true }}
-                  className="relative magnetic-hover"
-                >
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.8 }}
-                    viewport={{ once: true }}
-                    className="inline"
-                  >
+                <div className="relative magnetic-hover">
+                  <span className="inline">
                     Every product is shaped by skilled hands to endure beyond passing trends into something{' '}
-                  </motion.span>
-                  <motion.span
-                    className="text-gold font-bold inline relative ripple-effect"
-                    initial={{ opacity: 0, scale: 0.8, y: -20 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 1.0, ease: "easeOut" }}
-                    viewport={{ once: true }}
-                    whileHover={{
-                      scale: 1.05,
-                      transition: { duration: 0.3 }
-                    }}
-                  >
+                  </span>
+                  <span className="text-gold font-bold inline relative ripple-effect">
                     timeless
-                  </motion.span>
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 1.2 }}
-                    viewport={{ once: true }}
-                    className="inline"
-                  >
+                  </span>
+                  <span className="inline">
                     . He removed the barriers that kept excellence out of reach, ensuring that salons, retailers, and grooming houses, whether boutique or global, could offer their clients uncompromising quality without prohibitive barriers.
-                  </motion.span>
-                </motion.div>
+                  </span>
+                </div>
 
-                <motion.div
-                  initial={{ opacity: 0, x: 50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8, delay: 0.8 }}
-                  viewport={{ once: true }}
-                  className="relative magnetic-hover"
-                >
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 1.0 }}
-                    viewport={{ once: true }}
-                    className="inline"
-                  >
+                <div className="relative magnetic-hover">
+                  <span className="inline">
                     Today,{' '}
-                  </motion.span>
-                  <motion.strong
-                    className="text-premium font-bold relative ripple-effect inline"
-                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 1.2, ease: "easeOut" }}
-                    viewport={{ once: true }}
-                    whileHover={{
-                      scale: 1.05,
-                      transition: { duration: 0.3 }
-                    }}
-                  >
+                  </span>
+                  <strong className="text-premium font-bold relative ripple-effect inline">
                     Emilio Beaufort
-                  </motion.strong>
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 1.4 }}
-                    viewport={{ once: true }}
-                    className="inline"
-                  >
+                  </strong>
+                  <span className="inline">
                     {' '}is more than a name. It is a movement, bringing the principles of craftsmanship, sustainability, and accessible luxury to every corner of the world.
-                  </motion.span>
-                </motion.div>
+                  </span>
+                </div>
               </div>
 
-              {/* Enhanced Read More Button with Better Animation */}
-              <motion.button
+              {/* Read More Button - Ready to Display */}
+              <button
                 onClick={() => setShowFullPhilosophy(!showFullPhilosophy)}
                 className="mt-6 lg:hidden inline-flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#8B4513] via-[#A0522D] to-[#D4AF37] text-white rounded-full transition-all duration-300 text-xs sm:text-sm md:text-base font-bold shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[120px] sm:min-w-[140px] border border-[#D4AF37]/30 hover:border-[#D4AF37]/50"
-                initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.8, delay: 1.6, ease: "easeOut" }}
-                viewport={{ once: true }}
-                whileHover={{
-                  scale: 1.05,
-                  y: -2,
-                  transition: { duration: 0.3 }
-                }}
-                whileTap={{ scale: 0.95 }}
                 style={{
                   textShadow: '0 1px 2px rgba(0,0,0,0.3)',
                   boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3), 0 2px 4px rgba(0,0,0,0.1)'
                 }}
               >
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 1.8 }}
-                  viewport={{ once: true }}
-                  className="whitespace-nowrap"
-                >
+                <span className="whitespace-nowrap">
                   {showFullPhilosophy ? 'Read Less' : 'Read More'}
-                </motion.span>
-                <motion.svg
+                </span>
+                <svg
                   className={`ml-2 w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 flex-shrink-0`}
-                  animate={{ rotate: showFullPhilosophy ? 180 : 0 }}
+                  style={{ transform: showFullPhilosophy ? 'rotate(180deg)' : 'rotate(0deg)' }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </motion.svg>
-              </motion.button>
+                </svg>
+              </button>
             </div>
           </motion.div>
 
-          {/* Enhanced Three Pillars with 3D Effects */}
-          <div className="grid md:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
+          {/* Three Pillars - Single Animation */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            viewport={{ once: true }}
+            className="grid md:grid-cols-3 gap-6 sm:gap-8 md:gap-12"
+          >
             {safeMap([
               {
                 title: 'Timeless Elegance',
                 description: 'Our creations are designed to outlast fleeting trends, embodying a classic beauty and sophistication that endures for generations. Each bundle reflects a legacy of refinement and grace.',
                 icon: <Crown className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-premium" />,
-                delay: 0.2,
                 gradient: 'from-[#D4AF37] to-[#B7A16C]'
               },
               {
                 title: 'Sustainable Luxury',
                 description: 'We believe true luxury honors the earth. Our hair is sourced with respect for both people and planet, ensuring ethical practices and sustainability at every step.',
                 icon: <Leaf className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-premium" />,
-                delay: 0.4,
                 gradient: 'from-[#B7A16C] to-[#D4AF37]'
               },
               {
                 title: 'Uncompromising Quality',
                 description: 'Excellence is our standard. Every strand is meticulously selected and handled with care, guaranteeing purity, authenticity, and unmatched craftsmanship in every product.',
                 icon: <Award className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-premium" />,
-                delay: 0.6,
                 gradient: 'from-[#D4AF37] to-[#B7A16C]'
               }
             ], (item, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 100, rotateX: -15 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                transition={{ duration: 1.2, delay: item.delay, ease: "easeOut" }}
-                viewport={{ once: true }}
                 className="group relative perspective-1000"
-                whileHover={{
-                  y: -20,
-                  transition: { duration: 0.3 }
-                }}
               >
                 {/* 3D Card Container */}
                 <div className="relative h-full bg-white rounded-3xl p-6 sm:p-8 shadow-2xl group-hover:shadow-3xl transition-all duration-500 transform group-hover:rotate-y-2 group-hover:scale-105 border border-gray-100 card-3d">
@@ -859,34 +694,16 @@ export default function Home() {
                   </div>
 
                   {/* Animated Background Elements */}
-                  <motion.div
+                  <div
                     className={`absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br ${item.gradient} rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500`}
-                    animate={{
-                      scale: [1, 1.2, 1],
-                      rotate: [0, 180, 360],
-                    }}
-                    transition={{
-                      duration: 4,
-                      repeat: Infinity,
-                      delay: index * 0.5
-                    }}
                   />
-                  <motion.div
+                  <div
                     className={`absolute -bottom-4 -left-4 w-10 h-10 bg-gradient-to-br ${item.gradient} rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500`}
-                    animate={{
-                      scale: [1.2, 1, 1.2],
-                      rotate: [360, 180, 0],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      delay: index * 0.3
-                    }}
                   />
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -980,148 +797,71 @@ export default function Home() {
             viewport={{ once: true }}
           >
             <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 sm:gap-x-10 lg:gap-x-12 gap-y-14 justify-items-center">
-                {safeMap(firstRow as Founder[], (founder: Founder, index: number) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10 xl:gap-12 gap-y-8 md:gap-y-10 lg:gap-y-12 justify-items-center">
+                {safeMap([...firstRow, ...secondRow, ...thirdRow] as Founder[], (founder: Founder, index: number) => (
                   <motion.div
                     key={index}
-                    className="founder-card group relative max-w-xs w-full mx-auto transition-all duration-700 ease-out cursor-pointer"
+                    className={`founder-card group relative w-full max-w-sm mx-auto transition-all duration-700 ease-out cursor-pointer ${index === 4 ? 'md:col-start-1 lg:col-start-2' : ''}`}
                     initial={{ opacity: 0, y: 50, scale: 0.9 }}
                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.8, delay: index * 0.15, ease: [0.25, 0.25, 0, 1] }}
                     viewport={{ once: true }}
                     whileHover={{ y: -20, scale: 1.05, zIndex: 10, transition: { duration: 0.4, ease: [0.25, 0.25, 0, 1] } }}
                   >
-                    <div className="relative h-[320px] sm:h-[360px] md:h-[400px] lg:h-[420px] bg-white rounded-3xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-700">
+                    <div className="relative h-[420px] sm:h-[440px] md:h-[460px] lg:h-[480px] xl:h-[500px] bg-white rounded-3xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-700">
                       <div className={`absolute inset-0 bg-gradient-to-br ${founder.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl p-1`}>
                         <div className="w-full h-full bg-white rounded-3xl"></div>
                       </div>
-                      <div className="relative z-10 p-4 sm:p-5 md:p-6 lg:p-8 h-full flex flex-col">
-                        <div className="text-center">
+                      <div className="relative z-10 p-4 sm:p-5 md:p-6 lg:p-7 xl:p-8 h-full flex flex-col justify-between">
+                        <div className="text-center flex-1">
                           <FounderAvatar founder={founder} />
-                          <h4 className="font-serif font-bold text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-premium mb-1 sm:mb-2 group-hover:text-[#B7A16C] transition-colors duration-300">
+                          <h4 className="font-serif font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-premium mb-2 sm:mb-3 group-hover:text-[#B7A16C] transition-colors duration-300">
                             {founder.name}
                           </h4>
-                          <p className="text-[#B7A16C] font-semibold text-xs sm:text-sm md:text-base mb-2 sm:mb-3 group-hover:scale-105 transition-transform duration-300">
+                          <p className="text-[#B7A16C] font-semibold text-sm sm:text-base md:text-lg lg:text-xl mb-2 sm:mb-3 group-hover:scale-105 transition-transform duration-300">
                             {founder.role}
                           </p>
-                          <p className="text-gray-600 text-xs sm:text-sm md:text-base leading-relaxed mb-3 sm:mb-4 group-hover:text-gray-700 transition-colors duration-300">
+                          <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed mb-3 sm:mb-4 group-hover:text-gray-700 transition-colors duration-300 line-clamp-4">
                             {founder.description}
                           </p>
-                          <div className="flex items-center justify-center space-x-2 sm:space-x-3">
-                            {founder.linkedin && (
-                              <a
-                                href={founder.linkedin}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
-                              >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                                </svg>
-                              </a>
-                            )}
-                            {founder.twitter && (
-                              <a
-                                href={founder.twitter}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
-                              >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                </svg>
-                              </a>
-                            )}
-                            {founder.instagram && (
-                              <a
-                                href={founder.instagram}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
-                              >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                                </svg>
-                              </a>
-                            )}
-                          </div>
                         </div>
-                      </div>
-                      <div className={`absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br ${founder.gradient} rounded-full opacity-10 group-hover:opacity-20 group-hover:scale-150 transition-all duration-700`}></div>
-                      <div className={`absolute -bottom-4 -left-4 w-12 h-12 bg-gradient-to-br ${founder.gradient} rounded-full opacity-10 group-hover:opacity-20 group-hover:scale-150 transition-all duration-700`}></div>
-                    </div>
-                  </motion.div>
-                ))}
-                {(firstRow.length % 2 !== 0) && (
-                  <div className="invisible sm:block lg:hidden" />
-                )}
-              </div>
-
-              <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 sm:gap-x-10 lg:gap-x-12">
-                {safeMap(secondRow as Founder[], (founder: Founder, index: number) => (
-                  <motion.div
-                    key={index + 3}
-                    className="founder-card group relative w-full transition-all duration-700 ease-out cursor-pointer"
-                    initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.8, delay: (index + 2) * 0.15, ease: [0.25, 0.25, 0, 1] }}
-                    viewport={{ once: true }}
-                    whileHover={{ y: -20, scale: 1.05, zIndex: 10, transition: { duration: 0.4, ease: [0.25, 0.25, 0, 1] } }}
-                  >
-                    <div className="relative h-[420px] bg-white rounded-3xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-700">
-                      <div className={`absolute inset-0 bg-gradient-to-br ${founder.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl p-1`}>
-                        <div className="w-full h-full bg-white rounded-3xl"></div>
-                      </div>
-                      <div className="relative z-10 p-6 sm:p-8 h-full flex flex-col">
-                        <div className="text-center">
-                          <FounderAvatar founder={founder} />
-                          <h4 className="font-serif font-bold text-lg sm:text-xl md:text-2xl text-premium mb-2 group-hover:text-[#B7A16C] transition-colors duration-300">
-                            {founder.name}
-                          </h4>
-                          <p className="text-[#B7A16C] font-semibold text-sm sm:text-base mb-3 group-hover:scale-105 transition-transform duration-300">
-                            {founder.role}
-                          </p>
-                          <p className="text-gray-600 text-sm leading-relaxed mb-4 group-hover:text-gray-700 transition-colors duration-300">
-                            {founder.description}
-                          </p>
-                          <div className="flex items-center justify-center space-x-3">
-                            {founder.linkedin && (
-                              <a
-                                href={founder.linkedin}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
-                              >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                                </svg>
-                              </a>
-                            )}
-                            {founder.twitter && (
-                              <a
-                                href={founder.twitter}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
-                              >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                </svg>
-                              </a>
-                            )}
-                            {founder.instagram && (
-                              <a
-                                href={founder.instagram}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
-                              >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                                </svg>
-                              </a>
-                            )}
-                          </div>
+                        <div className="flex items-center justify-center space-x-2 sm:space-x-3 mt-auto">
+                          {founder.linkedin && (
+                            <a
+                              href={founder.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                              </svg>
+                            </a>
+                          )}
+                          {founder.twitter && (
+                            <a
+                              href={founder.twitter}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                              </svg>
+                            </a>
+                          )}
+                          {founder.instagram && (
+                            <a
+                              href={founder.instagram}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                              </svg>
+                            </a>
+                          )}
                         </div>
                       </div>
                       <div className={`absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br ${founder.gradient} rounded-full opacity-10 group-hover:opacity-20 group-hover:scale-150 transition-all duration-700`}></div>
@@ -1131,85 +871,12 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Third row for Rahul Pandey, centered */}
-              <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 sm:gap-x-10 lg:gap-x-12">
-                {safeMap(thirdRow as Founder[], (founder: Founder, index: number) => (
-                  <motion.div
-                    key={index + 6}
-                    className="founder-card group relative w-full transition-all duration-700 ease-out cursor-pointer col-start-1 sm:col-start-1 lg:col-start-2"
-                    initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ duration: 0.8, delay: (index + 4) * 0.15, ease: [0.25, 0.25, 0, 1] }}
-                    viewport={{ once: true }}
-                    whileHover={{ y: -20, scale: 1.05, zIndex: 10, transition: { duration: 0.4, ease: [0.25, 0.25, 0, 1] } }}
-                  >
-                    <div className="relative h-[420px] bg-white rounded-3xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-700">
-                      <div className={`absolute inset-0 bg-gradient-to-br ${founder.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl p-1`}>
-                        <div className="w-full h-full bg-white rounded-3xl"></div>
-                      </div>
-                      <div className="relative z-10 p-6 sm:p-8 h-full flex flex-col">
-                        <div className="text-center">
-                          <FounderAvatar founder={founder} />
-                          <h4 className="font-serif font-bold text-lg sm:text-xl md:text-2xl text-premium mb-2 group-hover:text-[#B7A16C] transition-colors duration-300">
-                            {founder.name}
-                          </h4>
-                          <p className="text-[#B7A16C] font-semibold text-sm sm:text-base mb-3 group-hover:scale-105 transition-transform duration-300">
-                            {founder.role}
-                          </p>
-                          <p className="text-gray-600 text-sm leading-relaxed mb-4 group-hover:text-gray-700 transition-colors duration-300">
-                            {founder.description}
-                          </p>
-                          <div className="flex items-center justify-center space-x-3">
-                            {founder.linkedin && (
-                              <a
-                                href={founder.linkedin}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
-                              >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                                </svg>
-                              </a>
-                            )}
-                            {founder.twitter && (
-                              <a
-                                href={founder.twitter}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
-                              >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                </svg>
-                              </a>
-                            )}
-                            {founder.instagram && (
-                              <a
-                                href={founder.instagram}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group/social p-2 rounded-full bg-gray-100 hover:bg-[#B7A16C] hover:text-white transition-all duration-300 transform hover:scale-110"
-                              >
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                                </svg>
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className={`absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br ${founder.gradient} rounded-full opacity-10 group-hover:opacity-20 group-hover:scale-150 transition-all duration-700`}></div>
-                      <div className={`absolute -bottom-4 -left-4 w-12 h-12 bg-gradient-to-br ${founder.gradient} rounded-full opacity-10 group-hover:opacity-20 group-hover:scale-150 transition-all duration-700`}></div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+
             </div>
           </motion.div>
 
 
-          {/* <motion.div
+          <motion.div
             className="text-center"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -1232,7 +899,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Button>
-          </motion.div> */}
+          </motion.div>
         </div>
       </section>
 
@@ -1299,9 +966,9 @@ export default function Home() {
         </span>
       </div>
       {/* Author signature - separate white background */}
-      <div className="w-full flex flex-col items-center justify-center bg-white py-2">
+      {/* <div className="w-full flex flex-col items-center justify-center bg-white py-2">
         <span className="block font-semibold text-xl md:text-2xl text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>Emilio Beaufort</span>
-      </div>
+      </div> */}
 
       <Footer />
 
