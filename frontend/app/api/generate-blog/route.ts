@@ -297,7 +297,7 @@ Important guidelines:
     if (includeImages && process.env.HF_TOKEN) {
       try {
         const promptText = `Editorial, luxury brand style photo, sharp, high-quality, related to: ${parsedContent.title || topic}`;
-        const modelId = process.env.HF_IMAGE_MODEL || 'black-forest-labs/FLUX.1-schnell';
+        const modelId = process.env.HF_IMAGE_MODEL || 'black-forest-labs/FLUX.1-dev';
         const url = `https://api-inference.huggingface.co/models/${encodeURIComponent(modelId)}`;
         const resp = await fetch(url, {
           method: 'POST',
