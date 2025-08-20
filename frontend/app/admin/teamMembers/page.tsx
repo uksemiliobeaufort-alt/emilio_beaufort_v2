@@ -182,6 +182,7 @@ export default function TeamMemberForm() {
                 <option value="Sales Department">Sales Department</option>
                 <option value="HR Department">HR Department</option>
                 <option value="Marketing Department">Marketing Department</option>
+                <option value="Social Media Department">Social Media Department</option>
               </select>
             </div>
             <div>
