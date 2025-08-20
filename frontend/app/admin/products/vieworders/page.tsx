@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import Image from "next/image";
 import { Eye, Trash2, Loader2 } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { Input } from '@/components/ui/input';
@@ -10,17 +11,17 @@ import OrderDetailsDialog from "../components/OrderDetailsDialog";
 
 const statusOptions = [
   { value: "all", label: "All Status" },
-  { value: "pending", label: "Pending" },
-  { value: "paid", label: "Paid" },
+  { value: "placed", label: "Placed" },
   { value: "shipped", label: "Shipped" },
+  { value: "delivered", label: "Delivered" },
   { value: "cancelled", label: "Cancelled" },
 ];
 
 function badgeClass(type: "order" | "payment", value: string) {
   if (type === "order") {
-    if (value === "pending") return "bg-yellow-100 text-yellow-700";
-    if (value === "paid") return "bg-green-100 text-green-700";
+    if (value === "placed") return "bg-yellow-100 text-yellow-700";
     if (value === "shipped") return "bg-blue-100 text-blue-700";
+    if (value === "delivered") return "bg-green-100 text-green-700";
     if (value === "cancelled") return "bg-red-100 text-red-700";
     return "bg-gray-100 text-gray-600";
   } else {
@@ -38,6 +39,7 @@ export default function ViewOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [savingStatusOrderId, setSavingStatusOrderId] = useState<string | null>(null);
 
   useEffect(() => { fetchOrdersAndProducts(); }, []);
 
@@ -77,7 +79,9 @@ export default function ViewOrdersPage() {
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
-      const matchesStatus = statusFilter === "all" || (order.status && order.status.toLowerCase() === statusFilter);
+      const rawStatus = (order.order_status || order.status || "").toLowerCase();
+      const normalizedStatus = rawStatus === "pending" ? "placed" : rawStatus;
+      const matchesStatus = statusFilter === "all" || normalizedStatus === statusFilter;
       const q = searchTerm.toLowerCase();
       const matchesSearch = [
         order.id,
@@ -90,6 +94,37 @@ export default function ViewOrdersPage() {
       return matchesStatus && (!searchTerm || matchesSearch);
     });
   }, [orders, statusFilter, searchTerm]);
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    setSavingStatusOrderId(orderId);
+    try {
+      let { error } = await supabase
+        .from("purchases")
+        .update({ order_status: newStatus })
+        .eq("id", orderId);
+      // Fallback: if 'placed' isn't allowed by current DB constraint, try legacy 'pending'
+      if (error && newStatus === "placed") {
+        const fallback = await supabase
+          .from("purchases")
+          .update({ order_status: "pending" })
+          .eq("id", orderId);
+        error = fallback.error;
+        if (!error) {
+          setOrders((prev) =>
+            prev.map((o) => (o.id === orderId ? { ...o, order_status: "pending" } : o))
+          );
+          return;
+        }
+      }
+      if (!error) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === orderId ? { ...o, order_status: newStatus } : o))
+        );
+      }
+    } finally {
+      setSavingStatusOrderId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -130,13 +165,14 @@ export default function ViewOrdersPage() {
         <div className="overflow-x-auto bg-white">
           <div className="w-fit border border-gray-100 rounded-xl">
             {/* Header Row */}
-            <div className="hidden md:grid grid-cols-[200px_150px_220px_140px_250px_200px_110px_110px_110px] gap-2 px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b">
+            <div className="hidden md:grid grid-cols-[200px_150px_220px_140px_250px_240px_140px_110px_110px_110px] gap-2 px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b">
               <div>CUSTOMER</div>
               <div>BUSINESS</div>
               <div>EMAIL</div>
               <div>PHONE</div>
               <div>ADDRESS</div>
               <div>ITEMS</div>
+              <div className="text-center">TRACK ORDER</div>
               <div className="text-right">TOTAL</div>
               <div className="text-center">PAYMENT</div>
               <div className="text-center">ACTIONS</div>
@@ -144,9 +180,9 @@ export default function ViewOrdersPage() {
             {filteredOrders.map((order) => (
               <div
                 key={order.id}
-                className="grid grid-cols-[200px_150px_220px_140px_250px_200px_110px_110px_110px] gap-2 px-6 py-4 items-center border-b last:border-0 text-[15px]"
+                className="grid grid-cols-[200px_150px_220px_140px_250px_240px_140px_110px_110px_110px] gap-2 px-6 py-4 items-center border-b last:border-0 text-[15px]"
               >
-                <div className="truncate font-medium text-gray-900">{order.name}</div>
+                <div className="font-medium text-gray-900 whitespace-normal break-words">{order.name}</div>
                 <div className="truncate">{order.business_name || "-"}</div>
                 <div className="truncate max-w-[210px] text-gray-700">{order.email}</div>
                 <div className="truncate text-gray-700">{order.phone}</div>
@@ -154,14 +190,44 @@ export default function ViewOrdersPage() {
                   {[order.address, order.city, order.state, order.pincode].filter(Boolean).join(", ")}
                 </div>
                 <div className="text-sm text-gray-700">
-  <ul className="list-disc list-inside">
-    {order.items.map((item: any, idx: number) => (
-      <li key={item.id + idx}>
-        {item.name} ×{item.quantity || 1}
-      </li>
-    ))}
-  </ul>
-</div>
+                  <ul className="space-y-2">
+                    {order.items.map((item: any, idx: number) => (
+                      <li key={(item.id || idx) + "-" + idx} className="flex items-center gap-2">
+                        {item.imageUrl ? (
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.name || "Item"}
+                            width={32}
+                            height={32}
+                            className="rounded-full object-cover border"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gray-100 border" />
+                        )}
+                        <span className="truncate">
+                          {item.name} ×{item.quantity || 1}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="flex justify-center">
+                  <select
+                    className="text-xs border rounded px-2 py-1 capitalize"
+                    value={((order.order_status || order.status || "placed").toLowerCase() === 'pending' ? 'placed' : (order.order_status || order.status || "placed").toLowerCase())}
+                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                    disabled={savingStatusOrderId === order.id}
+                  >
+                    {statusOptions
+                      .filter((opt) => opt.value !== "all")
+                      .map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                  </select>
+                </div>
                 <div className="font-semibold text-right whitespace-nowrap text-gray-900">₹{order.total}</div>
                 
                 <div className="flex justify-center">

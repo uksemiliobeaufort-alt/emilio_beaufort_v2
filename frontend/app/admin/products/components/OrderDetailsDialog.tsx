@@ -62,12 +62,23 @@ export default function OrderDetailsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={() => !isProcessing && onClose()}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden p-0">
         <DialogHeader>
           <DialogTitle>Order Details</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-6 p-6 overflow-y-auto max-h-[65vh]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-500">Order ID</h4>
+              <p className="font-mono text-sm break-all">{order.id}</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-500">Track Order</h4>
+              <p className="capitalize">{(order.order_status || order.status || 'placed')}</p>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-500">Name</h4>
             <p>{order.name}</p>
@@ -76,6 +87,18 @@ export default function OrderDetailsDialog({
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-500">Business Name</h4>
               <p>{order.business_name}</p>
+            </div>
+          )}
+          {order.gst_number && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-500">GST Number</h4>
+              <p className="break-all">{order.gst_number}</p>
+            </div>
+          )}
+          {order.company_type && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-500">Company Type</h4>
+              <p>{order.company_type}</p>
             </div>
           )}
           <div className="space-y-2">
@@ -95,12 +118,26 @@ export default function OrderDetailsDialog({
               {order.pincode && `, ${order.pincode}`}
             </p>
           </div>
+          {order.notes && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-500">Notes</h4>
+              <p className="whitespace-pre-wrap break-words">{order.notes}</p>
+            </div>
+          )}
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-500">Items</h4>
-            <ul className="list-disc ml-4">
+            <ul className="space-y-4">
               {order.items.map((item, idx) => (
-                <li key={item.id + idx}>
-                  {item.name || "Item"} {item.quantity ? `×${item.quantity}` : ""}
+                <li key={(item.id || idx) + idx} className="flex items-start gap-4">
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.name || 'Item'} className="w-28 h-28 rounded-lg object-cover border" />
+                  ) : (
+                    <div className="w-28 h-28 rounded-lg bg-gray-100 border" />
+                  )}
+                  <div className="pt-1">
+                    <div className="font-medium">{item.name || 'Item'}</div>
+                    {item.quantity ? <div className="text-sm text-gray-600">Quantity: {item.quantity}</div> : null}
+                  </div>
                 </li>
               ))}
             </ul>
@@ -116,13 +153,25 @@ export default function OrderDetailsDialog({
               <p className="capitalize">{order.payment_status}</p>
             </div>
           )}
+          {order.razorpay_order_id && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-500">Razorpay Order ID</h4>
+              <p className="font-mono text-sm break-all">{order.razorpay_order_id}</p>
+            </div>
+          )}
+          {order.razorpay_payment_id && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-500">Razorpay Payment ID</h4>
+              <p className="font-mono text-sm break-all">{order.razorpay_payment_id}</p>
+            </div>
+          )}
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-500">Placed On</h4>
             <p>{formatDate(order.created_at)}</p>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 border-t pt-4">
+        <div className="flex justify-end gap-2 border-t p-4">
           <Button
             variant="outline"
             onClick={onClose}
