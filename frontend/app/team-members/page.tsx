@@ -25,6 +25,7 @@ const roleColors: Record<string, string> = {
   "Sales Department": '#028139',
   "HR Department": '#a05edd',
   "Marketing Department": '#ff7f50',
+  "Social Media Department": '#1da1f2',
 };
 
 const getRoleColor = (department?: string | null): string => {
@@ -59,6 +60,7 @@ const TeamMembersSection = () => {
     "Sales Department",
     "HR Department",
     "Marketing Department",
+    "Social Media Department",
   ];
 
   return (
