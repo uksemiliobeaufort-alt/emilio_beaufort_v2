@@ -1,8 +1,12 @@
 # Gemini 2.0 Flash Image Generation Setup
 
+## **Important Information**
+The image generation API comes with a minimal amount of free tokens , so use the image generation wisely.
+
 ## ✅ **What's Implemented**
 
 The blog generation API now includes **Gemini 2.0 Flash image generation** using the official `@google/genai` SDK with `responseModalities` support.
+
 
 ## 🔧 **Prerequisites**
 
