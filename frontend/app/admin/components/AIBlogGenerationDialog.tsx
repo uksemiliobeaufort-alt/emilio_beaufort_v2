@@ -342,7 +342,7 @@ export default function AIBlogGenerationDialog({
               <div className="flex items-center justify-between border rounded-lg p-3">
                 <div>
                   <Label className="text-base font-medium">Include related images</Label>
-                  <div className="text-xs text-muted-foreground">Generate 1-3 images via Hugging Face</div>
+                  <div className="text-xs text-muted-foreground">Generate 1-3 images via Gemini</div>
                 </div>
                 <Switch checked={includeImages} onCheckedChange={setIncludeImages} />
               </div>
