@@ -164,10 +164,6 @@ useEffect(() => {
             Emilio Beaufort
           </motion.div>
 
-
-
-
-
           {/* Center Navigation - All Options Horizontally */}
           <div className="hidden xl:flex items-center space-x-2 xs:space-x-3 sm:space-x-4 md:space-x-6 lg:space-x-8 xl:space-x-10 2xl:space-x-12">
             {navItems.map((item, index) => (

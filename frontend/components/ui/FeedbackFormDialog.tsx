@@ -21,7 +21,10 @@ import BootstrapDropdown from "./BootstrapDropdown";
 
 const feedbackSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").optional(),
-  email: z.string().email("Invalid email").optional(),
+  email: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+    z.string().email("Invalid email").optional()
+  ),
   type: z.enum(["bug", "suggestion", "compliment"]),
   message: z.string().min(10, "Feedback must be at least 10 characters"),
 });
@@ -121,7 +124,7 @@ export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = 
                       <FormItem>
                         <FormLabel>Name</FormLabel>
                         <FormControl>
-                          <Input required placeholder="Your name" {...field} />
+                          <Input placeholder="Your name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -191,7 +194,7 @@ export default function FeedbackFormDialog({ isOpen, onClose, isAutoTriggered = 
                     )}
                     <Button
                       type="submit"
-                      className={`${isAutoTriggered ? 'flex-1' : 'w-full'} btn-primary-premium`}
+                      className={`${isAutoTriggered ? 'flex-1' : 'w-full'} btn-primary-premium-bright`}
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? "Submitting..." : "Send Feedback"}

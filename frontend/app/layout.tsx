@@ -8,6 +8,7 @@ import { BagProvider } from '@/components/BagContext';
 import { Toaster as ReactHotToastToaster } from 'react-hot-toast';
 import ConditionalAutoFeedback from '@/components/ConditionalAutoFeedback';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import ScrollToTop from '@/components/ScrollToTop';
 import Script from 'next/script';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -69,6 +70,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>
         <BagProvider>
+          <ScrollToTop />
           <ConditionalNavbar />
           <main>
             {children}

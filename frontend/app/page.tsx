@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'next/navigation';
 // import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -218,16 +219,50 @@ export default function Home() {
     setLoading(false);
   }, []);
 
-  // Handle initial hash navigation
+  // Handle hash navigation with accurate target and single smooth scroll
   useEffect(() => {
-    if (window.location.hash) {
-      const element = document.querySelector(window.location.hash);
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }, 500); // Wait for page load
+    const NAVBAR_HEIGHT = 64;
+
+    const findTeamTarget = (): HTMLElement | null => {
+      // Prefer first founder card if available
+      const card = document.querySelector('#team .founder-card') as HTMLElement | null;
+      if (card) return card;
+      // Fallback to section itself
+      return document.querySelector('#team') as HTMLElement | null;
+    };
+
+    const scrollToHash = (attempt = 0) => {
+      const { hash } = window.location;
+      if (!hash) return;
+
+      let target: HTMLElement | null = null;
+      if (hash === '#team') {
+        target = findTeamTarget();
+      } else {
+        target = document.querySelector(hash) as HTMLElement | null;
       }
-    }
+
+      if (!target) {
+        // Try again a few times while content renders
+        if (attempt < 8) setTimeout(() => scrollToHash(attempt + 1), 150);
+        return;
+      }
+
+      const rect = target.getBoundingClientRect();
+      const absoluteTop = rect.top + window.pageYOffset - NAVBAR_HEIGHT - 12; // small padding
+      window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' });
+    };
+
+    // Initial navigation after small delay to allow mount
+    const timer = setTimeout(() => scrollToHash(0), 300);
+
+    const onHashChange = () => scrollToHash(0);
+    window.addEventListener('hashchange', onHashChange);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('hashchange', onHashChange);
+    };
   }, []);
 
   // Handle scroll-to-top button visibility
