@@ -13,6 +13,7 @@ interface OrderItem {
   id: string;
   name?: string;
   quantity?: number;
+  imageUrl?: string; // added since you check item.imageUrl below
 }
 
 interface OrderDetails {
@@ -28,8 +29,14 @@ interface OrderDetails {
   items: OrderItem[];
   total: number;
   status: string;
-  payment_status?: string; 
+  payment_status?: string;
   created_at: string;
+  order_status?: string;
+  gst_number?: string;
+  company_type?: string;
+  notes?: string;
+  razorpay_order_id?: string;
+  razorpay_payment_id?: string;
 }
 
 interface OrderDetailsDialogProps {
@@ -67,7 +74,7 @@ export default function OrderDetailsDialog({
           <DialogTitle>Order Details</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 p-6 overflow-y-auto max-h-[65vh]">
+        <div className="space-y-6 p-4 sm:p-6 overflow-y-auto max-h-[70vh] max-w-full sm:max-w-2xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-500">Order ID</h4>
@@ -75,7 +82,7 @@ export default function OrderDetailsDialog({
             </div>
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-500">Track Order</h4>
-              <p className="capitalize">{(order.order_status || order.status || 'placed')}</p>
+              <p className="capitalize">{order.order_status || order.status || "placed"}</p>
             </div>
           </div>
 
@@ -83,32 +90,38 @@ export default function OrderDetailsDialog({
             <h4 className="font-medium text-sm text-gray-500">Name</h4>
             <p>{order.name}</p>
           </div>
+
           {order.business_name && (
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-500">Business Name</h4>
               <p>{order.business_name}</p>
             </div>
           )}
+
           {order.gst_number && (
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-500">GST Number</h4>
               <p className="break-all">{order.gst_number}</p>
             </div>
           )}
+
           {order.company_type && (
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-500">Company Type</h4>
               <p>{order.company_type}</p>
             </div>
           )}
+
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-500">Email</h4>
             <p className="break-all">{order.email}</p>
           </div>
+
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-500">Phone</h4>
             <p>{order.phone}</p>
           </div>
+
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-500">Address</h4>
             <p>
@@ -118,88 +131,72 @@ export default function OrderDetailsDialog({
               {order.pincode && `, ${order.pincode}`}
             </p>
           </div>
+
           {order.notes && (
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-500">Notes</h4>
               <p className="whitespace-pre-wrap break-words">{order.notes}</p>
             </div>
           )}
+
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-500">Items</h4>
             <ul className="space-y-4">
               {order.items.map((item, idx) => (
-                <li key={(item.id || idx) + idx} className="flex items-start gap-4">
+                <li
+                  key={item.id ? `item-${item.id}` : `idx-${idx}`}
+                  className="flex items-start gap-4"
+                >
                   {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.name || 'Item'} className="w-28 h-28 rounded-lg object-cover border" />
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name || "Item"}
+                      className="w-28 h-28 rounded-lg object-cover border"
+                    />
                   ) : (
                     <div className="w-28 h-28 rounded-lg bg-gray-100 border" />
                   )}
                   <div className="pt-1">
-                    <div className="font-medium">{item.name || 'Item'}</div>
-                    {item.quantity ? <div className="text-sm text-gray-600">Quantity: {item.quantity}</div> : null}
+                    <div className="font-medium">{item.name || "Item"}</div>
+                    {item.quantity ? (
+                      <div className="text-sm text-gray-600">Quantity: {item.quantity}</div>
+                    ) : null}
                   </div>
                 </li>
               ))}
             </ul>
           </div>
+
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-500">Total</h4>
             <p>₹{order.total}</p>
           </div>
-          
+
           {order.payment_status && (
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-500">Payment Status</h4>
               <p className="capitalize">{order.payment_status}</p>
             </div>
           )}
+
           {order.razorpay_order_id && (
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-500">Razorpay Order ID</h4>
               <p className="font-mono text-sm break-all">{order.razorpay_order_id}</p>
             </div>
           )}
+
           {order.razorpay_payment_id && (
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-500">Razorpay Payment ID</h4>
               <p className="font-mono text-sm break-all">{order.razorpay_payment_id}</p>
             </div>
           )}
+
           <div className="space-y-2">
             <h4 className="font-medium text-sm text-gray-500">Placed On</h4>
             <p>{formatDate(order.created_at)}</p>
           </div>
-        </div>
-
-        <div className="flex justify-end gap-2 border-t p-4">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isProcessing}
-          >
-            <X className="h-4 w-4 mr-2" />
-            Close
-          </Button>
-          {onMarkPaid && (
-            <Button
-              variant="outline"
-              onClick={() => onMarkPaid(order)}
-              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-              disabled={isProcessing}
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Mark Paid
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            onClick={() => onDelete(order)}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-            disabled={isProcessing}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

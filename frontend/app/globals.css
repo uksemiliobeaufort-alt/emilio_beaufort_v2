@@ -1557,3 +1557,24 @@
 }
 
 /* Job form dialog custom styles */
+
+
+/* Thin scrollbar for all .orders-scroll area */
+.orders-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #e5e7eb #fff;
+}
+
+/* For Webkit browsers */
+.orders-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.orders-scroll::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 8px;
+}
+.orders-scroll::-webkit-scrollbar-track {
+  background: #fff;
+}
+
