@@ -25,6 +25,7 @@ interface AIBlogGenerationDialogProps {
   }) => void;
 }
 
+
 export default function AIBlogGenerationDialog({
   open,
   onOpenChange,
@@ -342,7 +343,7 @@ export default function AIBlogGenerationDialog({
               <div className="flex items-center justify-between border rounded-lg p-3">
                 <div>
                   <Label className="text-base font-medium">Include related images</Label>
-                  <div className="text-xs text-muted-foreground">Generate 1-3 images via Gemini</div>
+                  <div className="text-xs text-muted-foreground">Generate 1-3 images via Gemini (auto-compressed to WebP &lt;1MB)</div>
                 </div>
                 <Switch checked={includeImages} onCheckedChange={setIncludeImages} />
               </div>
@@ -406,6 +407,36 @@ export default function AIBlogGenerationDialog({
                           </a>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Blog Size & Compression Info */}
+                  {generatedContent.metadata && (
+                    <div className="bg-gray-50 border rounded-lg p-4">
+                      <Label className="text-base font-medium mb-2 block">Blog Information</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium">Total Size:</span>{' '}
+                          <span className={`${generatedContent.metadata.estimatedSize > 1024 * 1024 ? 'text-red-600' : 'text-green-600'}`}>
+                            {(generatedContent.metadata.estimatedSize / 1024).toFixed(2)} KB
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Images:</span>{' '}
+                          <span>{generatedContent.metadata.imageCount} images</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Compression:</span>{' '}
+                          <span className={generatedContent.metadata.compressionApplied ? 'text-green-600' : 'text-gray-600'}>
+                            {generatedContent.metadata.compressionApplied ? '✓ WebP compressed' : 'No compression'}
+                          </span>
+                        </div>
+                      </div>
+                      {generatedContent.metadata.estimatedSize > 1024 * 1024 && (
+                        <div className="mt-2 text-xs text-red-600">
+                          ⚠️ Blog exceeds 1MB Firebase limit. Consider reducing content or images.
+                        </div>
+                      )}
                     </div>
                   )}
 

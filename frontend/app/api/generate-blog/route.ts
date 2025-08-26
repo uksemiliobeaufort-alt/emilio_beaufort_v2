@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { GoogleGenAI, Modality } from '@google/genai';
+import { compressMultipleImages, dataUrlToBuffer, bufferToDataUrl, compressImageToWebP, estimateBlogSize } from '@/lib/imageCompression';
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -198,7 +199,27 @@ Please provide the response in the following JSON format:
     // Fetch related images with brand prompt
     let images: Array<{ url: string; alt: string; source?: string }> = [];
     if (includeImages) {
-      images = await generateImagesViaGemini(topic);
+      const rawImages = await generateImagesViaGemini(topic);
+      
+      // Compress images to WebP format under 1MB each
+      if (rawImages.length > 0) {
+        try {
+          console.log(`Compressing ${rawImages.length} images to WebP format...`);
+          const imageUrls = rawImages.map(img => img.url);
+          const compressedUrls = await compressMultipleImages(imageUrls, 1024 * 1024); // 1MB limit
+          
+          images = rawImages.map((img, index) => ({
+            ...img,
+            url: compressedUrls[index] || img.url, // Fallback to original if compression fails
+            source: img.source + ' (compressed to WebP)'
+          }));
+          
+          console.log(`Successfully compressed ${images.length} images`);
+        } catch (error) {
+          console.error('Image compression failed, using original images:', error);
+          images = rawImages;
+        }
+      }
     }
 
     // Append images into HTML content
@@ -209,13 +230,44 @@ Please provide the response in the following JSON format:
       parsedContent.content += galleryHtml;
     }
 
+    // Estimate total blog size and validate it's under Firebase limit
+    const totalBlogSize = estimateBlogSize(parsedContent.content, images.map(img => img.url));
+    const maxFirebaseSize = 1024 * 1024; // 1MB Firebase document limit
+    
+    console.log(`Total blog size: ${(totalBlogSize / 1024).toFixed(2)} KB`);
+    
+    // If still too large, compress images further
+    if (totalBlogSize > maxFirebaseSize && images.length > 0) {
+      console.log('Blog exceeds 1MB, applying additional compression...');
+      try {
+        const smallerLimit = Math.floor((maxFirebaseSize * 0.6) / images.length); // Use 60% of limit for images
+        const recompressedUrls = await compressMultipleImages(images.map(img => img.url), smallerLimit);
+        
+        images = images.map((img, index) => ({
+          ...img,
+          url: recompressedUrls[index] || img.url,
+          source: img.source + ' (extra compressed)'
+        }));
+        
+        const newSize = estimateBlogSize(parsedContent.content, images.map(img => img.url));
+        console.log(`Recompressed blog size: ${(newSize / 1024).toFixed(2)} KB`);
+      } catch (error) {
+        console.error('Additional compression failed:', error);
+      }
+    }
+
     return NextResponse.json({
       title: parsedContent.title,
       content: parsedContent.content,
       keywords: parsedContent.keywords || [],
       tags: parsedContent.tags || [],
       summary: parsedContent.summary,
-      images
+      images,
+      metadata: {
+        estimatedSize: totalBlogSize,
+        compressionApplied: images.some(img => img.source?.includes('compressed')),
+        imageCount: images.length
+      }
     });
 
   } catch (error) {
