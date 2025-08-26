@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -137,7 +137,7 @@ export default function BlogGalleryPage() {
           </p>
         </div>
 
-        {/* Header Ad */}
+        {/* Header Ad *
         <BlogHeaderAd />
 
         {loading ? (
@@ -175,7 +175,7 @@ export default function BlogGalleryPage() {
                           day: "numeric",
                         })}
                       </p>
-                      {/* Share Row */}
+                      {/* Share Row *
                       <div className="flex items-center justify-between mb-3 mt-2">
                         <span className="text-sm text-gray-600 font-medium">Share it:</span>
                         <div className="flex items-center gap-2">
@@ -228,10 +228,10 @@ export default function BlogGalleryPage() {
               ))}
             </div>
 
-            {/* Content Ad after posts */}
+            {/* Content Ad after posts 
             <BlogContentAd />
 
-            {/* Pagination Controls */}
+            {/* Pagination Controls *
             <div className="flex justify-center gap-2 mt-12">
               <Button
                 variant="outline"
@@ -261,7 +261,7 @@ export default function BlogGalleryPage() {
               </Button>
             </div>
 
-            {/* Footer Ad */}
+            {/* Footer Ad *
             <BlogFooterAd />
           </>
         ) : (
@@ -274,5 +274,134 @@ export default function BlogGalleryPage() {
         )}
       </div>
     </div>
+  );}*/
+  
+  "use client";
+
+import { useEffect, useState } from "react";
+import { firestore } from "@/lib/firebase";
+import { collection, getDocs, query } from "firebase/firestore";
+import { toast } from "sonner";
+import { BlogHeaderAd, BlogContentAd, BlogFooterAd } from "@/components/GoogleAdSense";
+import Pagination from "./Pagination";
+import BlogPostCard from "./BlogPostCard";
+import { BlogPost } from "@/types/BlogPost";
+
+/*interface BlogPost {------> it was created in under types/BlogPost.ts
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  featured_image_url?: string;
+  gallery_urls?: string[];
+  created_at: string;
+  updated_at?: string;
+}*/
+
+const POSTS_PER_PAGE = 6;
+
+export default function BlogGalleryPage() {
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [copiedPostId, setCopiedPostId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setLoading(true);
+      try {
+        const q = query(collection(firestore, "blog_posts"));
+        const querySnapshot = await getDocs(q);
+        let firebasePosts: BlogPost[] = querySnapshot.docs.map((doc) => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            title: d.title || "",
+            slug: d.slug || "",
+            content: d.content || "",
+            featured_image_url: d.featured_image_url || "",
+            gallery_urls: d.gallery_urls || [],
+            created_at: d.created_at?.toDate?.().toISOString?.() || new Date().toISOString(),
+            updated_at: d.updated_at?.toDate?.().toISOString?.() || null,
+          };
+        });
+        firebasePosts = firebasePosts.sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        setPosts(firebasePosts);
+      } catch (error) {
+        setPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  const copyToClipboard = async (post: BlogPost) => {
+    const url = `https://emiliobeaufort.com/journal/${post.slug}`;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = url;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      setCopiedPostId(post.id);
+      toast.success("Link copied to clipboard!");
+      setTimeout(() => setCopiedPostId(null), 2000);
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
+  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+  const paginatedPosts = posts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-6 py-12 mt-12">
+        <div className="mb-8 text-center">
+          <h1 className="text-5xl md:text-6xl font-serif font-bold text-gray-900 mb-4">Gallery</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Explore our complete collection of stories, insights, and perspectives.
+          </p>
+        </div>
+
+        <BlogHeaderAd />
+
+        {loading ? (
+          <div className="text-center text-gray-500">Loading...</div>
+        ) : paginatedPosts.length > 0 ? (
+          <>
+            <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {paginatedPosts.map((post) => (
+                <BlogPostCard
+                  key={post.id}
+                  post={post}
+                  onCopy={copyToClipboard}
+                  copied={copiedPostId === post.id}
+                />
+              ))}
+            </div>
+
+            <BlogContentAd />
+
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+
+            <BlogFooterAd />
+          </>
+        ) : (
+          <div className="text-center text-gray-500 mt-10">
+            <p className="text-xl mb-4">No blog posts available yet.</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
-} 
+}

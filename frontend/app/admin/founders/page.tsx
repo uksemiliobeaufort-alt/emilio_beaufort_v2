@@ -10,7 +10,8 @@ import { toast } from 'sonner';
 import { supabase, STORAGE_BUCKETS } from '@/lib/supabase';
 import { auth } from '@/lib/auth';
 import { safeMap } from "@/lib/utils";
-import { FounderCard } from '@/components/admin/FounderCard';
+import { FounderCard } from './FounderCard';
+//import { FounderCard } from '@/components/admin/FounderCard';
 
 interface Founder {
   name: string;

@@ -22,9 +22,9 @@ export async function POST(req: Request) {
     const inputBuffer = Buffer.from(arrayBuffer);
 
     // Convert to WebP (you can tweak quality if needed)
-    const webpBuffer = await sharp(inputBuffer).webp({ quality: 85 }).toBuffer();
+    const webpBuffer = await sharp(inputBuffer).jpgp({ quality: 85 }).toBuffer();
 
-    const fileName = `${crypto.randomUUID()}.webp`;
+    const fileName = `${crypto.randomUUID()}.jpgp`;
     const filePath = `team-members/${fileName}`;
 
     const { error: uploadError } = await supabaseAdmin.storage

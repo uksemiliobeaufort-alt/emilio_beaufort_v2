@@ -18,6 +18,11 @@ import { getHairExtensionsFromFirebase } from '@/lib/firebase';
 import { firestore } from '@/lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
+import CategoryTabs from "./CategoryFilter";
+
+import Pagination from "./Pagination";
+import SearchBar from "./SearchBar";
+
 
 // Mapping function to convert Supabase Product to API Product format
 const mapSupabaseProductToAPIProduct = (supabaseProduct: SupabaseProduct): Product => {
@@ -243,6 +248,14 @@ function ProductsPageContent() {
     );
   }
 
+  const handleCategoryChange = (cat: 'COSMETICS' | 'HAIR') => {
+  setSelectedCategory(cat);
+  setSearch('');
+  setSearchInput('');
+  setCurrentPage(1); // Optional: resets pagination
+};
+
+
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
       {/* Subtle, professional gradient bubbles */}
@@ -287,7 +300,7 @@ function ProductsPageContent() {
               </div>
             )}
           </div>
-          <form
+          {/*<form
             className="flex justify-center"
             onSubmit={e => {
               e.preventDefault();
@@ -311,11 +324,19 @@ function ProductsPageContent() {
             >
               Search
             </button>
-          </form>
+          </form>*/}
+
+          <SearchBar
+             searchInput={searchInput}
+              onSearchInputChange={setSearchInput}
+             onSubmit={() => { setSearch(searchInput); setCurrentPage(1); }}
+          />
+
+
         </motion.div>
 
         {/* Category Filter */}
-        <div className="flex justify-center mb-12">
+      { /* <div className="flex justify-center mb-12">
           <div className="flex space-x-4">
             {[
               { value: 'HAIR', label: 'Hair' },
@@ -336,7 +357,15 @@ function ProductsPageContent() {
               </RippleButton>
             ))}
           </div>
-        </div>
+        </div>*/}
+       
+
+        <CategoryTabs
+               selectedCategory={selectedCategory}
+               onSelectCategory={handleCategoryChange}
+          />
+
+
 
         {/* Products Grid */}
         {/* Mobile List View */}
@@ -425,14 +454,15 @@ function ProductsPageContent() {
                 <ProductCard product={product} onViewDetails={(p) => { setSelectedProduct(p); setDetailDialogOpen(true); }} />
               </motion.div>
             ))
-          ) : (
-            <motion.div
+          ) :  (
+           <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
               className="col-span-full text-center py-16"
             >
-              <div className="mx-auto w-32 h-32 flex items-center justify-center mb-6 animate-fade-in">
+           <div className="mx-auto w-32 h-32 flex items-center justify-center mb-6 animate-fade-in">
+              
                 {/* SVG Gift Box with Sparkles */}
                 <svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <rect x="16" y="40" width="64" height="40" rx="8" fill="#FDE68A"/>
@@ -483,11 +513,16 @@ function ProductsPageContent() {
                 </button>
               )}
             </motion.div>
-          )}
-        </div>
+           
+         )}
+          
+
+        </div> 
 
         {/* Pagination Controls */}
-        {totalPages > 1 && (
+
+
+       {/* {totalPages > 1 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -531,6 +566,12 @@ function ProductsPageContent() {
             </button>
           </motion.div>
         )}
+          */}
+          <Pagination
+              currentPage={currentPage}
+               totalPages={totalPages}
+                onPageChange={setCurrentPage}
+          />
 
         <ProductDetailDialog
           product={selectedProduct}

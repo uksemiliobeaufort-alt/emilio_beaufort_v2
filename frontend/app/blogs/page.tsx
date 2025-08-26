@@ -24,7 +24,7 @@ export default function BlogsPage() {
   const [imageFiles, setImageFiles] = useState<FileList | null>(null);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
-  const defaultImageUrl = getImageUrl("the-house", "Cosmetics Banner.webp");
+  const defaultImageUrl = getImageUrl("the-house", "Cosmetics Banner.jpgp");
 
   useEffect(() => {
     const fetchPosts = async () => {

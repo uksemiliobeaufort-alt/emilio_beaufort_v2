@@ -532,7 +532,7 @@ const AuthPages = ({ isOpen = false, onClose, onSuccess }: AuthPagesProps = {}) 
                 <div className="w-full max-w-sm space-y-4">
                   <div className="text-center">
                     <div className="mb-2 sm:mb-4">
-                      <img src="https://mzvuuvtckcimzemivltz.supabase.co/storage/v1/object/public/the-house/EM.webp" alt="Logo" className="mx-auto h-6 sm:h-8 md:h-10 lg:h-12 w-auto" />
+                      <img src="https://mzvuuvtckcimzemivltz.supabase.co/storage/v1/object/public/the-house/EM.jpgp" alt="Logo" className="mx-auto h-6 sm:h-8 md:h-10 lg:h-12 w-auto" />
                     </div>
                     <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2" style={{ fontFamily: 'serif' }}>LOGIN</h2>
                     <p className="text-xs sm:text-sm md:text-base text-black mb-3 sm:mb-4 px-1 sm:px-2">
@@ -709,7 +709,7 @@ const AuthPages = ({ isOpen = false, onClose, onSuccess }: AuthPagesProps = {}) 
                 <div className="w-full max-w-sm space-y-4">
                   <div className="text-center">
                     <div className="mb-2 sm:mb-4">
-                      <img src="https://mzvuuvtckcimzemivltz.supabase.co/storage/v1/object/public/the-house/EM.webp" alt="Logo" className="mx-auto h-6 sm:h-8 md:h-10 lg:h-12 w-auto" />
+                      <img src="https://mzvuuvtckcimzemivltz.supabase.co/storage/v1/object/public/the-house/EM.jpgp" alt="Logo" className="mx-auto h-6 sm:h-8 md:h-10 lg:h-12 w-auto" />
                     </div>
                     <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2" style={{ fontFamily: 'serif' }}>CREATE AN ACCOUNT</h2>
                     <p className="text-xs sm:text-sm md:text-base text-black mb-3 sm:mb-4 px-1 sm:px-2">

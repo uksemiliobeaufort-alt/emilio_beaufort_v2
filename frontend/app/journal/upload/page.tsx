@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 
 import React, { useEffect, useState, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
@@ -159,4 +159,128 @@ export default function UploadBlogPage() {
       </div>
     </div>
   );
-} 
+} */
+
+  "use client";
+
+import React, { useEffect, useState, ChangeEvent } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { auth } from '@/lib/auth';
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import FormInput from './FormInput';
+import FormTextarea from './FormTextarea';
+import FormFileInput from './FormFileInput';
+
+
+interface FormData {
+  title: string;
+  content: string;
+  featuredImage: File | null;
+}
+
+export default function UploadBlogPage() {
+  const router = useRouter();
+  const [formData, setFormData] = useState<FormData>({
+    title: '',
+    content: '',
+    featuredImage: null,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    auth.init();
+    if (!auth.isAdmin()) {
+      toast.error('Unauthorized access');
+      router.push('/journal');
+    }
+  }, [router]);
+
+  const convertFileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      let featuredImageBase64 = null;
+      if (formData.featuredImage) {
+        featuredImageBase64 = await convertFileToBase64(formData.featuredImage);
+      }
+
+      const slug = formData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+      const { error } = await supabase.from('blog_posts').insert([
+        {
+          title: formData.title,
+          slug,
+          content: formData.content,
+          featured_image_base64: featuredImageBase64,
+        }
+      ]);
+
+      if (error) throw error;
+
+      toast.success('Post created successfully!');
+      router.push('/journal');
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast.error('Failed to create post');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFileChange = (file: File | null) => {
+    setFormData(prev => ({ ...prev, featuredImage: file }));
+  };
+
+  if (!auth.isAdmin()) return null;
+
+  return (
+    <div className="min-h-screen bg-white py-24">
+      <div className="max-w-3xl mx-auto px-6">
+        <div className="flex justify-between items-center mb-12">
+          <h1 className="text-4xl font-serif">Upload Blog Post</h1>
+          <Button onClick={() => { auth.logout(); router.push('/journal'); }} variant="outline">Logout</Button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <FormInput
+            id="title"
+            label="Title"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            required
+          />
+
+          <FormTextarea
+            id="content"
+            label="Content"
+            value={formData.content}
+            onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+            required
+            className="min-h-[300px]"
+          />
+
+          <FormFileInput
+            id="featuredImage"
+            label="Featured Image (Max 5MB)"
+            onFileChange={handleFileChange}
+            required
+          />
+
+          <Button type="submit" className="w-full mt-8" disabled={isSubmitting}>
+            {isSubmitting ? 'Uploading...' : 'Upload Blog Post'}
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}

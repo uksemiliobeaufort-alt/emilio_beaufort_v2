@@ -12,8 +12,9 @@ import { useRouter } from "next/navigation";
 import { Share2, Copy, MessageCircle, Linkedin, Twitter, Facebook, Check, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { BlogHeaderAd, BlogContentAd, BlogFooterAd } from "@/components/GoogleAdSense";
+import { BlogPost } from "@/types/BlogPost";
 
-interface BlogPost {
+/*interface BlogPost {
   id: string;
   title: string;
   slug: string;
@@ -22,7 +23,9 @@ interface BlogPost {
   gallery_urls?: string[];
   created_at: string;
   updated_at?: string;
-}
+}*/
+
+
 
 export default function JournalPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);

@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -140,13 +140,13 @@ export default function BlogPostPage({ params }: Props) {
         <meta property="og:description" content={metaDescription} />
         <meta property="og:image" content={post.featured_image_url || '/default-image.jpg'} />
       </Head>
-      {/* <Navbar /> */}
+      {/* <Navbar /> *
       <main className="pt-32 md:pt-36 lg:pt-40 pb-20 px-4">
         <div className="max-w-3xl mx-auto">
           <article>
             <div className="mb-8">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-4">{post.title}</h1>
-              {/* Only show tags visually, not keywords */}
+              {/* Only show tags visually, not keywords *
               {(post.tags && post.tags.length > 0) && (
                 <></> // Remove tags from the top
               )}
@@ -159,13 +159,14 @@ export default function BlogPostPage({ params }: Props) {
               </p>
             </div>
 
-            {/* Header Ad */}
+            {/* Header Ad 
             <BlogHeaderAd />
 
             <div className="relative w-full aspect-video rounded-md overflow-hidden mb-10">
               <Image
                 src={getPostImage(post)}
                 alt={post.title}
+                 loading="lazy" //----> added this line 
                 fill
                 className="object-cover"
                 priority
@@ -181,10 +182,10 @@ export default function BlogPostPage({ params }: Props) {
               />
             </div>
 
-            {/* Content Ad after main content */}
+            {/* Content Ad after main content 
             <BlogContentAd />
 
-            {/* Show tags at the bottom as clickable links, just above the back button */}
+            {/* Show tags at the bottom as clickable links, just above the back button 
             {(post.tags && post.tags.length > 0) && (
               <div className="flex flex-wrap gap-2 mb-8">
                 {post.tags.map((tag, idx) => (
@@ -203,7 +204,170 @@ export default function BlogPostPage({ params }: Props) {
               <span className="text-sm font-medium group-hover:underline">Back to Journal</span>
             </button>
 
-            {/* Footer Ad */}
+            {/* Footer Ad 
+            <BlogFooterAd />
+          </article>
+        </div>
+      </main>
+    </div>
+  );
+}
+*/
+
+"use client";
+
+import { useEffect, useState } from "react";
+import Head from "next/head";
+import { useRouter } from "next/navigation";
+import { firestore } from '@/lib/firebase';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import HtmlContent from "@/components/ui/HtmlContent";
+import { BlogHeaderAd, BlogContentAd, BlogFooterAd } from "@/components/GoogleAdSense";
+import { getDescription } from "./GetDescription";
+import PostHeader from "./BlogPostHeader";
+import PostImage from "./BlogPostImage";
+import BackButton from "./BackButton";
+import PostTags from "./BlogPostTags";
+
+/*import PostHeader from "@/components/blog/PostHeader";
+import PostImage from "@/components/blog/PostImage";
+import PostTags from "@/components/blog/PostTags";
+import BackButton from "@/components/ui/BackButton";
+import { getDescription } from "@/utils/getDescription";*/
+
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  featured_image_url?: string;
+  gallery_urls?: string[];
+  created_at: string;
+  keywords?: string[];
+  tags?: string[];
+}
+
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export default function BlogPostPage({ params }: Props) {
+  const router = useRouter();
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+  const [slug, setSlug] = useState<string>('');
+
+  const defaultImageUrl = "/default-image.jpg";
+
+  useEffect(() => {
+    const initializeParams = async () => {
+      try {
+        const resolvedParams = await params;
+        setSlug(resolvedParams.slug);
+      } catch (error) {
+        console.error("Failed to resolve params:", error);
+      }
+    };
+
+    initializeParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (!slug) return;
+
+    const fetchPost = async () => {
+      setLoading(true);
+      try {
+        const q = query(
+          collection(firestore, 'blog_posts'),
+          where('slug', '==', slug)
+        );
+        const querySnapshot = await getDocs(q);
+        const doc = querySnapshot.docs[0];
+
+        if (doc) {
+          const d = doc.data();
+          setPost({
+            id: doc.id,
+            title: d.title || '',
+            slug: d.slug || '',
+            content: d.content || '',
+            featured_image_url: d.featured_image_url || '',
+            gallery_urls: d.gallery_urls || [],
+            created_at: d.created_at?.toDate?.().toISOString() || new Date().toISOString(),
+            keywords: d.keywords || [],
+            tags: d.tags || [],
+          });
+        } else {
+          setPost(null);
+        }
+      } catch (error) {
+        setPost(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-2xl font-serif text-gray-900">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!post) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-xl text-muted-foreground">Post not found.</p>
+      </div>
+    );
+  }
+
+  const imageUrl = imageError ? defaultImageUrl : post.featured_image_url || defaultImageUrl;
+  const metaDescription = getDescription(post.content);
+  const metaKeywords = [...(post.keywords || []), ...(post.tags || [])].join(', ');
+
+  return (
+    <div className="min-h-screen bg-white">
+      <Head>
+        <title>{post.title} | Emilio Beaufort Journal</title>
+        <meta name="description" content={metaDescription} />
+        {metaKeywords && <meta name="keywords" content={metaKeywords} />}
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:image" content={imageUrl} />
+      </Head>
+
+      <main className="pt-32 md:pt-36 lg:pt-40 pb-20 px-4">
+        <div className="max-w-3xl mx-auto">
+          <article>
+            <PostHeader title={post.title} created_at={post.created_at} />
+
+            <BlogHeaderAd />
+
+            <PostImage src={imageUrl} alt={post.title} onError={() => setImageError(true)} />
+
+            <div className="mb-12">
+              <HtmlContent
+                content={post.content}
+                className="prose prose-lg max-w-none text-gray-800 leading-relaxed"
+              />
+            </div>
+
+            <BlogContentAd />
+
+          
+            {post.tags && post.tags.length > 0 && <PostTags tags={post.tags} />}
+
+
+            <BackButton />
+
             <BlogFooterAd />
           </article>
         </div>

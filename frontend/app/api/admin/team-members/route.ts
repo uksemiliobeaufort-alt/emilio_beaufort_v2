@@ -36,10 +36,10 @@ export async function POST(req: Request) {
     const webpBuffer = await sharp(inputBuffer)
       .rotate()
       .resize({ width: 800, height: 800, fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 85 })
+      .jpeg({ quality: 85 })
       .toBuffer();
 
-    const fileName = `${crypto.randomUUID()}.webp`;
+    const fileName = `${crypto.randomUUID()}.jpgp`;
     const filePath = `team-members/${fileName}`;
 
     const { error: uploadError } = await supabaseAdmin.storage
