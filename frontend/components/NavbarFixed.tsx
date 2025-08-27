@@ -122,10 +122,13 @@ useEffect(() => {
   const handlePartnerClick = async () => {
     setIsOpen(false);
     if (isHomePage) {
-      const alliancesSection = document.querySelector("#alliances");
-      if (alliancesSection) alliancesSection.scrollIntoView({ behavior: "smooth" });
+      if (window.location.hash !== '#partnership-form') {
+        window.location.hash = '#partnership-form';
+      } else {
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      }
     } else {
-      await router.push("/#alliances");
+      await router.push("/#partnership-form");
     }
   };
 

@@ -11,7 +11,7 @@ import { collection, getDocs, query } from 'firebase/firestore';
 import { useRouter } from "next/navigation";
 import { Share2, Copy, MessageCircle, Linkedin, Twitter, Facebook, Check, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import { BlogHeaderAd, BlogContentAd, BlogFooterAd } from "@/components/GoogleAdSense";
+ 
 
 interface BlogPost {
   id: string;
@@ -192,8 +192,7 @@ export default function JournalPage() {
             </p>
           </div>
 
-          {/* Header Ad */}
-          <BlogHeaderAd />
+          
 
           {/* Responsive Journal Cards */}
           <div className="mt-8">
@@ -475,8 +474,7 @@ export default function JournalPage() {
                   </motion.div>
                 </div>
 
-                {/* Content Ad after marquee */}
-                <BlogContentAd />
+                
               </>
             ) : (
               <div className="text-center text-gray-600 mt-10">

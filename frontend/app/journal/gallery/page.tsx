@@ -10,7 +10,7 @@ import { firestore } from '@/lib/firebase';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { Share2, Copy, MessageCircle, Linkedin, Twitter, Facebook, Check } from "lucide-react";
 import { toast } from "sonner";
-import { BlogHeaderAd, BlogContentAd, BlogFooterAd } from "@/components/GoogleAdSense";
+ 
 
 interface BlogPost {
   id: string;
@@ -137,8 +137,7 @@ export default function BlogGalleryPage() {
           </p>
         </div>
 
-        {/* Header Ad */}
-        <BlogHeaderAd />
+        
 
         {loading ? (
           <div className="text-center text-gray-500">Loading...</div>
@@ -228,8 +227,7 @@ export default function BlogGalleryPage() {
               ))}
             </div>
 
-            {/* Content Ad after posts */}
-            <BlogContentAd />
+            
 
             {/* Pagination Controls */}
             <div className="flex justify-center gap-2 mt-12">
@@ -261,8 +259,7 @@ export default function BlogGalleryPage() {
               </Button>
             </div>
 
-            {/* Footer Ad */}
-            <BlogFooterAd />
+            
           </>
         ) : (
           <div className="text-center text-gray-500 mt-10">

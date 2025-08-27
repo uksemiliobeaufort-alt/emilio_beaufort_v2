@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { BlogHeaderAd, BlogContentAd, BlogFooterAd } from "@/components/GoogleAdSense";
+ 
 
 export default function BlogsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -103,8 +103,7 @@ export default function BlogsPage() {
           </Button>
         </div>
 
-        {/* Header Ad */}
-        <BlogHeaderAd />
+        
 
         {/* Add Post Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -208,11 +207,9 @@ export default function BlogsPage() {
               ))}
             </div>
 
-            {/* Content Ad after first few posts */}
-            {posts.length > 3 && <BlogContentAd />}
+            
 
-            {/* Footer Ad */}
-            <BlogFooterAd />
+            
           </>
         ) : (
           <p className="text-center text-gray-500">No blog posts found.</p>

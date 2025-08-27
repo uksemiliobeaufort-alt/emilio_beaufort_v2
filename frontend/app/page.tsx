@@ -235,6 +235,12 @@ export default function Home() {
       const { hash } = window.location;
       if (!hash) return;
 
+      // Open partnership form directly
+      if (hash === '#partnership-form') {
+        setIsPartnershipFormOpen(true);
+        return;
+      }
+
       let target: HTMLElement | null = null;
       if (hash === '#team') {
         target = findTeamTarget();
