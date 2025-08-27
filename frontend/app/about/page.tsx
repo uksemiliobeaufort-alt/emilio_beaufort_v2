@@ -183,16 +183,20 @@ export default function AboutPage() {
     </div>
   );
 } */
-{/*modified code for reducing DOM  size---------
 
-🔧 Summary of Improvements
 
-✅ SectionHeader component	Reuses consistent heading structure
-✅ map() for difference features	Cleaner, easier to update
-✅ Less nested divs	Smaller DOM, improved rendering
-✅ Optional children for flexibility	More dynamic use of sections*/}
-  
-"use client";
+
+  "use client";
+//modified code for reducing DOM  size---------
+
+//🔧 Summary of Improvements
+
+//✅ SectionHeader component	Reuses consistent heading structure
+//✅ map() for difference features	Cleaner, easier to update
+//✅ Less nested divs	Smaller DOM, improved rendering
+//✅ Optional children for flexibility	More dynamic use of sections
+
+
 import { motion } from "framer-motion";
 import SectionWrapper from "@/components/SectionWrapper";
 
