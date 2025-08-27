@@ -41,9 +41,12 @@ const sidebarItems = [
   },
   {
     name: 'Products',
-    href: '/admin/products',
     icon: <ShoppingBag className="h-4 w-4" />,
-    permission: 'manage_products'
+    permission: 'manage_products',
+    subItems: [
+      { name: 'All Products', href: '/admin/products' },
+      { name: 'View Orders', href: '/admin/products/vieworders' } // <--- ADD THIS LINE
+    ]
   },
   {
     name: 'Blog Posts',

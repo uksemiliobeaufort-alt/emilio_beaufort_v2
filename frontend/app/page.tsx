@@ -323,7 +323,7 @@ export default function Home() {
     {
       name: "Aly Sayyad",
       role: "CoFounder & CSO",
-      description: "L&D| Training|Consulting|Banking|Startups",
+      description: "L&D| Training| Consulting| Banking| Startups",
       gradient: "from-purple-500 via-pink-500 to-rose-500",
       linkedin: "https://www.linkedin.com/in/aly-sayyad-40501a20/",
       twitter: "/",
@@ -347,15 +347,7 @@ export default function Home() {
       twitter: "/",
       instagram: "/"
     },
-    // {
-    //   name: "Dr. Bani Prasad Bhattacharjee",
-    //   role: "Legal Advisor",
-    //   description: "Oversees legal compliance and regulatory matters at Emilio Beaufort.",
-    //   gradient: "from-gray-600 via-slate-600 to-zinc-600",
-    //   linkedin: "/",
-    //   twitter: "/",
-    //   instagram: "/"
-    // },
+    
     // New founder card for Rahul Pandey
     {
       name: "Rahul Pandey",
@@ -367,12 +359,25 @@ export default function Home() {
       instagram: "/",
       imageName: "Rahul Sir"
     },
-
+      {
+       name: "Pratibha Sharma",
+      role: "HR Lead",
+      description: "HR Lead @ Emilio Beaufort | Certifications in Talent Acquisition, HR Analytics",
+     gradient: "from-gray-600 via-slate-600 to-zinc-600",
+     linkedin: "https://www.linkedin.com/in/pratibha-sharma-7771a6215//",
+    twitter: "/",
+     instagram: "https://www.instagram.com/aashii2509?igsh=MTg0NDNja3NqMnpmcw==/",
+     imageName: "Pratibha Mam"
+    },
   ];
-  const firstRow = founders.slice(0, 3);
-  const secondRow = founders.slice(3, 6);
-  const thirdRow = founders.slice(6, 7); // Rahul Pandey
+  //const firstRow = founders.slice(0, 3);
+  //const secondRow = founders.slice(3, 6);
+  //const thirdRow = founders.slice(6, 7); // Rahul Pandey
 
+  const firstRow = founders.slice(0, 3); // First 3 founders
+const secondRow = founders.slice(3, 6); // Next 3 founders (Sreedeep, Uttam, Rahul)
+const thirdRow = founders.slice(6, 7); // Last founder (Pratibha)
+const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
   return (
     <div className="min-h-screen bg-premium">
       <AnimatedBackground />
@@ -833,10 +838,10 @@ export default function Home() {
           >
             <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10 xl:gap-12 gap-y-8 md:gap-y-10 lg:gap-y-12 justify-items-center">
-                {safeMap([...firstRow, ...secondRow, ...thirdRow] as Founder[], (founder: Founder, index: number) => (
+                {safeMap(allFounders, (founder: Founder, index: number) => (
                   <motion.div
                     key={index}
-                    className={`founder-card group relative w-full max-w-sm mx-auto transition-all duration-700 ease-out cursor-pointer ${index === 4 ? 'md:col-start-1 lg:col-start-2' : ''}`}
+                    className={`founder-card group relative w-full max-w-sm mx-auto transition-all duration-700 ease-out cursor-pointer ${index === allFounders.length - 1 ? 'lg:col-start-2' : ''}`}
                     initial={{ opacity: 0, y: 50, scale: 0.9 }}
                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.8, delay: index * 0.15, ease: [0.25, 0.25, 0, 1] }}

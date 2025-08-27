@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       business_name: businessName || '',
       gst_number: gstNumber || '',
       company_type: companyType || '',
-      order_status: 'pending',
+      order_status: 'placed',
       payment_status: 'pending',
       created_at: new Date().toISOString()
     };

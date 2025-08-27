@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import RichTextEditor from "@/components/ui/RichTextEditor";
 import EnhancedEditor from "@/components/ui/EnhancedEditor";
 import TipTapEditor from "@/app/admin/components/TipTapEditor";
+import AIBlogGenerationDialog from "@/app/admin/components/AIBlogGenerationDialog";
 import PermissionGuard from '@/components/PermissionGuard';
 
 interface Post {
@@ -46,6 +47,7 @@ function AdminBlogsPageContent() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -56,7 +58,7 @@ function AdminBlogsPageContent() {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState("");
-  const [tagInput, setTagInput] = useState("");
+  const [tagInput, setTagInput] = useState(""); 
 
   const defaultImageUrl = "/default-image.jpg";
 
@@ -284,6 +286,42 @@ function AdminBlogsPageContent() {
     }
   };
 
+  const handleAIBlogGenerated = async (blogData: {
+    title: string;
+    content: string;
+    keywords: string[];
+    tags: string[];
+    images?: string[];
+  }) => {
+    setTitle(blogData.title);
+    setContent(blogData.content);
+    setKeywords(blogData.keywords);
+    setTags(blogData.tags);
+    // If AI provided images (data URLs), convert to FileList and set previews
+    if (blogData.images && blogData.images.length > 0) {
+      try {
+        const files = await Promise.all(
+          blogData.images.map(async (src, idx) => {
+            const res = await fetch(src);
+            const blob = await res.blob();
+            const ext = blob.type.split('/')[1] || 'png';
+            return new File([blob], `ai-image-${idx + 1}.${ext}`, { type: blob.type || 'image/png' });
+          })
+        );
+        const dt = new DataTransfer();
+        files.forEach(f => dt.items.add(f));
+        setImageFiles(dt.files);
+        setImagePreviews(blogData.images);
+      } catch (e) {
+        console.error('Failed to prepare AI images for upload', e);
+        setImagePreviews(blogData.images);
+        setImageFiles(null);
+      }
+    }
+    setDialogOpen(true);
+    toast.success("AI-generated content loaded! Images included.");
+  };
+
   return (
     <div className="space-y-6 lg:space-y-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -291,6 +329,7 @@ function AdminBlogsPageContent() {
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Blog Posts</h1>
           <p className="text-gray-600 mt-1">Manage your blog content</p>
         </div>
+        <div className="flex flex-row gap-3">
         <Button onClick={() => {
           resetForm();
           setDialogOpen(true);
@@ -298,7 +337,15 @@ function AdminBlogsPageContent() {
           <UploadCloud className="mr-2 h-4 w-4" />
           Create New Post
         </Button>
+        <Button onClick={() => {
+          setAiDialogOpen(true);
+        }} className="bg-purple-600 text-white hover:bg-purple-700 w-full sm:w-auto">
+          <UploadCloud className="mr-2 h-4 w-4" />
+          Generate New Post with AI
+        </Button>
+        </div>
       </div>
+      
 
       {/* Add/Edit Post Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => {
@@ -468,6 +515,13 @@ function AdminBlogsPageContent() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* AI Blog Generation Dialog */}
+      <AIBlogGenerationDialog
+        open={aiDialogOpen}
+        onOpenChange={setAiDialogOpen}
+        onBlogGenerated={handleAIBlogGenerated}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

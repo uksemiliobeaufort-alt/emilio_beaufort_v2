@@ -37,7 +37,17 @@ export function Footer() {
               <p className="body-premium text-gray-300 leading-relaxed mb-6 text-sm sm:text-base">
                 Where luxury meets precision. Crafting exceptional grooming experiences for the discerning gentleman. We supply raw human hair and wigs within India to Salons, Wig makers, Beauty retailers, Online store owners, and Cosmetic brands. Fast delivery across major Indian cities. Payment via UPI, NEFT or advance invoice.
               </p>
+             
+              <div>
+  <a href="/locations" className="body-premium text-gray-300 leading-relaxed mb-6 text-sm sm:text-base">Explore Our Locations</a>
+  </div>
             </div>
+
+            
+
+{/*Our Offices*/}
+
+            
 
             {/* Quick Links */}
             <div className="text-center sm:text-center lg:text-center">
@@ -126,6 +136,16 @@ export function Footer() {
                       className="hover:text-gold transition-premium footer-link-underline"
                     >
                       hello@emiliobeaufort.com
+                    </a>
+                  </div>
+
+                   <div>
+                    <span className="font-sans-medium">Website: </span>
+                    <a 
+                      href="https://www.emiliobeaufort.com/" 
+                      className="hover:text-gold transition-premium footer-link-underline"
+                    >
+                      Visit here
                     </a>
                   </div>
                 </div>

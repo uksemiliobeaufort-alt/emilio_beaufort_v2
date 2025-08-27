@@ -20,12 +20,12 @@ type TeamMember = {
 
 const roleColors: Record<string, string> = {
   All: '#000000',
-  "IT Department": '#2f8deb',
+  "IT Department": '#e7b923',
   "Founder's Office": '#e7b923',
-  "Sales Department": '#028139',
-  "HR Department": '#a05edd',
-  "Marketing Department": '#ff7f50',
-  "Social Media Department": '#1da1f2',
+  "Sales Department": '#e7b923',
+  "HR Department": '#e7b923',
+  "Marketing Department": '#e7b923',
+  "Social Media Department": '#e7b923',
 };
 
 const getRoleColor = (department?: string | null): string => {
