@@ -922,30 +922,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
           </motion.div>
 
 
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Button
-              className="px-14 py-5 rounded-full font-bold text-lg sm:text-2xl flex items-center justify-center gap-3 bg-gradient-to-r from-gray-200 via-gray-100 to-white text-gray-900 shadow-lg border-0 transition-all duration-200 hover:from-gray-300 hover:via-gray-200 hover:to-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-300 group"
-              style={{ boxShadow: '0 6px 24px rgba(0,0,0,0.10)' }}
-              onClick={() => router.push('/team-members')}
-            >
-              <span className="text-gray-900 font-bold">View More Team Members</span>
-              <svg
-                className="w-6 h-6 text-gray-500 group-hover:translate-x-1 transition-transform duration-200"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Button>
-          </motion.div>
+
         </div>
       </section>
 
