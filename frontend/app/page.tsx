@@ -712,18 +712,11 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                   <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} rounded-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500`}></div>
 
                   {/* Floating Icon */}
-                  <motion.div
-                    className="flex justify-center mb-4 sm:mb-6 relative z-10"
-                    whileHover={{
-                      scale: 1.2,
-                      rotate: 360,
-                      transition: { duration: 0.6 }
-                    }}
-                  >
+                  <div className="flex justify-center mb-4 sm:mb-6 relative z-10">
                     <div className={`p-3 sm:p-4 bg-gradient-to-br ${item.gradient} rounded-2xl shadow-lg group-hover:shadow-xl transition-all duration-300 glow-premium`}>
                       {item.icon}
                     </div>
-                  </motion.div>
+                  </div>
 
                   {/* Content */}
                   <div className="relative z-10 text-center">
