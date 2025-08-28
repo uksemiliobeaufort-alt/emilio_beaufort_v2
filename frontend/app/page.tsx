@@ -515,7 +515,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
           className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-[#D4AF37]/10 to-[#B7A16C]/10 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5, 0.3],
+            opacity: [0.3, 0.5,  0.3],
           }}
           transition={{
             duration: 2.5,
@@ -806,7 +806,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       </section>
 
       {/* Meet My Team Section */}
-      <section
+      {/* <section
         id="team"
         className="py-6 sm:py-8 md:py-12 relative overflow-hidden"
         onMouseEnter={() => trackUserBehavior.sectionView('team')}
@@ -821,10 +821,10 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             viewport={{ once: true }}
           >
             <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-4 sm:mb-6 leading-[1.1] tracking-tight">
-              Meet The Brains
+              Founder's Thoughts
             </h2>
             <p className="body-premium text-sm sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-2xl mx-auto leading-relaxed">
-              Global artisans and innovators crafting the future of luxury grooming
+              Insights, vision, and wisdom from our leadership team shaping the future of luxury grooming
             </p>
           </motion.div>
 
@@ -917,7 +917,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
 
 
         </div>
-      </section>
+      </section> */}
 
       {/* Partnership Section */}
       <section

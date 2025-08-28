@@ -21,6 +21,7 @@ export default function ExclusiveProductsMarquee() {
   const [exclusiveProducts, setExclusiveProducts] = useState<DisplayProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
 
   const fetchProducts = async () => {
@@ -94,6 +95,45 @@ export default function ExclusiveProductsMarquee() {
     }
   };
 
+  // Auto-scroll marquee effect (slow, seamless loop)
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    let rafId: number | null = null;
+    let lastTimestamp: number | null = null;
+    // pixels per second (tweak for speed)
+    const speedPxPerSecond = 200; // slightly faster marquee
+
+    const step = (timestamp: number) => {
+      if (!container) return;
+      if (lastTimestamp === null) lastTimestamp = timestamp;
+      const deltaMs = timestamp - lastTimestamp;
+      lastTimestamp = timestamp;
+
+      // Do not scroll when hovered or tab not visible
+      const isDocumentHidden = typeof document !== 'undefined' && document.hidden;
+      if (!isHovered && !isDocumentHidden) {
+        const deltaPx = (speedPxPerSecond * deltaMs) / 1000;
+        container.scrollLeft += deltaPx;
+
+        // Seamless loop when we've scrolled past half of the duplicated content
+        const maxScroll = container.scrollWidth / 2; // because we render items twice
+        if (container.scrollLeft >= maxScroll) {
+          container.scrollLeft -= maxScroll;
+        }
+      }
+
+      rafId = window.requestAnimationFrame(step);
+    };
+
+    rafId = window.requestAnimationFrame(step);
+
+    return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
+  }, [isHovered, marqueeProducts.length]);
+
   // Show loading state
   if (loading) {
     return (
@@ -161,27 +201,35 @@ export default function ExclusiveProductsMarquee() {
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch'
           }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onTouchStart={() => setIsHovered(true)}
+          onTouchEnd={() => setIsHovered(false)}
         >
           <div className="flex gap-8 min-w-max">
-            {marqueeProducts.filter(product => product.id).map((product, idx) => (
-              <div key={`${product.id}-${product.category}-${idx}`} className="min-w-[300px] max-w-xs flex-shrink-0">
-                <ProductCard 
-                  product={{
-                    id: product.id,
-                    name: product.title,
-                    description: product.description,
-                    price: product.price || 0,
-                    category: product.category,
-                    imageUrl: product.image,
-                    gallery: [],
-                    isSoldOut: !product.in_stock, // Use in_stock status for isSoldOut
-                    tags: [],
-                    createdAt: '',
-                    updatedAt: ''
-                  }}
-                  onViewDetails={() => router.push(`/products?id=${product.id}`)}
-                />
-              </div>
+            {[0, 1].map(repeatIndex => (
+              <React.Fragment key={`repeat-${repeatIndex}`}>
+                {marqueeProducts.filter(product => product.id).map((product, idx) => (
+                  <div key={`item-${repeatIndex}-${product.id}-${product.category}-${idx}`} className="min-w-[300px] max-w-xs flex-shrink-0">
+                    <ProductCard 
+                      product={{
+                        id: product.id,
+                        name: product.title,
+                        description: product.description,
+                        price: product.price || 0,
+                        category: product.category,
+                        imageUrl: product.image,
+                        gallery: [],
+                        isSoldOut: !product.in_stock,
+                        tags: [],
+                        createdAt: '',
+                        updatedAt: ''
+                      }}
+                      onViewDetails={() => router.push(`/products?id=${product.id}`)}
+                    />
+                  </div>
+                ))}
+              </React.Fragment>
             ))}
           </div>
         </div>

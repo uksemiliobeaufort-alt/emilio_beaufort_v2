@@ -18,7 +18,7 @@ const navItems = [
   { name: "Philosophy", href: "#philosophy" },
   { name: "The House", href: "#house" },
   { name: "Journal", href: "#journal" },
-  { name: "Meet The Brains", href: "#team" },
+      { name: "Founder's Thoughts", href: "#team" },
   { name: "Products", href: "/products" },
 ];
 
