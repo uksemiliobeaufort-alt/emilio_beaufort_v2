@@ -1,6 +1,6 @@
 'use client';
 
-import { Leaf, Globe, Shield, BadgePercent, Award } from 'lucide-react';
+import { Leaf, Globe, Shield, BadgePercent, Award, CheckCircle } from 'lucide-react';
 
 const cards = [
   {
@@ -16,6 +16,35 @@ const cards = [
     title: 'Zero Processing Policy',
     icon: <Leaf className="w-7 h-7 text-black" />,
     text: 'No mixing, no chemical treatment',
+  },
+  {
+    title: 'ISO Certified',
+    icon: <CheckCircle className="w-7 h-7 text-black" />,
+    text: 'International quality standards compliance',
+  },
+  {
+    title: 'Cruelty Free',
+    icon: (
+      <svg className="w-10 h-10 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {/* Heart shape as base */}
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        {/* Bunny silhouette inside heart */}
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M10 12c0-1 0.5-1.5 1.5-1.5S13 11 13 12"/>
+        {/* Bunny ears */}
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M11 10l0.5-1 0.5 1"/>
+        {/* Bunny face */}
+        <circle cx="12" cy="13" r="0.8" strokeWidth="1.2"/>
+        {/* Bunny eyes */}
+        <circle cx="11.5" cy="12.5" r="0.2" fill="currentColor"/>
+        <circle cx="12.5" cy="12.5" r="0.2" fill="currentColor"/>
+        {/* Small paw print */}
+        <circle cx="16" cy="16" r="0.3" fill="currentColor"/>
+        <circle cx="15.5" cy="17" r="0.3" fill="currentColor"/>
+        <circle cx="16.5" cy="17" r="0.3" fill="currentColor"/>
+        <circle cx="16" cy="18" r="0.3" fill="currentColor"/>
+      </svg>
+    ),
+    text: 'Ethical sourcing with no animal testing',
   },
   {
     title: 'Global and Domestic Shipping',
@@ -66,14 +95,14 @@ export default function WhyChooseSection() {
           </p>
         </div>
 
-        {/* Grid layout for 7 cards - 2 columns with last card centered */}
+        {/* Grid layout for 8 cards - 2 columns with last card centered */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {cards.slice(0, 6).map((card, idx) => (
+          {cards.slice(0, 8).map((card, idx) => (
             <div key={card.title} className="bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] p-[2px] rounded-2xl">
               <div
                 className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:shadow-[0_8px_32px_0_rgba(183,161,108,0.25),0_1.5px_8px_0_rgba(0,0,0,0.10)] hover:scale-105 hover:-translate-y-1"
               >
-                {/* Badge for the third card */}
+                {/* Badge for the fifth card */}
                 {card.badge && (
                   <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#B7A16C] text-xs font-semibold text-black px-4 py-1 rounded-full shadow z-10">
                     {card.badge}
@@ -89,17 +118,17 @@ export default function WhyChooseSection() {
           ))}
         </div>
 
-        {/* 7th card centered */}
+        {/* 9th card centered */}
         <div className="flex justify-center mt-8">
           <div className="bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] p-[2px] rounded-2xl w-full md:w-1/2">
             <div
               className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:shadow-[0_8px_32px_0_rgba(183,161,108,0.25),0_1.5px_8px_0_rgba(0,0,0,0.10)] hover:scale-105 hover:-translate-y-1 w-full"
             >
               <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-4 shadow">
-                {cards[6].icon}
+                {cards[8].icon}
               </div>
-              <span className="font-extrabold text-xl text-black mb-2">{cards[6].title}</span>
-              <span className="text-gray-700">{cards[6].text}</span>
+              <span className="font-extrabold text-xl text-black mb-2">{cards[8].title}</span>
+              <span className="text-gray-700">{cards[8].text}</span>
             </div>
           </div>
         </div>
