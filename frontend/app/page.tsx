@@ -386,7 +386,7 @@ const secondRow = founders.slice(3, 6); // Next 3 founders (Sreedeep, Uttam, Rah
 const thirdRow = founders.slice(6, 7); // Last founder (Pratibha)
 const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
   return (
-    <div className="min-h-screen bg-premium">
+    <div className="min-h-screen bg-premium overflow-x-hidden">
       <AnimatedBackground />
       {/* <Navbar /> */}
 
@@ -399,21 +399,29 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
 
 
       {/* Hero Section */}
-      <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-premium">
-        {/* Fallback background in case video fails to load */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#B7A16C] to-[#9a8a5a] z-0" />
+      <section id="hero" className="relative min-h-screen h-screen flex items-center justify-center overflow-hidden bg-premium">
+        {/* Fallback background in case image fails to load */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50 z-0" />
         
-        {/* Video background */}
-        <video
-          className="absolute inset-0 w-full h-full object-cover z-0"
-          src="https://mzvuuvtckcimzemivltz.supabase.co/storage/v1/object/public/product-images/heroVideo.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
+        {/* Image background */}
+        <img
+          className="absolute inset-0 w-screen h-screen object-cover object-center md:object-[center_30%] lg:object-center z-0"
+          src={getImageUrl('product-images', 'EB BG 1.png')}
+          alt="Hero Background"
+          sizes="100vw"
+          loading="eager"
+          fetchPriority="high"
         />
-        {/* Optional overlay for readability */}
-        <div className="absolute inset-0 bg-black/30 z-10" />
+        
+        {/* Soft Vignette for depth */}
+        <div
+          className="pointer-events-none absolute inset-0 z-10"
+          style={{
+            background:
+              'radial-gradient(120% 80% at 50% 20%, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.10) 35%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.02) 70%, rgba(0,0,0,0) 85%)'
+          }}
+        />
+        
         {/* Content */}
         <motion.div
           className="relative z-20 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
@@ -421,25 +429,33 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
         >
+          {/* Breathing spotlight behind title */}
+          <motion.div
+            className="absolute -top-10 left-1/2 -translate-x-1/2 w-[70vw] max-w-4xl h-[40vh] rounded-full blur-3xl"
+            style={{
+              background:
+                'radial-gradient(closest-side, rgba(255,255,255,0.35), rgba(255,255,255,0.18), rgba(255,255,255,0))'
+            }}
+            initial={{ opacity: 0.35, scale: 0.95 }}
+            animate={{ opacity: [0.3, 0.4, 0.3], scale: [0.95, 1.02, 0.95] }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          />
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.3 }}
             className="mb-6 w-full"
           >
-            <h1 className="text-7xl md:text-9xl font-serif font-bold text-white mb-2 leading-tight tracking-tight text-center w-full">
+            <h1 className="text-7xl md:text-9xl font-serif font-bold mb-2 leading-tight tracking-tight text-center w-full bg-gradient-to-b from-neutral-900 via-neutral-800 to-neutral-900 bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
               Emilio Beaufort
             </h1>
           </motion.div>
           <motion.p
-            className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-center mx-auto text-white relative z-40"
+            className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-center mx-auto text-neutral-900 relative z-40"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6 }}
-            style={{
-              textShadow: '0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.2)',
-              filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6))'
-            }}
+            
           >
             Discover the beauty of ethical temple hair and luxury hair extensions—crafted for confidence, trusted by a global community. Your transformation starts here.
           </motion.p>
@@ -449,20 +465,29 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             transition={{ duration: 1, delay: 0.9 }}
             className="w-full flex justify-center relative z-40"
           >
+            {/* Glass CTA container */}
+            <div className="relative rounded-full bg-white/10 border border-white/25 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
             <Button
               size="lg"
-              className="text-lg px-12 py-6 text-base font-sans-medium transition-all duration-300 bg-black/80 text-white hover:bg-white hover:text-black border border-white backdrop-blur-sm hover:backdrop-blur-md hover:shadow-2xl hover:shadow-white/20 relative z-50"
+                className="text-lg px-12 py-6 text-base font-sans-medium transition-all duration-300 bg-black/70 text-white hover:bg-white hover:text-black border border-white/40 hover:shadow-2xl hover:shadow-white/20"
               onClick={() => {
                 document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' });
                 trackEngagement.buttonClick('Discover Our Philosophy', 'hero-section');
               }}
               style={{
-                textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
-                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)'
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)'
               }}
             >
               Discover Our Philosophy
             </Button>
+              {/* gold underline accent */}
+              <motion.span
+                className="absolute left-1/2 -bottom-1 h-0.5 w-0 bg-gradient-to-r from-[#8B4513] via-[#A0522D] to-[#D4AF37]"
+                initial={{ x: '-50%' }}
+                whileHover={{ width: '90%' }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+              />
+            </div>
           </motion.div>
         </motion.div>
       </section>
