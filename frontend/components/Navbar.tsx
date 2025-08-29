@@ -147,7 +147,7 @@ useEffect(() => {
       className={`fixed top-0 left-0 right-0 z-50 transition-premium ${
         isScrolled
           ? "bg-white/95 backdrop-blur-md border-b border-premium shadow-premium"
-          : "bg-transparent"
+          : "bg-gradient-to-b from-black/60 via-black/40 to-black/20 backdrop-blur-md border-b border-white/10"
       }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -159,7 +159,7 @@ useEffect(() => {
           <motion.div
             className={`heading-premium text-lg xs:text-xl sm:text-2xl lg:text-3xl cursor-pointer transition-colors duration-300 flex-shrink-0 ${
               (isHomePage && !isScrolled) || isAuthPage
-                ? "text-white"
+                ? "text-white drop-shadow-sm"
                 : "text-premium"
             }`}
             onClick={handleLogoClick}
@@ -180,7 +180,7 @@ useEffect(() => {
                 key={item.name}
                 className={`font-sans-medium text-xs xs:text-sm sm:text-sm md:text-base lg:text-lg transition-premium relative group whitespace-nowrap ${
                   (isHomePage && !isScrolled) || isAuthPage
-                    ? "text-white hover:text-gold"
+                    ? "text-white hover:text-gold drop-shadow-sm"
                     : "text-premium hover:text-gold"
                 }`}
                 onClick={() => handleNavigation(item.href)}
@@ -264,7 +264,7 @@ useEffect(() => {
                     <UserCircle
                       className={`w-5 h-5 xs:w-6 xs:h-6 ${
                         (isHomePage && !isScrolled) || isAuthPage
-                          ? "text-white hover:text-gray-200"
+                          ? "text-white hover:text-gray-200 drop-shadow-sm"
                           : "text-premium hover:text-gold"
                       }`}
                     />
@@ -280,7 +280,7 @@ useEffect(() => {
                   <button
                     className={`transition-premium p-1 ${
                       (isHomePage && !isScrolled) || isAuthPage
-                        ? "text-white hover:text-gold"
+                        ? "text-white hover:text-gold drop-shadow-sm"
                         : "text-premium hover:text-gold"
                     }`}
                   >

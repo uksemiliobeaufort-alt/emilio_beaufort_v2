@@ -402,15 +402,19 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
         {/* Fallback background in case video fails to load */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#B7A16C] to-[#9a8a5a] z-0" />
         
-        {/* Video background */}
-        <video
-          className="absolute inset-0 w-full h-full object-cover z-0"
-          src="https://mzvuuvtckcimzemivltz.supabase.co/storage/v1/object/public/product-images/heroVideo.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
+        {/* Image background (replacing video) */}
+        <img
+          className="absolute inset-0 w-full h-full object-cover object-center md:object-[center_30%] lg:object-center z-0"
+          src={getImageUrl('product-images', 'EB BG 1.png')}
+          alt="Hero Background"
+          sizes="100vw"
+          loading="eager"
+          fetchPriority="high"
         />
+        
+        {/* Navbar Background Overlay - Reduced opacity since navbar has its own background */}
+        <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/20 via-black/10 to-transparent z-10"></div>
+        
         {/* Optional overlay for readability */}
         <div className="absolute inset-0 bg-black/30 z-10" />
         {/* Content */}
@@ -426,19 +430,16 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             transition={{ duration: 1, delay: 0.3 }}
             className="mb-6 w-full"
           >
-            <h1 className="text-7xl md:text-9xl font-serif font-bold text-white mb-2 leading-tight tracking-tight text-center w-full">
+            <h1 className="text-7xl md:text-9xl font-serif font-bold mb-2 leading-tight tracking-tight text-center w-full bg-gradient-to-b from-neutral-900 via-neutral-800 to-neutral-900 bg-clip-text text-transparent drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]">
               Emilio Beaufort
             </h1>
           </motion.div>
           <motion.p
-            className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-center mx-auto text-white relative z-40"
+            className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-center mx-auto text-neutral-900 relative z-40"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6 }}
-            style={{
-              textShadow: '0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.2)',
-              filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6))'
-            }}
+            
           >
             Discover the beauty of ethical temple hair and luxury hair extensions—crafted for confidence, trusted by a global community. Your transformation starts here.
           </motion.p>
