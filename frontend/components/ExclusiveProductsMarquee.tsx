@@ -103,7 +103,7 @@ export default function ExclusiveProductsMarquee() {
     let rafId: number | null = null;
     let lastTimestamp: number | null = null;
     // pixels per second (tweak for speed)
-    const speedPxPerSecond = 200; // slightly faster marquee
+    const speedPxPerSecond = 350; // slightly faster marquee
 
     const step = (timestamp: number) => {
       if (!container) return;
