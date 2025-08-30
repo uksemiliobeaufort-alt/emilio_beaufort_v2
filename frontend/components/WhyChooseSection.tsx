@@ -82,7 +82,7 @@ const cards = [
 
 export default function WhyChooseSection() {
   return (
-    <section id="why-choose" className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-hidden section-premium">
+    <section id="why-choose" className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium">
       <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#f8f8f8]"></div>
       <div className="absolute inset-0 bg-pattern-dots opacity-[0.07]"></div>
       <div className="container-premium relative z-10">

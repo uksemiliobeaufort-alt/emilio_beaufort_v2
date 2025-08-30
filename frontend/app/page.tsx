@@ -495,7 +495,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       {/* Philosophy Section */}
       <section
         id="philosophy"
-        className="py-16 sm:py-20 md:py-24 lg:py-32 relative overflow-hidden section-premium min-h-screen"
+        className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium min-h-screen"
         onMouseEnter={() => trackUserBehavior.sectionView('philosophy')}
       >
         {/* Interactive Background */}
@@ -590,7 +590,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-center mb-16 sm:mb-20"
           >
             {/* Elegant Decorative Line */}
             <div className="absolute left-1/2 transform -translate-x-1/2 -top-8 w-32 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
@@ -788,7 +788,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       {/* The House Section */}
       <section
         id="house"
-        className="py-8 sm:py-10 md:py-12 lg:py-16 relative overflow-hidden section-premium"
+        className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium"
         onMouseEnter={() => trackUserBehavior.sectionView('house')}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-[#f8f8f8] via-white to-[#f5f5f5]"></div>
@@ -799,7 +799,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-center mb-16 sm:mb-20"
           >
             <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
               The House
@@ -814,7 +814,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       </section>
 
       {/* Journal Section */}
-      <section id="journal" className="py-8 sm:py-10 md:py-16 lg:py-20 relative overflow-hidden section-premium">
+      <section id="journal" className="py-12 sm:py-16 md:py-20 lg:py-24 relative overflow-hidden section-premium">
         <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#fafafa]"></div>
         <div className="absolute inset-0 bg-pattern-diagonal opacity-[0.1] rotate-180"></div>
         <div className="container-premium relative z-10">
@@ -840,20 +840,20 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
        {/*Meet My Team Section */}
        <section
         id="team"
-        className="py-4 sm:py-6 md:py-8 lg:py-12 relative overflow-visible"
+        className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-visible"
         onMouseEnter={() => trackUserBehavior.sectionView('team')}
       >
         <div className="absolute inset-0 bg-white z-0"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 overflow-visible pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 overflow-visible pt-6 sm:pt-8">
 
           <motion.div
-            className="text-center mb-8 sm:mb-12"
+            className="text-center mb-16 sm:mb-20"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-4 sm:mb-6 leading-[1.1] tracking-tight">
+            <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.2] tracking-tight">
               Our People
             </h2>
             <p className="body-premium text-sm sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-2xl mx-auto leading-relaxed">
@@ -862,7 +862,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
           </motion.div>
 
           <motion.div
-            className="mb-12 sm:mb-20 overflow-visible"
+            className="mb-4 sm:mb-6 overflow-visible"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -871,9 +871,9 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             <div
     className="relative w-full px-4 sm:px-6 overflow-visible"
     style={{
-          minHeight: "750px",   
-      paddingTop: "60px",   
-      paddingBottom: "40px" 
+          minHeight: "250px",   
+      paddingTop: "5px",   
+      paddingBottom: "5px" 
     }}
   >
 
@@ -981,7 +981,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       {/* Partnership Section */}
       <section
         id="partnership"
-        className="py-16 sm:py-20 md:py-24 relative overflow-hidden"
+        className="py-6 sm:py-8 md:py-12 lg:py-16 relative overflow-hidden"
         onMouseEnter={() => trackUserBehavior.sectionView('partnership')}
       >
         <div className="absolute inset-0 bg-white"></div>
@@ -1009,7 +1009,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center mb-8 sm:mb-12 md:mb-16"
+            className="text-center mb-2 sm:mb-4 md:mb-6"
           >
             <Button
               size="lg"
@@ -1026,7 +1026,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       </section>
 
       {/* Partners Section (marquee) */}
-      <section id="partners" className="py-16 sm:py-20 md:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 bg-white">
+      <section id="partners" className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">Our Partners</h2>
           <p className="text-sm sm:text-sm md:text-base lg:text-lg text-gray-600">We proudly collaborate with these distinguished brands.</p>
@@ -1035,7 +1035,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       </section>
 
       {/* Inspirational Quote Above Footer */}
-      <div className="relative w-full flex flex-col items-center justify-center py-8 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 overflow-hidden" style={{ background: 'linear-gradient(90deg, #f5e9c6 0%, #fffbe6 40%, #fffbe6 60%, #f5e9c6 100%)' }}>
+      <div className="relative w-full flex flex-col items-center justify-center py-6 sm:py-8 md:py-12 px-4 sm:px-6 md:px-8 overflow-hidden" style={{ background: 'linear-gradient(90deg, #f5e9c6 0%, #fffbe6 40%, #fffbe6 60%, #f5e9c6 100%)' }}>
         <span className="relative z-10 text-center font-serif italic text-base sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-[#4b2e1e] leading-relaxed px-4 sm:px-6 md:px-8 max-w-6xl mx-auto lg:whitespace-nowrap flex justify-center items-center" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', textShadow: '0 2px 8px rgba(212,175,55,0.08)' }}>
           ~ We built trust when others chased profits. Now the world wants what we've perfected.
         </span>

@@ -137,7 +137,7 @@ export default function ExclusiveProductsMarquee() {
   // Show loading state
   if (loading) {
     return (
-      <div className="w-full py-16 overflow-hidden relative bg-white">
+      <div className="w-full py-12 sm:py-16 md:py-20 lg:py-24 overflow-hidden relative bg-white">
         <h2 className="text-4xl font-serif font-bold text-premium mb-10 text-center">
           Most Exclusive Collection
         </h2>
@@ -151,7 +151,7 @@ export default function ExclusiveProductsMarquee() {
   // If there are no featured products, show a message or nothing
   if (!loading && exclusiveProducts.length === 0) {
     return (
-      <div className="w-full py-16 overflow-hidden relative bg-white">
+      <div className="w-full py-12 sm:py-16 md:py-20 lg:py-24 overflow-hidden relative bg-white">
         <h2 className="text-4xl font-serif font-bold text-premium mb-10 text-center">
           Most Exclusive Collection
         </h2>
@@ -163,7 +163,7 @@ export default function ExclusiveProductsMarquee() {
   }
 
   return (
-    <div className="w-full py-16 overflow-hidden relative bg-white">
+    <div className="w-full py-12 sm:py-16 md:py-20 lg:py-24 overflow-hidden relative bg-white">
       <div className="flex items-center justify-center gap-3 mb-10">
         <h2 className="text-4xl font-serif font-bold text-premium text-center">
           Most Exclusive Collection

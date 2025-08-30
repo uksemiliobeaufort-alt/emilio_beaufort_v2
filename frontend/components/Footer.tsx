@@ -1,6 +1,6 @@
 "use client";
 
-import { Instagram, Twitter, Facebook, Linkedin, ArrowUp } from "lucide-react";
+import { Instagram, Twitter, Facebook, Linkedin, ArrowUp, ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -12,6 +12,7 @@ export function Footer() {
   const router = useRouter();
   const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [isQuickLinksOpen, setIsQuickLinksOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,7 +40,14 @@ export function Footer() {
               </p>
              
               <div>
-  <a href="/locations" className="body-premium text-gray-300 leading-relaxed mb-6 text-sm sm:text-base">Explore Our Locations</a>
+  <a href="/locations" className="inline-flex items-center justify-center px-3 py-1.5 bg-gradient-to-r from-gray-700 to-gray-800 border border-gray-500 text-white font-semibold rounded-md hover:from-gray-600 hover:to-gray-700 hover:border-gray-400 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-gray-500/20 hover:shadow-xl hover:shadow-gray-500/30 mb-6 text-xs sm:text-sm relative overflow-hidden group">
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-400/30 to-transparent opacity-30 group-hover:opacity-100 transition-opacity duration-300 transform -skew-x-12 -translate-x-full group-hover:translate-x-full"></div>
+    <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+    Explore Our Locations
+  </a>
   </div>
             </div>
 
@@ -49,46 +57,109 @@ export function Footer() {
 
             
 
-            {/* Quick Links */}
-            <div className="text-center sm:text-center lg:text-center">
-              <h4 className="font-sans-semibold text-white mb-4 sm:mb-8 text-base sm:text-lg">Quick Links</h4>
-                             <nav className="flex flex-col space-y-1 sm:space-y-2 items-center">
-                {[
-                  { name: 'Philosophy', href: '#philosophy', isExternal: false },
-                  { name: 'The House', href: '#house', isExternal: false },
-                  { name: 'Journal', href: '#journal', isExternal: false },
-                  { name: 'Track Order', href: '/track-order', isExternal: true },
-                  { name: 'Give Feedback', href: '#feedback', isExternal: false, isFeedback: true },
-                  { name: 'Admin Login', href: '/admin/login', isExternal: true }
-                ].map((link: any) => (
-                  <div key={link.name} className="flex justify-center">
-                    {link.isExternal ? (
-                      <Link
-                        href={link.href}
-                        className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-1 sm:py-2 px-0 min-h-[44px] flex items-center footer-link-underline"
-                      >
-                        {link.name}
-                      </Link>
-                    ) : link.isFeedback ? (
-                      <button
-                        onClick={() => setIsFeedbackFormOpen(true)}
-                        className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-1 sm:py-2 px-0 min-h-[44px] flex items-center footer-link-underline"
-                      >
-                        {link.name}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' })}
-                        className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-1 sm:py-2 px-0 min-h-[44px] flex items-center footer-link-underline"
-                      >
-                        {link.name}
-                      </button>
-                    )}
+            {/* Quick Links - Dropdown on mobile */}
+            <div className="text-center">
+              {/* Mobile Dropdown Header */}
+              <div className="sm:hidden">
+                                 <button
+                   onClick={() => setIsQuickLinksOpen(!isQuickLinksOpen)}
+                   className="flex items-center justify-center w-full py-3 px-4 text-white transition-all duration-300"
+                 >
+                  <h4 className="font-sans-semibold text-white text-base">Quick Links</h4>
+                  {isQuickLinksOpen ? (
+                    <ChevronUp className="ml-2 h-5 w-5 text-gray-300" />
+                  ) : (
+                    <ChevronDown className="ml-2 h-5 w-5 text-gray-300" />
+                  )}
+                </button>
+                
+                {/* Mobile Dropdown Content */}
+                {isQuickLinksOpen && (
+                  <div className="mt-3 bg-gray-700/30 rounded-lg p-4 animate-in slide-in-from-top-2 duration-300">
+                    <nav className="flex flex-col space-y-3">
+                      {[
+                        { name: 'Philosophy', href: '#philosophy', isExternal: false },
+                        { name: 'The House', href: '#house', isExternal: false },
+                        { name: 'Journal', href: '#journal', isExternal: false },
+                        { name: 'Track Order', href: '/track-order', isExternal: true },
+                        { name: 'Give Feedback', href: '#feedback', isExternal: false, isFeedback: true },
+                        { name: 'Admin Login', href: '/admin/login', isExternal: true }
+                      ].map((link: any) => (
+                        <div key={link.name} className="flex justify-center">
+                          {link.isExternal ? (
+                                                         <Link
+                               href={link.href}
+                               className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm py-2 px-3 min-h-[44px] flex items-center justify-center w-full"
+                             >
+                               {link.name}
+                             </Link>
+                          ) : link.isFeedback ? (
+                                                         <button
+                               onClick={() => {
+                                 setIsFeedbackFormOpen(true);
+                                 setIsQuickLinksOpen(false);
+                               }}
+                               className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm py-2 px-3 min-h-[44px] flex items-center justify-center w-full"
+                             >
+                               {link.name}
+                             </button>
+                          ) : (
+                                                         <button
+                               onClick={() => {
+                                 document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' });
+                                 setIsQuickLinksOpen(false);
+                               }}
+                               className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm py-2 px-3 min-h-[44px] flex items-center justify-center w-full"
+                             >
+                               {link.name}
+                             </button>
+                          )}
+                        </div>
+                      ))}
+                    </nav>
                   </div>
-                ))}
-              </nav>
-              {/* Divider for mobile only */}
-              <div className="block sm:hidden border-t border-gray-700 my-8"></div>
+                )}
+              </div>
+
+              {/* Desktop/Tablet Regular Layout */}
+              <div className="hidden sm:block">
+                <h4 className="font-sans-semibold text-white mb-4 sm:mb-8 text-base sm:text-lg">Quick Links</h4>
+                <nav className="flex flex-col space-y-1 sm:space-y-2 items-center">
+                  {[
+                    { name: 'Philosophy', href: '#philosophy', isExternal: false },
+                    { name: 'The House', href: '#house', isExternal: false },
+                    { name: 'Journal', href: '#journal', isExternal: false },
+                    { name: 'Track Order', href: '/track-order', isExternal: true },
+                    { name: 'Give Feedback', href: '#feedback', isExternal: false, isFeedback: true },
+                    { name: 'Admin Login', href: '/admin/login', isExternal: true }
+                  ].map((link: any) => (
+                    <div key={link.name} className="flex justify-center">
+                      {link.isExternal ? (
+                        <Link
+                          href={link.href}
+                          className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-1 sm:py-2 px-0 min-h-[44px] flex items-center footer-link-underline"
+                        >
+                          {link.name}
+                        </Link>
+                      ) : link.isFeedback ? (
+                        <button
+                          onClick={() => setIsFeedbackFormOpen(true)}
+                          className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-1 sm:py-2 px-0 min-h-[44px] flex items-center footer-link-underline"
+                        >
+                          {link.name}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' })}
+                          className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-1 sm:py-2 px-0 min-h-[44px] flex items-center footer-link-underline"
+                        >
+                          {link.name}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </nav>
+              </div>
             </div>
 
             {/* Contact */}
@@ -136,16 +207,6 @@ export function Footer() {
                       className="hover:text-gold transition-premium footer-link-underline"
                     >
                       hello@emiliobeaufort.com
-                    </a>
-                  </div>
-
-                   <div>
-                    <span className="font-sans-medium">Website: </span>
-                    <a 
-                      href="https://www.emiliobeaufort.com/" 
-                      className="hover:text-gold transition-premium footer-link-underline"
-                    >
-                      Visit here
                     </a>
                   </div>
                 </div>
