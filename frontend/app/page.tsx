@@ -32,11 +32,11 @@ const HeroSection = () => {
   return (
     <section className="relative w-full h-screen overflow-hidden">
       {/* Split Background */}
-      <div className="absolute inset-0 grid grid-cols-1 md:grid-cols-2 w-full h-full">
+      <div className="absolute inset-0 grid grid-cols-2 w-full h-full max-w-screen-2xl mx-auto">
         
         {/* LEFT SIDE - IMAGE */}
         <div
-          className="relative"
+          className="relative w-full h-full overflow-hidden"
           onMouseEnter={() => setHoveredSide("left")}
           onMouseLeave={() => setHoveredSide(null)}
         >
@@ -44,6 +44,11 @@ const HeroSection = () => {
             src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-1.jpg?alt=media&token=e5673b33-c529-4c1a-9b4f-c91141cc9ee7"
             alt="Luxury Remy Hair"
             className="w-full h-full object-cover"
+            style={{
+              objectPosition: 'center center',
+              width: '100%',
+              height: '100%'
+            }}
           />
 
           {/* Base overlay (lighter) */}
@@ -57,16 +62,21 @@ const HeroSection = () => {
           />
         </div>
 
-        {/* RIGHT SIDE - VIDEO */}
+        {/* RIGHT SIDE - IMAGE */}
         <div
-          className="relative"
+          className="relative w-full h-full overflow-hidden"
           onMouseEnter={() => setHoveredSide("right")}
           onMouseLeave={() => setHoveredSide(null)}
         >
           <img
             src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-2.jpg?alt=media&token=03e4c9ac-9b08-452a-861c-98e9365afd3c"
             alt="Luxury Remy Hair"
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
+            style={{
+              objectPosition: 'center center',
+              width: '100%',
+              height: '100%'
+            }}
           />
           <div className="absolute inset-0 bg-black/30" />
           <div className={`absolute inset-0 bg-black transition-opacity duration-700 ${

@@ -217,7 +217,7 @@ export function Footer() {
           {/* Bottom Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-center border-t border-gray-700 pt-4 sm:pt-8 mt-4 sm:mt-8 gap-4 sm:gap-0">
             <p className="body-premium text-gray-400 text-sm text-center sm:text-left">
-              © {currentYear} Emilio Beaufort. All rights reserved.
+              © {currentYear} Emilio Beaufort.Pvt.Ltd. All rights reserved.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-sm">
               <Link href="/privacy-policy" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta py-2 sm:py-0 footer-link-underline">
