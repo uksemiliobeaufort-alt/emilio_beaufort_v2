@@ -28,33 +28,30 @@ import Marquee from "react-fast-marquee";
 // Hero Section Component
 const HeroSection = () => {
   const [hoveredSide, setHoveredSide] = useState<"left" | "right" | null>(null);
+  const rightImageSources = [
+    "https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-2.jpg?alt=media&token=992ef7c7-40ac-4608-abad-0d8a2bf4c666",
+    "https://firebasestorage.googleapis.com/v0/b/emilio-beaufort/o/herosection-image%2Fimage-2.jpg?alt=media&token=992ef7c7-40ac-4608-abad-0d8a2bf4c666"
+  ];
+  const [rightImageIndex, setRightImageIndex] = useState(0);
+  const [rightImageFailed, setRightImageFailed] = useState(false);
 
   return (
     <section className="relative w-full h-screen overflow-hidden">
       {/* Split Background */}
-      <div className="absolute inset-0 grid grid-cols-2 w-full h-full max-w-screen-2xl mx-auto">
+      <div className="absolute inset-0 flex flex-col md:flex-row w-full h-full max-w-screen-2xl mx-auto">
         
         {/* LEFT SIDE - IMAGE */}
         <div
-          className="relative w-full h-full overflow-hidden"
+          className="relative w-full md:flex-1 h-1/2 md:h-full overflow-hidden"
           onMouseEnter={() => setHoveredSide("left")}
           onMouseLeave={() => setHoveredSide(null)}
         >
           <img
             src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-1.jpg?alt=media&token=e5673b33-c529-4c1a-9b4f-c91141cc9ee7"
             alt="Luxury Remy Hair"
-            className="w-full h-full object-cover"
-            style={{
-              objectPosition: 'center center',
-              width: '100%',
-              height: '100%'
-            }}
+            className="w-full h-full object-cover object-center"
           />
-
-          {/* Base overlay (lighter) */}
           <div className="absolute inset-0 bg-black/30" />
-
-          {/* Extra overlay when opposite side is hovered */}
           <div
             className={`absolute inset-0 bg-black transition-opacity duration-700 ${
               hoveredSide === "right" ? "opacity-40" : "opacity-60"
@@ -64,24 +61,43 @@ const HeroSection = () => {
 
         {/* RIGHT SIDE - IMAGE */}
         <div
-          className="relative w-full h-full overflow-hidden"
+          className="relative w-full md:flex-1 h-1/2 md:h-full overflow-hidden"
           onMouseEnter={() => setHoveredSide("right")}
           onMouseLeave={() => setHoveredSide(null)}
         >
-          <img
-            src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-2.jpg?alt=media&token=03e4c9ac-9b08-452a-861c-98e9365afd3c"
-            alt="Luxury Remy Hair"
-            className="w-full h-full object-cover"
-            style={{
-              objectPosition: 'center center',
-              width: '100%',
-              height: '100%'
-            }}
-          />
+          {!rightImageFailed ? (
+            <img
+              src={rightImageSources[rightImageIndex]}
+              alt="Luxury Remy Hair"
+              className="w-full h-full object-cover object-center"
+              loading="eager"
+              decoding="async"
+              onLoad={() => {
+                // eslint-disable-next-line no-console
+                console.debug("Right hero image loaded:", rightImageSources[rightImageIndex]);
+              }}
+              onError={() => {
+                // eslint-disable-next-line no-console
+                console.warn("Right hero image failed:", rightImageSources[rightImageIndex]);
+                if (rightImageIndex < rightImageSources.length - 1) {
+                  setRightImageIndex(rightImageIndex + 1);
+                } else {
+                  setRightImageFailed(true);
+                }
+              }}
+              draggable={false}
+            />
+          ) : (
+            <div className="w-full h-full bg-rose-700 flex items-center justify-center text-white">
+              <span className="sr-only">Right hero image unavailable</span>
+            </div>
+          )}
           <div className="absolute inset-0 bg-black/30" />
-          <div className={`absolute inset-0 bg-black transition-opacity duration-700 ${
-            hoveredSide === "left" ? "opacity-40" : "opacity-0"
-          }`} />
+          <div
+            className={`absolute inset-0 bg-black transition-opacity duration-700 ${
+              hoveredSide === "left" ? "opacity-40" : "opacity-60"
+            }`}
+          />
         </div>
       </div>
 
@@ -106,7 +122,7 @@ const HeroSection = () => {
               </h1>
             </motion.div>
             <motion.p
-              className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-center mx-auto text-white relative z-40"
+              className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-justify mx-auto text-white relative z-40"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.6 }}
