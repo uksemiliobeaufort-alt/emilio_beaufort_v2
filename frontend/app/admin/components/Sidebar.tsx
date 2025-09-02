@@ -65,8 +65,11 @@ const sidebarItems = [
   },
   {
     name: 'Team Members',
-    href: '/admin/teamMembers',
-    icon: <Users className="h-4 w-4" />
+    icon: <Users className="h-4 w-4" />,
+    subItems: [
+      { name: 'Add New Team Member', href: '/admin/teamMembers' },
+      { name: 'View Team Members', href: '/admin/teamMembers/view' },
+    ]
   },
   {
     name: 'Admin Users',

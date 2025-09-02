@@ -6,6 +6,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 45s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 /* Custom breakpoint for extra small screens */
 @layer utilities {
   .xs\:text-xs { font-size: 0.75rem; line-height: 1rem; }
@@ -701,6 +727,21 @@
     border-radius: 8px;
     font-weight: 600;
     transition: all 0.3s ease;
+  }
+
+  .btn-primary-premium-bright {
+    background: linear-gradient(135deg, #DCC58E 0%, #E8D9B9 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary-premium-bright:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(220, 197, 142, 0.35);
   }
 
   [data-sonner-toaster] {

@@ -18,7 +18,7 @@ const navItems = [
   { name: "Philosophy", href: "#philosophy" },
   { name: "The House", href: "#house" },
   { name: "Journal", href: "#journal" },
-      { name: "Our People ", href: "#team" },
+      { name: "Founder's Thoughts", href: "#team" },
   { name: "Products", href: "/products" },
 ];
 
@@ -122,11 +122,9 @@ useEffect(() => {
   const handlePartnerClick = async () => {
     setIsOpen(false);
     if (isHomePage) {
-      // Trigger opening the partnership form via hash change
       if (window.location.hash !== '#partnership-form') {
         window.location.hash = '#partnership-form';
       } else {
-        // Force hashchange if already on the same hash
         window.dispatchEvent(new HashChangeEvent('hashchange'));
       }
     } else {
@@ -147,7 +145,7 @@ useEffect(() => {
       className={`fixed top-0 left-0 right-0 z-50 transition-premium ${
         isScrolled
           ? "bg-white/95 backdrop-blur-md border-b border-premium shadow-premium"
-          : "bg-gradient-to-b from-black/60 via-black/40 to-black/20 backdrop-blur-md border-b border-white/10"
+          : "bg-transparent"
       }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -159,7 +157,7 @@ useEffect(() => {
           <motion.div
             className={`heading-premium text-lg xs:text-xl sm:text-2xl lg:text-3xl cursor-pointer transition-colors duration-300 flex-shrink-0 ${
               (isHomePage && !isScrolled) || isAuthPage
-                ? "text-white drop-shadow-sm"
+                ? "text-white"
                 : "text-premium"
             }`}
             onClick={handleLogoClick}
@@ -169,10 +167,6 @@ useEffect(() => {
             Emilio Beaufort
           </motion.div>
 
-
-
-
-
           {/* Center Navigation - All Options Horizontally */}
           <div className="hidden xl:flex items-center space-x-2 xs:space-x-3 sm:space-x-4 md:space-x-6 lg:space-x-8 xl:space-x-10 2xl:space-x-12">
             {navItems.map((item, index) => (
@@ -180,7 +174,7 @@ useEffect(() => {
                 key={item.name}
                 className={`font-sans-medium text-xs xs:text-sm sm:text-sm md:text-base lg:text-lg transition-premium relative group whitespace-nowrap ${
                   (isHomePage && !isScrolled) || isAuthPage
-                    ? "text-white hover:text-gold drop-shadow-sm"
+                    ? "text-white hover:text-gold"
                     : "text-premium hover:text-gold"
                 }`}
                 onClick={() => handleNavigation(item.href)}
@@ -264,7 +258,7 @@ useEffect(() => {
                     <UserCircle
                       className={`w-5 h-5 xs:w-6 xs:h-6 ${
                         (isHomePage && !isScrolled) || isAuthPage
-                          ? "text-white hover:text-gray-200 drop-shadow-sm"
+                          ? "text-white hover:text-gray-200"
                           : "text-premium hover:text-gold"
                       }`}
                     />
@@ -280,7 +274,7 @@ useEffect(() => {
                   <button
                     className={`transition-premium p-1 ${
                       (isHomePage && !isScrolled) || isAuthPage
-                        ? "text-white hover:text-gold drop-shadow-sm"
+                        ? "text-white hover:text-gold"
                         : "text-premium hover:text-gold"
                     }`}
                   >

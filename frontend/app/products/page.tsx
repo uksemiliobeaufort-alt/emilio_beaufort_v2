@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { motion } from "framer-motion";
 import { getProducts, UnifiedProduct as SupabaseProduct } from "@/lib/supabase";
 import { Product } from "@/lib/api";
@@ -18,6 +18,7 @@ import { getHairExtensionsFromFirebase } from '@/lib/firebase';
 import { firestore } from '@/lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProductsPageState } from '@/components/ProductsPageState';
 
 // Mapping function to convert Supabase Product to API Product format
 const mapSupabaseProductToAPIProduct = (supabaseProduct: SupabaseProduct): Product => {
@@ -40,15 +41,19 @@ function ProductsPageContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<'COSMETICS' | 'HAIR'>('HAIR');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+
+  // Use the state management hook
+  const { state, updateState, clearState } = useProductsPageState();
+  const { currentPage, selectedCategory, search, searchInput, scrollPosition, selectedProductId, detailDialogOpen } = state;
+  
+  // Get selected product from products array based on saved ID
+  const selectedProduct = products.find(p => p.id === selectedProductId) || null;
+  
+  // Track if this is the initial load
+  const isInitialLoad = useRef(true);
 
   // New: Bag and Checkout modal state
   const [bagOpen, setBagOpen] = useState(false);
@@ -197,21 +202,34 @@ function ProductsPageContent() {
     return () => unsubscribe();
   }, [selectedCategory]);
 
-  // Handle URL query parameter for product detail
+  // Read the `id` param once per render and use as a stable dependency
+  const productIdParam = searchParams?.get('id') || null;
+
+  // Sync dialog open/close with URL query parameter `id`
   useEffect(() => {
-    const productId = searchParams?.get('id');
+    const productId = productIdParam;
+    // If there is an id in URL and products are ready, open dialog for that product
     if (productId && products.length > 0) {
       const product = products.find(p => p.id === productId);
       if (product) {
-        setSelectedProduct(product);
-        setDetailDialogOpen(true);
-        setSelectedCategory(product.category);
-        router.replace('/products', { scroll: false });
+        // Avoid redundant updates
+        if (selectedProductId !== product.id || !detailDialogOpen) {
+          updateState({
+            selectedProductId: product.id,
+            detailDialogOpen: true,
+            selectedCategory: product.category,
+          });
+        }
       }
     }
-    // Only run if params or products change
+    // If there is no id in URL but dialog is open, close it
+    if (!productId && detailDialogOpen) {
+      updateState({ detailDialogOpen: false, selectedProductId: null });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, products]);
+  }, [productIdParam, products, detailDialogOpen, selectedProductId, updateState]);
+
+  // No explicit popstate listener needed; `useSearchParams` effect above responds to history changes
 
   // Filter and paginate products
   const filteredProducts = products
@@ -232,8 +250,84 @@ function ProductsPageContent() {
 
   // Reset to first page when search or category changes
   useEffect(() => {
-    setCurrentPage(1);
-  }, [search, selectedCategory]);
+    updateState({ currentPage: 1 });
+  }, [search, selectedCategory, updateState]);
+
+  // Save scroll position when user scrolls (throttled)
+  useEffect(() => {
+    let ticking = false;
+    
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          updateState({ scrollPosition: window.scrollY });
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [updateState]);
+
+  // Restore scroll position on initial load (but not when product dialog is being restored)
+  useEffect(() => {
+    if (scrollPosition > 0 && typeof window !== 'undefined' && isInitialLoad.current && !selectedProductId) {
+      const timer = setTimeout(() => {
+        window.scrollTo({
+          top: scrollPosition,
+          behavior: 'smooth'
+        });
+        isInitialLoad.current = false;
+      }, 200);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [scrollPosition, selectedProductId]);
+
+  // Scroll to top when page changes (but not on initial load)
+  useEffect(() => {
+    if (!isInitialLoad.current && currentPage > 1) {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, [currentPage]);
+
+  // Mark initial load as complete after a delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      isInitialLoad.current = false;
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Restore product detail dialog when products load and we have a saved product ID
+  useEffect(() => {
+    if (selectedProductId && products.length > 0 && !selectedProduct) {
+      // Try to find the product in the current category
+      const product = products.find(p => p.id === selectedProductId);
+      if (product) {
+        // Product found, ensure dialog is open and scroll to top
+        updateState({ detailDialogOpen: true });
+        // Scroll to top when restoring product dialog
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'smooth'
+        });
+        // Mark initial load as complete since we're restoring a dialog
+        isInitialLoad.current = false;
+      } else {
+        // Product not found in current category, clear the saved state
+        updateState({ selectedProductId: null, detailDialogOpen: false });
+      }
+    }
+  }, [products, selectedProductId, selectedProduct, updateState]);
 
   if (loading) {
     return (
@@ -291,16 +385,16 @@ function ProductsPageContent() {
             className="flex justify-center"
             onSubmit={e => {
               e.preventDefault();
-              setSearch(searchInput);
+              updateState({ search: searchInput });
             }}
           >
             <input
               type="text"
               value={searchInput}
               onChange={e => {
-                setSearchInput(e.target.value);
+                updateState({ searchInput: e.target.value });
                 // Optionally, for real-time search, uncomment the next line:
-                // setSearch(e.target.value);
+                // updateState({ search: e.target.value });
               }}
               placeholder="Search products..."
               className="w-full max-w-2xl px-5 py-2 rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-premium text-lg shadow-sm"
@@ -312,6 +406,18 @@ function ProductsPageContent() {
               Search
             </button>
           </form>
+          {/* Reset button - only show if there's saved state */}
+          {(search || currentPage > 1 || selectedCategory !== 'HAIR') && (
+            <div className="mt-4">
+              <button
+                onClick={clearState}
+                className="text-sm text-gray-500 hover:text-gray-700 underline"
+                title="Reset to default view"
+              >
+                Reset to default
+              </button>
+            </div>
+          )}
         </motion.div>
 
         {/* Category Filter */}
@@ -324,7 +430,7 @@ function ProductsPageContent() {
               <RippleButton
                 key={category.value}
                 type="button"
-                onClick={() => setSelectedCategory(category.value as 'COSMETICS' | 'HAIR')}
+                onClick={() => updateState({ selectedCategory: category.value as 'COSMETICS' | 'HAIR' })}
                 className={
                   (selectedCategory === category.value
                     ? 'bg-black text-white shadow-lg scale-105 border-[#B7A16C]'
@@ -349,7 +455,13 @@ function ProductsPageContent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
               >
-                <ProductListItem product={product} onViewDetails={(p) => { setSelectedProduct(p); setDetailDialogOpen(true); }} />
+                <ProductListItem product={product} onViewDetails={(p) => { 
+                  // push ?id= to URL so Back button will close dialog instead of leaving page
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('id', p.id);
+                  window.history.pushState({}, '', url);
+                  updateState({ selectedProductId: p.id, detailDialogOpen: true }); 
+                }} />
               </motion.div>
             ))
           ) : (
@@ -401,8 +513,7 @@ function ProductsPageContent() {
               {search && (
                 <button
                   onClick={() => {
-                    setSearch('');
-                    setSearchInput('');
+                    updateState({ search: '', searchInput: '' });
                   }}
                   className="text-blue-600 hover:text-blue-800 hover:underline font-semibold"
                 >
@@ -422,7 +533,12 @@ function ProductsPageContent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
               >
-                <ProductCard product={product} onViewDetails={(p) => { setSelectedProduct(p); setDetailDialogOpen(true); }} />
+                <ProductCard product={product} onViewDetails={(p) => { 
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('id', p.id);
+                  window.history.pushState({}, '', url);
+                  updateState({ selectedProductId: p.id, detailDialogOpen: true }); 
+                }} />
               </motion.div>
             ))
           ) : (
@@ -474,8 +590,7 @@ function ProductsPageContent() {
               {search && (
                 <button
                   onClick={() => {
-                    setSearch('');
-                    setSearchInput('');
+                    updateState({ search: '', searchInput: '' });
                   }}
                   className="text-blue-600 hover:text-blue-800 hover:underline font-semibold"
                 >
@@ -495,7 +610,7 @@ function ProductsPageContent() {
             className="flex justify-center items-center gap-2 mt-12"
           >
             <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              onClick={() => updateState({ currentPage: Math.max(1, currentPage - 1) })}
               disabled={currentPage === 1}
               className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
@@ -510,7 +625,7 @@ function ProductsPageContent() {
                 return (
                   <button
                     key={pageNumber}
-                    onClick={() => setCurrentPage(pageNumber)}
+                    onClick={() => updateState({ currentPage: pageNumber })}
                     className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${isCurrentPage
                         ? 'bg-black text-white'
                         : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-700'
@@ -523,7 +638,7 @@ function ProductsPageContent() {
             </div>
 
             <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              onClick={() => updateState({ currentPage: Math.min(totalPages, currentPage + 1) })}
               disabled={currentPage === totalPages}
               className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
@@ -535,7 +650,21 @@ function ProductsPageContent() {
         <ProductDetailDialog
           product={selectedProduct}
           open={detailDialogOpen}
-          onOpenChange={setDetailDialogOpen}
+          onOpenChange={(open) => {
+            // Keep URL in sync with dialog
+            const url = new URL(window.location.href);
+            if (open && selectedProductId) {
+              url.searchParams.set('id', selectedProductId);
+              window.history.pushState({}, '', url);
+            } else {
+              url.searchParams.delete('id');
+              window.history.pushState({}, '', url);
+            }
+            updateState({ 
+              detailDialogOpen: open,
+              selectedProductId: open ? selectedProductId : null 
+            });
+          }}
           showAddToCartButton
         />
       </div>

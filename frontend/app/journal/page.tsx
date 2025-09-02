@@ -11,7 +11,7 @@ import { collection, getDocs, query } from 'firebase/firestore';
 import { useRouter } from "next/navigation";
 import { Share2, Copy, MessageCircle, Linkedin, Twitter, Facebook, Check, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import { BlogHeaderAd, BlogContentAd, BlogFooterAd } from "@/components/GoogleAdSense";
+ 
 
 interface BlogPost {
   id: string;
@@ -181,9 +181,9 @@ export default function JournalPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <section className="py-16 sm:py-20 md:py-24 bg-gradient-to-b from-[#f5f5f5] via-white to-[#fafafa]">
+      <section className="bg-gradient-to-b from-[#f5f5f5] via-white to-[#fafafa]">
         <div className="container-premium mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif font-black text-premium mb-6 leading-tight pb-2">
               Hair Extension Blog & Real Stories
             </h1>
@@ -192,11 +192,10 @@ export default function JournalPage() {
             </p>
           </div>
 
-          {/* Header Ad */}
-          <BlogHeaderAd />
+          
 
           {/* Responsive Journal Cards */}
-          <div className="mt-8">
+          <div className="mt-4">
             {posts.length > 0 ? (
               <>
                 {/* Mobile Carousel */}
@@ -475,11 +474,10 @@ export default function JournalPage() {
                   </motion.div>
                 </div>
 
-                {/* Content Ad after marquee */}
-                <BlogContentAd />
+                
               </>
             ) : (
-              <div className="text-center text-gray-600 mt-10">
+              <div className="text-center text-gray-600 mt-6">
                 No blog posts yet.
               </div>
             )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'next/navigation';
 // import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,143 @@ import { trackEngagement, trackUserBehavior } from '@/lib/analytics';
 import TeamMemberSocialLinks from '@/components/TeamMemberSocialLinks';
 import PartnersMarquee from "@/components/PartnersMarquee";
 import Chatbot from "@/components/Chatbot";
+import Marquee from "react-fast-marquee";
+
+// Hero Section Component
+const HeroSection = () => {
+  const [hoveredSide, setHoveredSide] = useState<"left" | "right" | null>(null);
+  const rightImageSources = [
+    "https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-2.jpg?alt=media&token=992ef7c7-40ac-4608-abad-0d8a2bf4c666",
+    "https://firebasestorage.googleapis.com/v0/b/emilio-beaufort/o/herosection-image%2Fimage-2.jpg?alt=media&token=992ef7c7-40ac-4608-abad-0d8a2bf4c666"
+  ];
+  const [rightImageIndex, setRightImageIndex] = useState(0);
+  const [rightImageFailed, setRightImageFailed] = useState(false);
+
+  return (
+    <section className="relative w-full h-screen overflow-hidden">
+      {/* Split Background */}
+      <div className="absolute inset-0 flex flex-col md:flex-row w-full h-full max-w-screen-2xl mx-auto">
+        
+        {/* LEFT SIDE - IMAGE */}
+        <div
+          className="relative w-full md:flex-1 h-1/2 md:h-full overflow-hidden"
+          onMouseEnter={() => setHoveredSide("left")}
+          onMouseLeave={() => setHoveredSide(null)}
+        >
+          <img
+            src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-1.jpg?alt=media&token=e5673b33-c529-4c1a-9b4f-c91141cc9ee7"
+            alt="Luxury Remy Hair"
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-black/30" />
+          <div
+            className={`absolute inset-0 bg-black transition-opacity duration-700 ${
+              hoveredSide === "right" ? "opacity-40" : "opacity-60"
+            }`}
+          />
+        </div>
+
+        {/* RIGHT SIDE - IMAGE */}
+        <div
+          className="relative w-full md:flex-1 h-1/2 md:h-full overflow-hidden"
+          onMouseEnter={() => setHoveredSide("right")}
+          onMouseLeave={() => setHoveredSide(null)}
+        >
+          {!rightImageFailed ? (
+            <img
+              src={rightImageSources[rightImageIndex]}
+              alt="Luxury Remy Hair"
+              className="w-full h-full object-cover object-center"
+              loading="eager"
+              decoding="async"
+              onLoad={() => {
+                // eslint-disable-next-line no-console
+                console.debug("Right hero image loaded:", rightImageSources[rightImageIndex]);
+              }}
+              onError={() => {
+                // eslint-disable-next-line no-console
+                console.warn("Right hero image failed:", rightImageSources[rightImageIndex]);
+                if (rightImageIndex < rightImageSources.length - 1) {
+                  setRightImageIndex(rightImageIndex + 1);
+                } else {
+                  setRightImageFailed(true);
+                }
+              }}
+              draggable={false}
+            />
+          ) : (
+            <div className="w-full h-full bg-rose-700 flex items-center justify-center text-white">
+              <span className="sr-only">Right hero image unavailable</span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/30" />
+          <div
+            className={`absolute inset-0 bg-black transition-opacity duration-700 ${
+              hoveredSide === "left" ? "opacity-40" : "opacity-60"
+            }`}
+          />
+        </div>
+      </div>
+
+      {/* Centered Content */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6 z-10">
+        
+        <div className="mt-12 flex flex-col sm:flex-row gap-6 animate-fade-in-up">
+          <motion.div
+            className="relative z-20 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.3 }}
+              className="mb-6 w-full"
+            >
+              <h1 className="text-7xl md:text-9xl font-serif font-bold text-white mb-2 leading-tight tracking-tight text-center w-full">
+                Emilio Beaufort
+              </h1>
+            </motion.div>
+            <motion.p
+              className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-justify mx-auto text-white relative z-40"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.6 }}
+              style={{
+                textShadow: '0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.2)',
+                filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6))'
+              }}
+            >
+              Discover the beauty of ethical temple hair and luxury hair extensions—crafted for confidence, trusted by a global community. Your transformation starts here.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.9 }}
+              className="w-full flex justify-center relative z-40"
+            >
+              <Button
+                size="lg"
+                className="text-lg px-12 py-6 text-base font-sans-medium transition-all duration-300 bg-black/80 text-white hover:bg-white hover:text-black border border-white backdrop-blur-sm hover:backdrop-blur-md hover:shadow-2xl hover:shadow-white/20 relative z-50"
+                onClick={() => {
+                  document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' });
+                  trackEngagement.buttonClick('Discover Our Philosophy', 'hero-section');
+                }}
+                style={{
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+                  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                Discover Our Philosophy
+              </Button>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+};
 // Auto Feedback Trigger Component
 function AutoFeedbackTrigger() {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
@@ -218,16 +356,56 @@ export default function Home() {
     setLoading(false);
   }, []);
 
-  // Handle initial hash navigation
+  // Handle hash navigation with accurate target and single smooth scroll
   useEffect(() => {
-    if (window.location.hash) {
-      const element = document.querySelector(window.location.hash);
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }, 500); // Wait for page load
+    const NAVBAR_HEIGHT = 64;
+
+    const findTeamTarget = (): HTMLElement | null => {
+      // Prefer first founder card if available
+      const card = document.querySelector('#team .founder-card') as HTMLElement | null;
+      if (card) return card;
+      // Fallback to section itself
+      return document.querySelector('#team') as HTMLElement | null;
+    };
+
+    const scrollToHash = (attempt = 0) => {
+      const { hash } = window.location;
+      if (!hash) return;
+
+      // Open partnership form directly
+      if (hash === '#partnership-form') {
+        setIsPartnershipFormOpen(true);
+        return;
       }
-    }
+
+      let target: HTMLElement | null = null;
+      if (hash === '#team') {
+        target = findTeamTarget();
+      } else {
+        target = document.querySelector(hash) as HTMLElement | null;
+      }
+
+      if (!target) {
+        // Try again a few times while content renders
+        if (attempt < 8) setTimeout(() => scrollToHash(attempt + 1), 150);
+        return;
+      }
+
+      const rect = target.getBoundingClientRect();
+      const absoluteTop = rect.top + window.pageYOffset - NAVBAR_HEIGHT - 12; // small padding
+      window.scrollTo({ top: Math.max(absoluteTop, 0), behavior: 'smooth' });
+    };
+
+    // Initial navigation after small delay to allow mount
+    const timer = setTimeout(() => scrollToHash(0), 300);
+
+    const onHashChange = () => scrollToHash(0);
+    window.addEventListener('hashchange', onHashChange);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('hashchange', onHashChange);
+    };
   }, []);
 
   // Handle scroll-to-top button visibility
@@ -283,12 +461,12 @@ export default function Home() {
       linkedin: "https://www.linkedin.com/company/emiliobeaufort/",
       twitter: "https://x.com/Emilio_Beaufort?t=0p7UVvP0DjaMiqT50ydDEg&s=09",
       instagram: "https://www.instagram.com/emiliobeaufort_official?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
-      imageName: "EM Avatar"
+      //imageName: "EM Avatar"
     },
     {
       name: "Aly Sayyad",
       role: "CoFounder & CSO",
-      description: "L&D| Training|Consulting|Banking|Startups",
+      description: "L&D| Training| Consulting| Banking| Startups",
       gradient: "from-purple-500 via-pink-500 to-rose-500",
       linkedin: "https://www.linkedin.com/in/aly-sayyad-40501a20/",
       twitter: "/",
@@ -312,34 +490,39 @@ export default function Home() {
       twitter: "/",
       instagram: "/"
     },
-    // {
-    //   name: "Dr. Bani Prasad Bhattacharjee",
-    //   role: "Legal Advisor",
-    //   description: "Oversees legal compliance and regulatory matters at Emilio Beaufort.",
-    //   gradient: "from-gray-600 via-slate-600 to-zinc-600",
-    //   linkedin: "/",
-    //   twitter: "/",
-    //   instagram: "/"
-    // },
+    
     // New founder card for Rahul Pandey
     {
       name: "Rahul Pandey",
       role: "Tech Lead and Project Coordinator",
-      description: "AI Automation Consultant | Technical Coordinator @ Emilio Beaufort | Co-Founder, Anteratic Solutions | Certified Web Developer",
+      description: "AI Automation Consultant | Technical Coordinator @ Emilio Beaufort  ",
       gradient: "from-cyan-500 via-blue-500 to-indigo-500",
       linkedin: "https://www.linkedin.com/in/rahulpandey187/",
       twitter: "https://x.com/rahulpandey187",
       instagram: "/",
       imageName: "Rahul Sir"
     },
-
+      {
+       name: "Pratibha Sharma",
+      role: "HR Lead",
+      description: "HR Lead @ Emilio Beaufort | Certifications in Talent Acquisition, HR Analytics ",
+     gradient: "from-gray-600 via-slate-600 to-zinc-600",
+     linkedin: "https://www.linkedin.com/in/pratibha-sharma-7771a6215//",
+    twitter: "/",
+     instagram: "https://www.instagram.com/aashii2509?igsh=MTg0NDNja3NqMnpmcw==/",
+     //imageName: "Pratibha Mam"
+    },
   ];
-  const firstRow = founders.slice(0, 3);
-  const secondRow = founders.slice(3, 6);
-  const thirdRow = founders.slice(6, 7); // Rahul Pandey
+  //const firstRow = founders.slice(0, 3);
+  //const secondRow = founders.slice(3, 6);
+  //const thirdRow = founders.slice(6, 7); // Rahul Pandey
 
+  const firstRow = founders.slice(0, 3); // First 3 founders
+const secondRow = founders.slice(3, 6); // Next 3 founders (Sreedeep, Uttam, Rahul)
+const thirdRow = founders.slice(6, 7); // Last founder (Pratibha)
+const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
   return (
-    <div className="min-h-screen bg-premium">
+    <div className="min-h-screen bg-premium overflow-x-hidden">
       <AnimatedBackground />
       {/* <Navbar /> */}
 
@@ -352,78 +535,12 @@ export default function Home() {
 
 
       {/* Hero Section */}
-      <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-premium">
-        {/* Fallback background in case video fails to load */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#B7A16C] to-[#9a8a5a] z-0" />
-        
-        {/* Video background */}
-        <video
-          className="absolute inset-0 w-full h-full object-cover z-0"
-          src="https://mzvuuvtckcimzemivltz.supabase.co/storage/v1/object/public/product-images/heroVideo.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-        />
-        {/* Optional overlay for readability */}
-        <div className="absolute inset-0 bg-black/30 z-10" />
-        {/* Content */}
-        <motion.div
-          className="relative z-20 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.3 }}
-            className="mb-6 w-full"
-          >
-            <h1 className="text-7xl md:text-9xl font-serif font-bold text-white mb-2 leading-tight tracking-tight text-center w-full">
-              Emilio Beaufort
-            </h1>
-          </motion.div>
-          <motion.p
-            className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-center mx-auto text-white relative z-40"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.6 }}
-            style={{
-              textShadow: '0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.2)',
-              filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6))'
-            }}
-          >
-            Discover the beauty of ethical temple hair and luxury hair extensions—crafted for confidence, trusted by a global community. Your transformation starts here.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.9 }}
-            className="w-full flex justify-center relative z-40"
-          >
-            <Button
-              size="lg"
-              className="text-lg px-12 py-6 text-base font-sans-medium transition-all duration-300 bg-black/80 text-white hover:bg-white hover:text-black border border-white backdrop-blur-sm hover:backdrop-blur-md hover:shadow-2xl hover:shadow-white/20 relative z-50"
-              onClick={() => {
-                document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' });
-                trackEngagement.buttonClick('Discover Our Philosophy', 'hero-section');
-              }}
-              style={{
-                textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
-                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)'
-              }}
-            >
-              Discover Our Philosophy
-            </Button>
-          </motion.div>
-        </motion.div>
-      </section>
+      <HeroSection />
 
       {/* Philosophy Section */}
       <section
         id="philosophy"
-        className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-hidden section-premium min-h-screen"
+        className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium min-h-screen"
         onMouseEnter={() => trackUserBehavior.sectionView('philosophy')}
       >
         {/* Interactive Background */}
@@ -469,7 +586,7 @@ export default function Home() {
           className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-[#D4AF37]/10 to-[#B7A16C]/10 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5, 0.3],
+            opacity: [0.3, 0.5,  0.3],
           }}
           transition={{
             duration: 2.5,
@@ -518,7 +635,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-center mb-16 sm:mb-20"
           >
             {/* Elegant Decorative Line */}
             <div className="absolute left-1/2 transform -translate-x-1/2 -top-8 w-32 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
@@ -527,12 +644,12 @@ export default function Home() {
               <span className="relative inline-block">
                 {/* Main Title */}
                 <span className="block gradient-text-animate">
-                  Philosophy
+                  Why Partner With
                 </span>
 
                 {/* Subtitle */}
                 <span className="block text-premium font-bold">
-                  & About Us
+                  Emilio Beaufort
                 </span>
 
                 {/* Underline */}
@@ -559,30 +676,30 @@ export default function Home() {
                 {/* Paragraphs - Ready to Display */}
                 <div className="relative magnetic-hover">
                   <span className="inline">
-                    They say he arrived quietly, carrying nothing but the single belief that luxury should not belong to a select few but to all who value it. That belief became{' '}
+                    At {' '}
                   </span>
                   <strong className="text-premium font-bold relative ripple-effect inline">
                     Emilio Beaufort
                   </strong>
                   <span className="inline">
-                    . He built not just a company, but a philosophy.
+                    , we've redefined luxury hair supply by combining India's rich tradition and modern scalability to deliver ethically sourced, 100% Temple Virgin Remy hair of premium quality.
                   </span>
                 </div>
 
                 <div className="relative magnetic-hover">
-                  <strong className="text-gold font-bold relative ripple-effect inline">
+                  {/*<strong className="text-gold font-bold relative ripple-effect inline">
                     Slow Beauty
-                  </strong>
+                  </strong>*/}
                   <span className="inline">
-                    . The art of creating products with patience and precision. From premium hair extensions to refined grooming essentials, every Emilio Beaufort creation begins with the finest ethically sourced materials.
+                    The art of creating products with patience and precision. From premium hair extensions to refined grooming essentials, every Emilio Beaufort creation begins with the finest ethically sourced materials.
                   </span>
                 </div>
 
                 <div className="relative magnetic-hover">
                   <span className="inline">
-                    Every product is shaped by skilled hands to endure beyond passing trends into something{' '}
+                    By cutting out middlemen, we provide transparent pricing, Higher margins, consistent stock, and reliable delivery. Beyond just supplying hair, we offer expert training, marketing support, and partnership guidance to help you build lasting customer loyalty and scale your business sustainably.{' '}
                   </span>
-                  <span className="text-gold font-bold inline relative ripple-effect">
+                  {/*<span className="text-gold font-bold inline relative ripple-effect">
                     timeless
                   </span>
                   <span className="inline">
@@ -596,10 +713,16 @@ export default function Home() {
                   </span>
                   <strong className="text-premium font-bold relative ripple-effect inline">
                     Emilio Beaufort
-                  </strong>
+                  </strong>*/}
                   <span className="inline">
-                    {' '}is more than a name. It is a movement, bringing the principles of craftsmanship, sustainability, and accessible luxury to every corner of the world.
+                    {' '}Our ethical and traceable sourcing resonates with conscious consumers, giving you a true competitive edge.
                   </span>
+                  
+                </div>
+                <div className="relative magnetic-hover">
+                <span className="text-gold font-bold inline relative ripple-effect">
+                    <center>Your Success Story Starts with Emilio Beaufort.</center>
+                </span>
                 </div>
               </div>
 
@@ -666,18 +789,11 @@ export default function Home() {
                   <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} rounded-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500`}></div>
 
                   {/* Floating Icon */}
-                  <motion.div
-                    className="flex justify-center mb-4 sm:mb-6 relative z-10"
-                    whileHover={{
-                      scale: 1.2,
-                      rotate: 360,
-                      transition: { duration: 0.6 }
-                    }}
-                  >
+                  <div className="flex justify-center mb-4 sm:mb-6 relative z-10">
                     <div className={`p-3 sm:p-4 bg-gradient-to-br ${item.gradient} rounded-2xl shadow-lg group-hover:shadow-xl transition-all duration-300 glow-premium`}>
                       {item.icon}
                     </div>
-                  </motion.div>
+                  </div>
 
                   {/* Content */}
                   <div className="relative z-10 text-center">
@@ -717,7 +833,7 @@ export default function Home() {
       {/* The House Section */}
       <section
         id="house"
-        className="py-8 sm:py-10 md:py-12 lg:py-16 relative overflow-hidden section-premium"
+        className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium"
         onMouseEnter={() => trackUserBehavior.sectionView('house')}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-[#f8f8f8] via-white to-[#f5f5f5]"></div>
@@ -728,7 +844,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-center mb-16 sm:mb-20"
           >
             <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
               The House
@@ -743,7 +859,7 @@ export default function Home() {
       </section>
 
       {/* Journal Section */}
-      <section id="journal" className="py-8 sm:py-10 md:py-16 lg:py-20 relative overflow-hidden section-premium">
+      <section id="journal" className="py-12 sm:py-16 md:py-20 lg:py-24 relative overflow-hidden section-premium">
         <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#fafafa]"></div>
         <div className="absolute inset-0 bg-pattern-diagonal opacity-[0.1] rotate-180"></div>
         <div className="container-premium relative z-10">
@@ -766,55 +882,79 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Meet My Team Section */}
-      <section
+       {/*Meet My Team Section */}
+       <section
         id="team"
-        className="py-6 sm:py-8 md:py-12 relative overflow-hidden"
+        className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-visible"
         onMouseEnter={() => trackUserBehavior.sectionView('team')}
       >
-        <div className="absolute inset-0 bg-white"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="absolute inset-0 bg-white z-0"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 overflow-visible pt-6 sm:pt-8">
+
           <motion.div
-            className="text-center mb-8 sm:mb-12"
+            className="text-center mb-16 sm:mb-20"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-4 sm:mb-6 leading-[1.1] tracking-tight">
-              Meet The Brains
+            <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.2] tracking-tight">
+              Our People
             </h2>
             <p className="body-premium text-sm sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-2xl mx-auto leading-relaxed">
-              Global artisans and innovators crafting the future of luxury grooming
+              Insights, vision, and wisdom from our leadership team shaping the future of luxury grooming
             </p>
           </motion.div>
 
           <motion.div
-            className="mb-12 sm:mb-16"
+            className="mb-4 sm:mb-6 overflow-visible"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10 xl:gap-12 gap-y-8 md:gap-y-10 lg:gap-y-12 justify-items-center">
-                {safeMap([...firstRow, ...secondRow, ...thirdRow] as Founder[], (founder: Founder, index: number) => (
+            <div
+    className="relative w-full px-4 sm:px-6 overflow-visible"
+    style={{
+          minHeight: "250px",   
+      paddingTop: "5px",   
+      paddingBottom: "5px" 
+    }}
+  >
+
+
+              <div className="w-full">
+                <div className="w-full"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  lineHeight: 0,               
+                  width: "100vw",              
+                  marginLeft: "calc(-50vw + 50%)", 
+                  overflow: "visible", 
+                }}
+  
+              >
+                <Marquee pauseOnHover={true} speed={40} gradient={false} style={{ overflow: "visible" }}>
+                {safeMap(allFounders, (founder: Founder, index: number) => (
                   <motion.div
                     key={index}
-                    className={`founder-card group relative w-full max-w-sm mx-auto transition-all duration-700 ease-out cursor-pointer ${index === 4 ? 'md:col-start-1 lg:col-start-2' : ''}`}
+                    className={`founder-card group relative w-72 sm:w-80 mx-4 transition-all duration-700 ease-out cursor-pointer ${index === allFounders.length - 1 ? 'lg:col-start-2' : ''}`}
                     initial={{ opacity: 0, y: 50, scale: 0.9 }}
                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ duration: 0.8, delay: index * 0.15, ease: [0.25, 0.25, 0, 1] }}
                     viewport={{ once: true }}
-                    whileHover={{ y: -20, scale: 1.05, zIndex: 10, transition: { duration: 0.4, ease: [0.25, 0.25, 0, 1] } }}
+                    whileHover={{ y: -20, scale: 1.05, zIndex: 50, position: "relative", transition: { duration: 0.4, ease: [0.25, 0.25, 0, 1] } }}
                   >
-                    <div className="relative h-[420px] sm:h-[440px] md:h-[460px] lg:h-[480px] xl:h-[500px] bg-white rounded-3xl overflow-hidden shadow-xl group-hover:shadow-2xl transition-all duration-700">
+                    <div className="relative h-[220px] sm:h-[240px] md:h-[360px] lg:h-[280px] xl:h-[300px] bg-white rounded-3xl  shadow-md hover:shadow-2xl
+
+                    transition-all duration-700">
                       <div className={`absolute inset-0 bg-gradient-to-br ${founder.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl p-1`}>
                         <div className="w-full h-full bg-white rounded-3xl"></div>
                       </div>
                       <div className="relative z-10 p-4 sm:p-5 md:p-6 lg:p-7 xl:p-8 h-full flex flex-col justify-between">
                         <div className="text-center flex-1">
-                          <FounderAvatar founder={founder} />
+                          {/* <FounderAvatar founder={founder} /> */}
                           <h4 className="font-serif font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-premium mb-2 sm:mb-3 group-hover:text-[#B7A16C] transition-colors duration-300">
                             {founder.name}
                           </h4>
@@ -869,6 +1009,9 @@ export default function Home() {
                     </div>
                   </motion.div>
                 ))}
+                </Marquee>
+                </div>
+                
               </div>
 
 
@@ -876,37 +1019,14 @@ export default function Home() {
           </motion.div>
 
 
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Button
-              className="px-14 py-5 rounded-full font-bold text-lg sm:text-2xl flex items-center justify-center gap-3 bg-gradient-to-r from-gray-200 via-gray-100 to-white text-gray-900 shadow-lg border-0 transition-all duration-200 hover:from-gray-300 hover:via-gray-200 hover:to-white hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-gray-300 group"
-              style={{ boxShadow: '0 6px 24px rgba(0,0,0,0.10)' }}
-              onClick={() => router.push('/team-members')}
-            >
-              <span className="text-gray-900 font-bold">View More Team Members</span>
-              <svg
-                className="w-6 h-6 text-gray-500 group-hover:translate-x-1 transition-transform duration-200"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Button>
-          </motion.div>
+
         </div>
-      </section>
+      </section> 
 
       {/* Partnership Section */}
       <section
         id="partnership"
-        className="py-16 sm:py-20 md:py-24 relative overflow-hidden"
+        className="py-6 sm:py-8 md:py-12 lg:py-16 relative overflow-hidden"
         onMouseEnter={() => trackUserBehavior.sectionView('partnership')}
       >
         <div className="absolute inset-0 bg-white"></div>
@@ -934,7 +1054,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center mb-8 sm:mb-12 md:mb-16"
+            className="text-center mb-2 sm:mb-4 md:mb-6"
           >
             <Button
               size="lg"
@@ -951,7 +1071,7 @@ export default function Home() {
       </section>
 
       {/* Partners Section (marquee) */}
-      <section id="partners" className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
+      <section id="partners" className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">Our Partners</h2>
           <p className="text-sm sm:text-sm md:text-base lg:text-lg text-gray-600">We proudly collaborate with these distinguished brands.</p>
@@ -960,7 +1080,7 @@ export default function Home() {
       </section>
 
       {/* Inspirational Quote Above Footer */}
-      <div className="relative w-full flex flex-col items-center justify-center py-8 sm:py-12 md:py-16 px-4 sm:px-6 md:px-8 overflow-hidden" style={{ background: 'linear-gradient(90deg, #f5e9c6 0%, #fffbe6 40%, #fffbe6 60%, #f5e9c6 100%)' }}>
+      <div className="relative w-full flex flex-col items-center justify-center py-6 sm:py-8 md:py-12 px-4 sm:px-6 md:px-8 overflow-hidden" style={{ background: 'linear-gradient(90deg, #f5e9c6 0%, #fffbe6 40%, #fffbe6 60%, #f5e9c6 100%)' }}>
         <span className="relative z-10 text-center font-serif italic text-base sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-[#4b2e1e] leading-relaxed px-4 sm:px-6 md:px-8 max-w-6xl mx-auto lg:whitespace-nowrap flex justify-center items-center" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', textShadow: '0 2px 8px rgba(212,175,55,0.08)' }}>
           ~ We built trust when others chased profits. Now the world wants what we've perfected.
         </span>

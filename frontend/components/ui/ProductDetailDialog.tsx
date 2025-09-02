@@ -142,6 +142,7 @@ export function ProductDetailDialog({
 
   // Check authentication before adding to bag
   const handleAddToBag = () => {
+    if (!product) return;
     if (product.isSoldOut || !bagContext) return;
     
     // Check if user is authenticated (with fallback to localStorage)
@@ -1191,6 +1192,5 @@ export function ProductDetailDialog({
     </Dialog>
   );
 }
-
 
 
