@@ -58,7 +58,7 @@ export default function PurchasesPage() {
       } catch {}
     });
     // 3. Fetch product details
-    let productMap: Record<string, Product> = {};
+    const productMap: Record<string, Product> = {};
     if (allProductIds.size > 0) {
       const { data: productList } = await supabase
         .from('products')

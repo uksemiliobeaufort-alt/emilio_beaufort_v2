@@ -142,8 +142,8 @@ Please provide the response in the following JSON format:
     for (const modelName of modelOrder) {
       try {
         const mdl = genAI.getGenerativeModel({ model: modelName, generationConfig });
-        let result = await mdl.generateContent(prompt);
-        let resp = await result.response;
+        const result = await mdl.generateContent(prompt);
+        const resp = await result.response;
         let trimmed = getResponseText(resp).trim();
 
         if (!trimmed) {

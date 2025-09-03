@@ -5,8 +5,8 @@ import { firestore } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query, addDoc, deleteDoc, doc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
-import { saveAs } from "file-saver";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";//DialogClose
+// import { saveAs } from "file-saver";
 import { toast } from "sonner";
 
 
@@ -16,7 +16,7 @@ interface Application {
   email: string;
   phone?: string;
   resumeUrl?: string;
-  createdAt?: any;
+  createdAt?: Timestamp;
   portfolio?: string;
   coverLetter?: string;
   jobTitle?: string;
@@ -25,7 +25,7 @@ interface Application {
   linkedin?: string;
   github?: string;
   hearAbout?: string;
-  rejectedAt?: any;
+  rejectedAt?: Timestamp;
 }
 
 export default function ViewApplicationsPage() {
@@ -198,9 +198,9 @@ export default function ViewApplicationsPage() {
           console.error('Failed to sync to Google Sheets:', error);
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching applications:', err);
-      setError(err.message || 'Failed to fetch applications');
+      setError((err as Error).message || 'Failed to fetch applications');
     } finally {
       setLoading(false);
     }
@@ -392,7 +392,8 @@ export default function ViewApplicationsPage() {
   };
 
   // Open resume in viewer
-  const handleDownload = async (url: string, filename: string) => {
+  // const handleDownload = async (url: string, filename: string) => {
+  const handleDownload = async (url: string) => {
     if (!url) {
       toast.error("No resume URL available");
       return;

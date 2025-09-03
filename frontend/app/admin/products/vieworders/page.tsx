@@ -151,7 +151,7 @@ export default function ViewOrdersPage() {
       // Map "placed" back to "pending" for database consistency
       const statusToSave = newStatus === "placed" ? "pending" : newStatus;
       
-      let { error } = await supabase
+      const { error } = await supabase
         .from("purchases")
         .update({ order_status: statusToSave })
         .eq("id", orderId);

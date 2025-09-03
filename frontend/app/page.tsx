@@ -73,11 +73,11 @@ const HeroSection = () => {
               loading="eager"
               decoding="async"
               onLoad={() => {
-                // eslint-disable-next-line no-console
+                 
                 console.debug("Right hero image loaded:", rightImageSources[rightImageIndex]);
               }}
               onError={() => {
-                // eslint-disable-next-line no-console
+                 
                 console.warn("Right hero image failed:", rightImageSources[rightImageIndex]);
                 if (rightImageIndex < rightImageSources.length - 1) {
                   setRightImageIndex(rightImageIndex + 1);

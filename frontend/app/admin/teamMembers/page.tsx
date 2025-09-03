@@ -46,7 +46,7 @@ export default function TeamMemberForm() {
     setStatusMessage('');
     setStatusType('');
  
-    let publicUrl = '';
+    const publicUrl = '';
  
     try {
       if (!imageFile) {

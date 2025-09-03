@@ -226,7 +226,7 @@ function ProductsPageContent() {
     if (!productId && detailDialogOpen) {
       updateState({ detailDialogOpen: false, selectedProductId: null });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [productIdParam, products, detailDialogOpen, selectedProductId, updateState]);
 
   // No explicit popstate listener needed; `useSearchParams` effect above responds to history changes

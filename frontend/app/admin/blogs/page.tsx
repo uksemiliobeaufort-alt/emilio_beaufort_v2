@@ -2,21 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+// import Link from "next/link";
 import { motion } from "framer-motion";
 // import { getImageUrl, supabase } from "@/lib/supabase";
 import { firestore, uploadBlogImagesToFirebase } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getDocs, query, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+// import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Pencil, Trash2, UploadCloud, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import RichTextEditor from "@/components/ui/RichTextEditor";
-import EnhancedEditor from "@/components/ui/EnhancedEditor";
+// import RichTextEditor from "@/components/ui/RichTextEditor";
+// import EnhancedEditor from "@/components/ui/EnhancedEditor";
 import TipTapEditor from "@/app/admin/components/TipTapEditor";
 import AIBlogGenerationDialog from "@/app/admin/components/AIBlogGenerationDialog";
 import PermissionGuard from '@/components/PermissionGuard';
@@ -60,7 +60,7 @@ function AdminBlogsPageContent() {
   const [keywordInput, setKeywordInput] = useState("");
   const [tagInput, setTagInput] = useState(""); 
 
-  const defaultImageUrl = "/default-image.jpg";
+  // const defaultImageUrl = "/default-image.jpg";
 
   useEffect(() => {
     fetchPosts();
@@ -107,19 +107,19 @@ function AdminBlogsPageContent() {
     });
   };
 
-  const stripHtmlAndTruncate = (html: string, maxLength: number = 100): string => {
-    // Create a temporary div to parse HTML
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
+  // const stripHtmlAndTruncate = (html: string, maxLength: number = 100): string => {
+  //   // Create a temporary div to parse HTML
+  //   const tempDiv = document.createElement('div');
+  //   tempDiv.innerHTML = html;
     
-    // Get text content without HTML tags
-    const textContent = tempDiv.textContent || tempDiv.innerText || '';
+  //   // Get text content without HTML tags
+  //   const textContent = tempDiv.textContent || tempDiv.innerText || '';
     
-    // Truncate and add ellipsis
-    return textContent.length > maxLength 
-      ? textContent.slice(0, maxLength) + '...'
-      : textContent;
-  };
+  //   // Truncate and add ellipsis
+  //   return textContent.length > maxLength 
+  //     ? textContent.slice(0, maxLength) + '...'
+  //     : textContent;
+  // };
 
   const truncateHtmlContent = (html: string, maxLength: number = 200): string => {
     if (!html) return '';
@@ -261,7 +261,7 @@ function AdminBlogsPageContent() {
     setIsProcessing(true);
     try {
       const slug = title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-      let updateData: any = {
+      const updateData: Record<string, unknown> = {
         title,
         content,
         slug,
@@ -578,7 +578,7 @@ function AdminBlogsPageContent() {
                 <Card className="overflow-hidden group hover:shadow-lg transition-all duration-200 h-full flex flex-col">
                   <div className="relative aspect-[4/3] overflow-hidden">
                     {imageSrc ? (
-                      <img
+                      <Image
                         src={imageSrc}
                         alt={post.title}
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

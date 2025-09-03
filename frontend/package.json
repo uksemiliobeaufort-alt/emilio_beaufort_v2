@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check:ts-prune": "ts-prune",
+    "check:dep": "depcheck",
+    "check:analyze": "next build && source-map-explorer '.next/static/chunks/*.js'",
+    "check:tailwind": "tailwindcss -i ./src/styles/globals.css -o ./out.css --analyze",
+    "check:all": "npm run lint && npm run check:ts-prune && npm run check:dep"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -62,15 +67,15 @@
     "react-fast-marquee": "^1.6.5",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
-    "sharp": "^0.33.5",
+    "sharp": "^0.33.4",
     "tailwind-merge": "^3.3.1",
     "tailwind-scrollbar": "^4.0.2",
-    "tooltip": "^1.6.1",
-    "sharp": "^0.33.4"
+    "tooltip": "^1.6.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@hookform/resolvers": "^5.1.1",
+    "@tailwindcss/oxide": "^4.1.12",
     "@types/canvas-confetti": "^1.9.0",
     "@types/file-saver": "^2.0.7",
     "@types/formidable": "^3.4.5",
@@ -79,14 +84,19 @@
     "@types/react-dom": "^18.3.0",
     "@types/sharp": "^0.31.1",
     "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
     "autoprefixer": "^10.4.20",
-    "eslint": "^9",
+    "depcheck": "^1.4.7",
+    "eslint": "^9.34.0",
     "eslint-config-next": "15.3.4",
     "framer-motion": "^12.20.4",
     "postcss": "^8.4.49",
     "react-hook-form": "^7.59.0",
     "sonner": "^2.0.5",
+    "source-map-explorer": "^2.5.3",
     "tailwindcss": "^3.4.17",
+    "ts-prune": "^0.10.3",
     "typescript": "^5",
     "zod": "^3.25.67"
   },
