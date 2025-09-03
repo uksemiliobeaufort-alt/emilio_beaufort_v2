@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 // import { Navbar } from '@/components/Navbar';
@@ -26,15 +26,26 @@ import Chatbot from "@/components/Chatbot";
 import Marquee from "react-fast-marquee";
 
 // Hero Section Component
-const HeroSection = () => {
+const HeroSection = ({ onHeroReady }: { onHeroReady?: () => void }) => {
   return (
     <section className="relative w-full overflow-hidden">
       {/* SINGLE IMAGE */}
       <div className="w-full">
         <img
-          src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fhero.svg?alt=media&token=09a984ec-c803-4ae7-a250-840d155b52ca"
+          src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fhero.webp?alt=media&token=b62e69c7-11ab-4f0a-9ccc-f7f70680b55b"
           className="w-full h-auto block"
           alt="Hero"
+          loading="eager"
+          fetchPriority="high"
+          decoding="sync"
+          onLoad={() => {
+            // Mark hero as ready when the image has loaded
+            if (onHeroReady) onHeroReady();
+          }}
+          onError={() => {
+            // Fail-safe: still mark as ready to avoid blocking UI
+            if (onHeroReady) onHeroReady();
+          }}
           draggable={false}
         />
       </div>
@@ -99,88 +110,88 @@ const HeroSection = () => {
   );
 };
 // Auto Feedback Trigger Component
-function AutoFeedbackTrigger() {
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
-  const [hasTriggered, setHasTriggered] = useState(false);
+// function AutoFeedbackTrigger() {
+//   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+//   const [hasTriggered, setHasTriggered] = useState(false);
 
-  useEffect(() => {
-    // Check if feedback form was already shown in this session
-    const feedbackShown = sessionStorage.getItem('auto-feedback-shown');
-    if (feedbackShown) {
-      setHasTriggered(true);
-    }
-  }, []);
+//   useEffect(() => {
+//     // Check if feedback form was already shown in this session
+//     const feedbackShown = sessionStorage.getItem('auto-feedback-shown');
+//     if (feedbackShown) {
+//       setHasTriggered(true);
+//     }
+//   }, []);
 
-  const triggerFeedback = () => {
-    if (!hasTriggered && !showFeedbackForm) {
-      setShowFeedbackForm(true);
-      setHasTriggered(true);
-      sessionStorage.setItem('auto-feedback-shown', 'true');
-    }
-  };
+//   const triggerFeedback = () => {
+//     if (!hasTriggered && !showFeedbackForm) {
+//       setShowFeedbackForm(true);
+//       setHasTriggered(true);
+//       sessionStorage.setItem('auto-feedback-shown', 'true');
+//     }
+//   };
 
-  useEffect(() => {
-    if (hasTriggered) return;
+//   useEffect(() => {
+//     if (hasTriggered) return;
 
-    // Intersection Observer for footer visibility
-    const footerElement = document.querySelector('footer');
-    let footerObserver: IntersectionObserver | null = null;
+//     // Intersection Observer for footer visibility
+//     const footerElement = document.querySelector('footer');
+//     let footerObserver: IntersectionObserver | null = null;
 
-    if (footerElement) {
-      footerObserver = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            // Trigger when footer is 30% visible
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.3) {
-              triggerFeedback();
-            }
-          });
-        },
-        {
-          threshold: [0.3, 0.5], // Trigger when 30% or 50% of footer is visible
-          rootMargin: '0px 0px -10% 0px' // Slightly reduce the trigger area
-        }
-      );
+//     if (footerElement) {
+//       footerObserver = new IntersectionObserver(
+//         (entries) => {
+//           entries.forEach((entry) => {
+//             // Trigger when footer is 30% visible
+//             if (entry.isIntersecting && entry.intersectionRatio >= 0.3) {
+//               triggerFeedback();
+//             }
+//           });
+//         },
+//         {
+//           threshold: [0.3, 0.5], // Trigger when 30% or 50% of footer is visible
+//           rootMargin: '0px 0px -10% 0px' // Slightly reduce the trigger area
+//         }
+//       );
 
-      footerObserver.observe(footerElement);
-    }
+//       footerObserver.observe(footerElement);
+//     }
 
-    // Scroll position detection (fallback)
-    let scrollTimeout: NodeJS.Timeout;
-    const handleScroll = () => {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        const scrollPosition = window.scrollY + window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-        const scrollPercentage = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight;
+//     // Scroll position detection (fallback)
+//     let scrollTimeout: NodeJS.Timeout;
+//     const handleScroll = () => {
+//       clearTimeout(scrollTimeout);
+//       scrollTimeout = setTimeout(() => {
+//         const scrollPosition = window.scrollY + window.innerHeight;
+//         const documentHeight = document.documentElement.scrollHeight;
+//         const scrollPercentage = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight;
 
-        // Trigger when user is 85% down the page or within 200px of bottom
-        if (scrollPercentage >= 0.85 || (documentHeight - scrollPosition) <= 200) {
-          triggerFeedback();
-        }
-      }, 100); // Debounce scroll events
-    };
+//         // Trigger when user is 85% down the page or within 200px of bottom
+//         if (scrollPercentage >= 0.85 || (documentHeight - scrollPosition) <= 200) {
+//           triggerFeedback();
+//         }
+//       }, 100); // Debounce scroll events
+//     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+//     window.addEventListener('scroll', handleScroll, { passive: true });
 
-    // Cleanup
-    return () => {
-      if (footerObserver) {
-        footerObserver.disconnect();
-      }
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(scrollTimeout);
-    };
-  }, [hasTriggered]);
+//     // Cleanup
+//     return () => {
+//       if (footerObserver) {
+//         footerObserver.disconnect();
+//       }
+//       window.removeEventListener('scroll', handleScroll);
+//       clearTimeout(scrollTimeout);
+//     };
+//   }, [hasTriggered]);
 
-  return (
-    <FeedbackFormDialog
-      isOpen={showFeedbackForm}
-      onClose={() => setShowFeedbackForm(false)}
-      isAutoTriggered={true}
-    />
-  );
-}
+//   return (
+//     <FeedbackFormDialog
+//       isOpen={showFeedbackForm}
+//       onClose={() => setShowFeedbackForm(false)}
+//       isAutoTriggered={true}
+//     />
+//   );
+// }
 
 interface Founder {
   name: string;
@@ -206,6 +217,8 @@ function FounderAvatar({ founder }: { founder: Founder }) {
             src={getFounderImageUrl(founder.name, founder.imageName)}
             alt={`${founder.name} - ${founder.role}`}
             className="w-full h-full object-cover rounded-full"
+            loading="lazy"
+            decoding="async"
             onLoad={() => {
               // Optionally log success
               // console.log(`Image loaded successfully for ${founder.name}`);
@@ -278,20 +291,35 @@ function InteractiveBackground() {
 }
 
 export default function Home() {
-  const [loading, setLoading] = useState(true);
+  const [contentLoaded, setContentLoaded] = useState(false);
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
   const router = useRouter();
   // const analytics = useAnalytics();
     const [showFullPhilosophy, setShowFullPhilosophy] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [showRest, setShowRest] = useState(false);
+  const [heroReady, setHeroReady] = useState(false);
+  const [hasHydrated, setHasHydrated] = useState(false);
+  const heroReadyBufferedRef = useRef(false);
 
   
 
 
 
   useEffect(() => {
-    // No need to fetch home data as components handle their own data fetching
-    setLoading(false);
+    // Set content as loaded almost immediately for better perceived performance
+    const timer = setTimeout(() => setContentLoaded(true), 50);
+    const deferTimer = setTimeout(() => setShowRest(true), 200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Mark when hydration is complete and apply any buffered hero-ready signal
+  useEffect(() => {
+    setHasHydrated(true);
+    if (heroReadyBufferedRef.current) {
+      setHeroReady(true);
+      heroReadyBufferedRef.current = false;
+    }
   }, []);
 
   // Handle hash navigation with accurate target and single smooth scroll
@@ -372,13 +400,8 @@ export default function Home() {
 
 
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-2xl font-serif text-gray-900">Loading...</div>
-      </div>
-    );
-  }
+  // Don't block the entire page - let navbar show immediately
+  // Content will fade in smoothly when ready
 
   // Define founders, firstRow, and secondRow safely
   const founders = [
@@ -460,20 +483,56 @@ const secondRow = founders.slice(3, 6); // Next 3 founders (Sreedeep, Uttam, Rah
 const thirdRow = founders.slice(6, 7); // Last founder (Pratibha)
 const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
   return (
-    <div className="min-h-screen bg-premium overflow-x-hidden">
-      <AnimatedBackground />
+    <>
+      {/* Render Hero immediately for best LCP with loading text overlay until ready */}
+      <div className="relative">
+        <HeroSection
+          onHeroReady={() => {
+            // Avoid state changes during hydration to prevent mismatches
+            if (!hasHydrated) {
+              heroReadyBufferedRef.current = true;
+              return;
+            }
+            setHeroReady(true);
+          }}
+        />
+        {!heroReady && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-[1px] z-20">
+            <span className="text-sm sm:text-base md:text-lg font-semibold text-premium">Loading...</span>
+          </div>
+        )}
+      </div>
+
+      <motion.div 
+        className="min-h-screen bg-premium overflow-x-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: contentLoaded ? 1 : 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+      {/* Content Loading Indicator - Shows while content loads */}
+      {!contentLoaded && (
+        <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-gold to-premium z-50">
+          <motion.div
+            className="h-full bg-white"
+            initial={{ width: "0%" }}
+            animate={{ width: "100%" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          />
+        </div>
+      )}
+      
+      {showRest && <AnimatedBackground />}
       {/* <Navbar /> */}
 
       {/* Cookie Consent Popup */}
-      <CookieConsent />
+      {showRest && <CookieConsent />}
 
       {/* Auto Feedback Trigger */}
-      <AutoFeedbackTrigger />
+      {/* <AutoFeedbackTrigger /> */}
 
 
 
-      {/* Hero Section */}
-      <HeroSection />
+      {/* Rest of the content appears after a tiny delay */}
 
       {/* Philosophy Section */}
       <section
@@ -612,11 +671,11 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             <div className="body-premium text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-gray-800 relative text-justify">
               <div className={`${!showFullPhilosophy ? 'line-clamp-6 lg:line-clamp-none' : ''} space-y-4`}>
                 {/* Paragraphs - Ready to Display */}
-                <div className="relative magnetic-hover">
+                <div className="relative">
                   <span className="inline">
                     At {' '}
                   </span>
-                  <strong className="text-premium font-bold relative ripple-effect inline">
+                  <strong className="text-premium font-bold relative inline">
                     Emilio Beaufort
                   </strong>
                   <span className="inline">
@@ -624,7 +683,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                   </span>
                 </div>
 
-                <div className="relative magnetic-hover">
+                <div className="relative">
                   {/*<strong className="text-gold font-bold relative ripple-effect inline">
                     Slow Beauty
                   </strong>*/}
@@ -633,7 +692,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                   </span>
                 </div>
 
-                <div className="relative magnetic-hover">
+                <div className="relative">
                   <span className="inline">
                     By cutting out middlemen, we provide transparent pricing, Higher margins, consistent stock, and reliable delivery. Beyond just supplying hair, we offer expert training, marketing support, and partnership guidance to help you build lasting customer loyalty and scale your business sustainably.{' '}
                   </span>
@@ -645,11 +704,11 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                   </span>
                 </div>
 
-                <div className="relative magnetic-hover">
+                <div className="relative">
                   <span className="inline">
                     Today,{' '}
                   </span>
-                  <strong className="text-premium font-bold relative ripple-effect inline">
+                  <strong className="text-premium font-bold relative inline">
                     Emilio Beaufort
                   </strong>*/}
                   <span className="inline">
@@ -657,8 +716,8 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                   </span>
                   
                 </div>
-                <div className="relative magnetic-hover">
-                <span className="text-gold font-bold inline relative ripple-effect">
+                <div className="relative">
+                <span className="text-gold font-bold inline relative">
                     <center>Your Success Story Starts with Emilio Beaufort.</center>
                 </span>
                 </div>
@@ -719,16 +778,16 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             ], (item, index) => (
               <div
                 key={index}
-                className="group relative perspective-1000"
+                className="relative perspective-1000"
               >
                 {/* 3D Card Container */}
-                <div className="relative h-full bg-white rounded-3xl p-6 sm:p-8 shadow-2xl group-hover:shadow-3xl transition-all duration-500 transform group-hover:rotate-y-2 group-hover:scale-105 border border-gray-100 card-3d">
+                <div className="relative h-full bg-white rounded-3xl p-6 sm:p-8 shadow-2xl transition-all duration-500 transform border border-gray-100 card-3d">
                   {/* Gradient Border Effect */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} rounded-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500`}></div>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} rounded-3xl opacity-10 transition-opacity duration-500`}></div>
 
                   {/* Floating Icon */}
                   <div className="flex justify-center mb-4 sm:mb-6 relative z-10">
-                    <div className={`p-3 sm:p-4 bg-gradient-to-br ${item.gradient} rounded-2xl shadow-lg group-hover:shadow-xl transition-all duration-300 glow-premium`}>
+                    <div className={`p-3 sm:p-4 bg-gradient-to-br ${item.gradient} rounded-2xl shadow-lg transition-all duration-300 glow-premium`}>
                       {item.icon}
                     </div>
                   </div>
@@ -737,22 +796,20 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                   <div className="relative z-10 text-center">
                     <motion.h3
                       className="heading-premium text-base sm:text-lg md:text-xl lg:text-2xl text-premium mb-3 sm:mb-4 font-bold"
-                      whileHover={{ scale: 1.05 }}
-                      transition={{ duration: 0.2 }}
                     >
                       {item.title}
                     </motion.h3>
-                    <p className="body-premium text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed text-gray-700 group-hover:text-gray-800 transition-colors duration-300">
+                    <p className="body-premium text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed text-gray-700 transition-colors duration-300">
                       {item.description}
                     </p>
                   </div>
 
                   {/* Animated Background Elements */}
                   <div
-                    className={`absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br ${item.gradient} rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500`}
+                    className={`absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br ${item.gradient} rounded-full opacity-20 transition-opacity duration-500`}
                   />
                   <div
-                    className={`absolute -bottom-4 -left-4 w-10 h-10 bg-gradient-to-br ${item.gradient} rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500`}
+                    className={`absolute -bottom-4 -left-4 w-10 h-10 bg-gradient-to-br ${item.gradient} rounded-full opacity-20 transition-opacity duration-500`}
                   />
                 </div>
               </div>
@@ -762,11 +819,11 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       </section>
 
       {/* Why Choose Emilio Beaufort Section */}
-      <WhyChooseSection />
+      {showRest && <WhyChooseSection />}
 
 
       {/* Exclusive Products Marquee Section */}
-      <ExclusiveProductsMarquee />
+      {showRest && <ExclusiveProductsMarquee />}
 
       {/* The House Section */}
       <section
@@ -792,7 +849,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
               Each product is designed to elevate your daily ritual.
             </p>
           </motion.div>
-          <CardGrid />
+          {showRest && <CardGrid />}
         </div>
       </section>
 
@@ -816,7 +873,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
               the intersection of style, culture, and the pursuit of excellence.
             </p>
           </motion.div> */}
-          <Journal />
+          {showRest && <Journal />}
         </div>
       </section>
 
@@ -1014,7 +1071,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
           <h2 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">Our Partners</h2>
           <p className="text-sm sm:text-sm md:text-base lg:text-lg text-gray-600">We proudly collaborate with these distinguished brands.</p>
         </div>
-        <PartnersMarquee />
+        {showRest && <PartnersMarquee />}
       </section>
 
       {/* Inspirational Quote Above Footer */}
@@ -1028,12 +1085,14 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
         <span className="block font-semibold text-xl md:text-2xl text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>Emilio Beaufort</span>
       </div> */}
 
-      <Footer />
+      {showRest && <Footer />}
 
-      <PartnershipFormDialog
-        isOpen={isPartnershipFormOpen}
-        onClose={() => setIsPartnershipFormOpen(false)}
-      />
+      {showRest && (
+        <PartnershipFormDialog
+          isOpen={isPartnershipFormOpen}
+          onClose={() => setIsPartnershipFormOpen(false)}
+        />
+      )}
 
       {/* Floating Action Button - Scroll to Top */}
       <AnimatePresence>
@@ -1054,7 +1113,8 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       </AnimatePresence>
 
       {/* Chatbot Support System */}
-      <Chatbot />
-    </div>
+      {showRest && <Chatbot />}
+    </motion.div>
+    </>
   );
 }
