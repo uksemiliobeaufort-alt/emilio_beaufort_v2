@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type CSSProperties } from 'react';
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 // import { Navbar } from '@/components/Navbar';
@@ -16,7 +16,6 @@ import { useRouter } from 'next/navigation';
 import { Leaf, Globe, Shield, BadgePercent, Crown, Award, ChevronUp } from 'lucide-react';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import CookieConsent from '@/components/CookieConsent';
-import FeedbackFormDialog from '@/components/ui/FeedbackFormDialog';
 import { safeMap } from "@/lib/utils";
 import WhyChooseSection from '@/components/WhyChooseSection'; 
 import { trackEngagement, trackUserBehavior } from '@/lib/analytics';
@@ -78,7 +77,7 @@ const HeroSection = ({ onHeroReady }: { onHeroReady?: () => void }) => {
               style={{
                 textShadow: '0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.2)',
                 filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6))'
-              }}
+              } as CSSProperties}
             >
               Discover the beauty of ethical temple hair and luxury hair extensions—crafted for confidence, trusted by a global community. Your transformation starts here.
             </motion.p>
@@ -109,89 +108,6 @@ const HeroSection = ({ onHeroReady }: { onHeroReady?: () => void }) => {
     </section>
   );
 };
-// Auto Feedback Trigger Component
-// function AutoFeedbackTrigger() {
-//   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
-//   const [hasTriggered, setHasTriggered] = useState(false);
-
-//   useEffect(() => {
-//     // Check if feedback form was already shown in this session
-//     const feedbackShown = sessionStorage.getItem('auto-feedback-shown');
-//     if (feedbackShown) {
-//       setHasTriggered(true);
-//     }
-//   }, []);
-
-//   const triggerFeedback = () => {
-//     if (!hasTriggered && !showFeedbackForm) {
-//       setShowFeedbackForm(true);
-//       setHasTriggered(true);
-//       sessionStorage.setItem('auto-feedback-shown', 'true');
-//     }
-//   };
-
-//   useEffect(() => {
-//     if (hasTriggered) return;
-
-//     // Intersection Observer for footer visibility
-//     const footerElement = document.querySelector('footer');
-//     let footerObserver: IntersectionObserver | null = null;
-
-//     if (footerElement) {
-//       footerObserver = new IntersectionObserver(
-//         (entries) => {
-//           entries.forEach((entry) => {
-//             // Trigger when footer is 30% visible
-//             if (entry.isIntersecting && entry.intersectionRatio >= 0.3) {
-//               triggerFeedback();
-//             }
-//           });
-//         },
-//         {
-//           threshold: [0.3, 0.5], // Trigger when 30% or 50% of footer is visible
-//           rootMargin: '0px 0px -10% 0px' // Slightly reduce the trigger area
-//         }
-//       );
-
-//       footerObserver.observe(footerElement);
-//     }
-
-//     // Scroll position detection (fallback)
-//     let scrollTimeout: NodeJS.Timeout;
-//     const handleScroll = () => {
-//       clearTimeout(scrollTimeout);
-//       scrollTimeout = setTimeout(() => {
-//         const scrollPosition = window.scrollY + window.innerHeight;
-//         const documentHeight = document.documentElement.scrollHeight;
-//         const scrollPercentage = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight;
-
-//         // Trigger when user is 85% down the page or within 200px of bottom
-//         if (scrollPercentage >= 0.85 || (documentHeight - scrollPosition) <= 200) {
-//           triggerFeedback();
-//         }
-//       }, 100); // Debounce scroll events
-//     };
-
-//     window.addEventListener('scroll', handleScroll, { passive: true });
-
-//     // Cleanup
-//     return () => {
-//       if (footerObserver) {
-//         footerObserver.disconnect();
-//       }
-//       window.removeEventListener('scroll', handleScroll);
-//       clearTimeout(scrollTimeout);
-//     };
-//   }, [hasTriggered]);
-
-//   return (
-//     <FeedbackFormDialog
-//       isOpen={showFeedbackForm}
-//       onClose={() => setShowFeedbackForm(false)}
-//       isAutoTriggered={true}
-//     />
-//   );
-// }
 
 interface Founder {
   name: string;
@@ -281,7 +197,7 @@ function InteractiveBackground() {
         rotateX,
         rotateY,
         transformStyle: "preserve-3d",
-      }}
+      } as CSSProperties}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 via-transparent to-[#B7A16C]/5" />
       <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#D4AF37]/10 rounded-full blur-xl" />
@@ -527,9 +443,6 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       {/* Cookie Consent Popup */}
       {showRest && <CookieConsent />}
 
-      {/* Auto Feedback Trigger */}
-      {/* <AutoFeedbackTrigger /> */}
-
 
 
       {/* Rest of the content appears after a tiny delay */}
@@ -555,7 +468,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
-              }}
+              } as CSSProperties}
               animate={{
                 y: [0, -20, 0],
                 opacity: [0.3, 0.6, 0.3],

@@ -90,4 +90,47 @@ export const productCardUtils = {
 
 export function safeMap<T, U>(arr: T[] | undefined | null, fn: (item: T, idx: number) => U): U[] {
   return Array.isArray(arr) ? arr.map(fn) : [];
-} 
+}
+
+// Utility function to validate Firebase Storage URLs
+export const isValidFirebaseUrl = (url: string): boolean => {
+  if (!url) return false;
+  
+  try {
+    const urlObj = new URL(url);
+    
+    // Check for Firebase Storage domains
+    const isFirebaseStorage = urlObj.hostname.includes('firebasestorage.googleapis.com') || 
+                             urlObj.hostname.includes('firebaseapp.com') ||
+                             urlObj.hostname.includes('firebase.com');
+    
+    // Check for valid protocol
+    const isValidProtocol = urlObj.protocol === 'https:';
+    
+    // Check for valid path (should contain bucket and object)
+    const hasValidPath = urlObj.pathname.length > 1;
+    
+    console.log('URL validation:', {
+      url,
+      hostname: urlObj.hostname,
+      protocol: urlObj.protocol,
+      pathname: urlObj.pathname,
+      isFirebaseStorage,
+      isValidProtocol,
+      hasValidPath
+    });
+    
+    return isFirebaseStorage && isValidProtocol && hasValidPath;
+  } catch (error) {
+    console.error('URL validation error:', error);
+    return false;
+  }
+};
+
+// Utility function to get a safe image URL with fallback
+export const getSafeImageUrl = (url: string, fallbackUrl: string = '/default-image.jpg'): string => {
+  if (isValidFirebaseUrl(url)) {
+    return url;
+  }
+  return fallbackUrl;
+}; 
