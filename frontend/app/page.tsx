@@ -186,7 +186,6 @@ interface Founder {
   name: string;
   role: string;
   description: string;
-  gradient: string;
   linkedin?: string; // now full URL
   twitter?: string;  // now full URL
   instagram?: string; // now full URL
@@ -199,7 +198,6 @@ function FounderAvatar({ founder }: { founder: Founder }) {
   const initials = (founder.name || '').split(' ').map(n => n[0]).join('');
   return (
     <div className="relative mb-6">
-      <div className={`w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br ${founder.gradient} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-500 shadow-lg group-hover:shadow-xl overflow-hidden`}>
         {/* Founder Image from Supabase */}
         {!imgError ? (
           <img
@@ -219,9 +217,6 @@ function FounderAvatar({ founder }: { founder: Founder }) {
             {initials}
           </span>
         )}
-      </div>
-      {/* Animated Ring */}
-      <div className={`absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br ${founder.gradient} rounded-full opacity-0 group-hover:opacity-30 group-hover:scale-150 transition-all duration-700`}></div>
     </div>
   );
 }
@@ -381,12 +376,12 @@ export default function Home() {
   }
 
   // Define founders, firstRow, and secondRow safely
+  
   const founders = [
     {
       name: "Manish Jha",
       role: "CoFounder & CEO",
       description: "CEO | Director & Head of Strategy & Innovation | Emilio Beaufort – Luxury Personal Care Brand | 13 Years in Business Building",
-      gradient: "from-amber-500 via-orange-500 to-red-500",
       linkedin: "https://www.linkedin.com/in/manish-jha-786a87257",
       twitter: "https://x.com/manishXplore?t=WINq2Q-fqSjS-1WBF0K76g&s=09",
       instagram: "https://www.instagram.com/manish_jha_emilio?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
@@ -395,7 +390,6 @@ export default function Home() {
       name: "Emilio Beaufort",
       role: "Founder ",
       description: "Personal Care Product Manufacturer",
-      gradient: "from-purple-500 via-pink-500 to-rose-500",
       linkedin: "https://www.linkedin.com/company/emiliobeaufort/",
       twitter: "https://x.com/Emilio_Beaufort?t=0p7UVvP0DjaMiqT50ydDEg&s=09",
       instagram: "https://www.instagram.com/emiliobeaufort_official?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
@@ -405,7 +399,6 @@ export default function Home() {
       name: "Aly Sayyad",
       role: "CoFounder & CSO",
       description: "L&D| Training| Consulting| Banking| Startups",
-      gradient: "from-purple-500 via-pink-500 to-rose-500",
       linkedin: "https://www.linkedin.com/in/aly-sayyad-40501a20/",
       twitter: "/",
       instagram: "/"
@@ -414,7 +407,6 @@ export default function Home() {
       name: "Sreedeep Saha",
       role: "Junior Founder",
       description: "Junior Founder | EMILIO BEAUFORT Steering Emilio Beaufort Pvt. Ltd. towards excellence",
-      gradient: "from-blue-500 via-indigo-500 to-purple-500",
       linkedin: "https://www.linkedin.com/in/sreedeep-saha-fm-eb",
       twitter: "https://x.com/SahaSreede48415?t=yDKm6CvOxpC_s9iCU73MDw&s=09",
       instagram: "https://www.instagram.com/sreedeep_eb/"
@@ -423,7 +415,6 @@ export default function Home() {
       name: "Uttam Kumar Singh",
       role: "Junior Founder",
       description: "Junior Founding Member | Multi Faceted Entrepreneur | Product Manager",
-      gradient: "from-green-500 via-emerald-500 to-teal-500",
       linkedin: "https://www.linkedin.com/in/uttam-kumar-singh-uks/",
       twitter: "/",
       instagram: "/"
@@ -434,7 +425,6 @@ export default function Home() {
       name: "Rahul Pandey",
       role: "Tech Lead and Project Coordinator",
       description: "AI Automation Consultant | Technical Coordinator @ Emilio Beaufort  ",
-      gradient: "from-cyan-500 via-blue-500 to-indigo-500",
       linkedin: "https://www.linkedin.com/in/rahulpandey187/",
       twitter: "https://x.com/rahulpandey187",
       instagram: "/",
@@ -444,7 +434,6 @@ export default function Home() {
        name: "Pratibha Sharma",
       role: "HR Lead",
       description: "HR Lead @ Emilio Beaufort | Certifications in Talent Acquisition, HR Analytics ",
-     gradient: "from-gray-600 via-slate-600 to-zinc-600",
      linkedin: "https://www.linkedin.com/in/pratibha-sharma-7771a6215//",
     twitter: "/",
      instagram: "https://www.instagram.com/aashii2509?igsh=MTg0NDNja3NqMnpmcw==/",
@@ -473,7 +462,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
 
 
       {/* Hero Section */}
-      <HeroSection />
+      <HeroSection/>
 
       {/* Philosophy Section */}
       <section
@@ -603,20 +592,20 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
 
           {/* Main Content - Single Animation */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            viewport={{ once: true }}
-            className="max-w-6xl mx-auto mb-12"
+            // initial={{ opacity: 0, y: 20 }}
+            // whileInView={{ opacity: 1, y: 0 }}
+            // transition={{ duration: 0.4, ease: "easeOut" }}
+            // viewport={{ once: true }}
+            // className="max-w-6xl mx-auto mb-12"
           >
             <div className="body-premium text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-gray-800 relative text-justify">
               <div className={`${!showFullPhilosophy ? 'line-clamp-6 lg:line-clamp-none' : ''} space-y-4`}>
                 {/* Paragraphs - Ready to Display */}
-                <div className="relative magnetic-hover">
+                <div>
                   <span className="inline">
                     At {' '}
                   </span>
-                  <strong className="text-premium font-bold relative ripple-effect inline">
+                  <strong className="">
                     Emilio Beaufort
                   </strong>
                   <span className="inline">
@@ -624,16 +613,13 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                   </span>
                 </div>
 
-                <div className="relative magnetic-hover">
-                  {/*<strong className="text-gold font-bold relative ripple-effect inline">
-                    Slow Beauty
-                  </strong>*/}
+                <div >
                   <span className="inline">
                     The art of creating products with patience and precision. From premium hair extensions to refined grooming essentials, every Emilio Beaufort creation begins with the finest ethically sourced materials.
                   </span>
                 </div>
 
-                <div className="relative magnetic-hover">
+                <div>
                   <span className="inline">
                     By cutting out middlemen, we provide transparent pricing, Higher margins, consistent stock, and reliable delivery. Beyond just supplying hair, we offer expert training, marketing support, and partnership guidance to help you build lasting customer loyalty and scale your business sustainably.{' '}
                   </span>
@@ -657,8 +643,8 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                   </span>
                   
                 </div>
-                <div className="relative magnetic-hover">
-                <span className="text-gold font-bold inline relative ripple-effect">
+                <div>
+                <span className="text-gold font-bold inline relative">
                     <center>Your Success Story Starts with Emilio Beaufort.</center>
                 </span>
                 </div>
