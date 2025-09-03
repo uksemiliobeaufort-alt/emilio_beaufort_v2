@@ -27,34 +27,34 @@ import Marquee from "react-fast-marquee";
 // Hero Section Component
 const HeroSection = ({ onHeroReady }: { onHeroReady?: () => void }) => {
   return (
-    <section className="relative w-full overflow-hidden">
+    <section className="relative w-full min-h-[100svh] overflow-hidden pt-0 md:pt-20">
       {/* SINGLE IMAGE */}
-      <div className="w-full">
+      <div className="absolute left-0 right-0 bottom-0 top-16 md:top-20 lg:top-12">
         <img
           src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fhero.webp?alt=media&token=b62e69c7-11ab-4f0a-9ccc-f7f70680b55b"
-          className="w-full h-auto block"
+          className="w-full h-full block object-cover object-left md:object-left lg:object-center transform origin-left scale-[1.25] sm:scale-[1.25] md:scale-[1.15] lg:scale-100"
           alt="Hero"
           loading="eager"
           fetchPriority="high"
           decoding="sync"
           onLoad={() => {
-            // Mark hero as ready when the image has loaded
             if (onHeroReady) onHeroReady();
           }}
           onError={() => {
-            // Fail-safe: still mark as ready to avoid blocking UI
             if (onHeroReady) onHeroReady();
           }}
           draggable={false}
         />
+        {/* Mobile readability overlay (extended upward to sit under navbar) */}
+        <div className="absolute left-0 right-0 bottom-0 sm:bg-transparent bg-black/40" style={{ top: '-64px' }} />
       </div>
 
       {/* Centered Content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-6 z-10">
+      <div className="absolute left-0 right-0 bottom-0 top-16 md:top-20 lg:top-12 flex flex-col items-center justify-center text-center text-white px-4 sm:px-6 z-10">
         
-        <div className="mt-12 flex flex-col sm:flex-row gap-6 animate-fade-in-up">
+        <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row gap-6">
           <motion.div
-            className="relative z-20 flex flex-col items-center px-6 max-w-5xl mx-auto w-full"
+            className="relative z-20 flex flex-col items-center px-4 sm:px-6 max-w-5xl mx-auto w-full"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
@@ -63,14 +63,14 @@ const HeroSection = ({ onHeroReady }: { onHeroReady?: () => void }) => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, delay: 0.3 }}
-              className="mb-6 w-full"
+              className="mb-4 sm:mb-6 w-full"
             >
-              <h1 className="text-7xl md:text-9xl font-serif font-bold text-white mb-2 leading-tight tracking-tight text-center w-full">
+              <h1 className="text-4xl sm:text-6xl md:text-9xl font-serif font-bold text-white mb-2 leading-tight tracking-tight text-center w-full">
                 Emilio Beaufort
               </h1>
             </motion.div>
             <motion.p
-              className="text-xl md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-justify mx-auto text-white relative z-40"
+              className="text-base sm:text-lg md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-center mx-auto text-white/95 relative z-40"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.6 }}
@@ -79,7 +79,9 @@ const HeroSection = ({ onHeroReady }: { onHeroReady?: () => void }) => {
                 filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6))'
               } as CSSProperties}
             >
-              Discover the beauty of ethical temple hair and luxury hair extensions—crafted for confidence, trusted by a global community. Your transformation starts here.
+              Emilio Beaufort Pvt Ltd stands at the forefront of the international and domestic B2B market, delivering 100% authentic temple hair and luxury extensions.
+
+              Ethically sourced, meticulously crafted, and trusted by salons, distributors, and beauty brands across India, USA, UK, Europe, Middle East, China, and Africa.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -89,13 +91,13 @@ const HeroSection = ({ onHeroReady }: { onHeroReady?: () => void }) => {
             >
               <Button
                 size="lg"
-                className="text-lg px-12 py-6 text-base font-sans-medium transition-all duration-300 bg-black/80 text-white hover:bg-white hover:text-black border border-white backdrop-blur-sm hover:backdrop-blur-md hover:shadow-2xl hover:shadow-white/20 relative z-50"
+                className="text-sm sm:text-lg px-8 sm:px-12 py-4 sm:py-6 text-base font-sans-medium transition-all duration-300 bg-black/80 text-white hover:bg-white hover:text-black border border-white backdrop-blur-sm hover:backdrop-blur-md hover:shadow-2xl hover:shadow-white/20"
                 onClick={() => {
                   document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' });
                   trackEngagement.buttonClick('Discover Our Philosophy', 'hero-section');
                 }}
                 style={{
-                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.5)',
                   boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)'
                 }}
               >
@@ -454,34 +456,13 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
         onMouseEnter={() => trackUserBehavior.sectionView('philosophy')}
       >
         {/* Interactive Background */}
-        <InteractiveBackground />
+        {/* <InteractiveBackground /> */}
 
         {/* Animated Background Layers */}
         <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100"></div>
 
         {/* Floating Particles - Reduced count and faster animation */}
-        <div className="absolute inset-0 overflow-hidden">
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-[#D4AF37]/20 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              } as CSSProperties}
-              animate={{
-                y: [0, -20, 0],
-                opacity: [0.3, 0.6, 0.3],
-                scale: [1, 1.1, 1],
-              }}
-              transition={{
-                duration: 2 + Math.random() * 1,
-                repeat: Infinity,
-                delay: Math.random() * 1,
-              }}
-            />
-          ))}
-        </div>
+        {/* Floating Particles removed */}
 
         {/* Animated Grid Pattern */}
         <div className="absolute inset-0 opacity-[0.03]">
@@ -492,61 +473,14 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
         </div>
 
         {/* Glowing Orbs - Faster animation */}
-        <motion.div
-          className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-[#D4AF37]/10 to-[#B7A16C]/10 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.3, 0.5,  0.3],
-          }}
-          transition={{
-            duration: 2.5,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-l from-[#B7A16C]/10 to-[#D4AF37]/10 rounded-full blur-3xl"
-          animate={{
-            scale: [1.1, 1, 1.1],
-            opacity: [0.4, 0.6, 0.4],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.5
-          }}
-        />
+        {/* Glowing Orbs removed */}
 
         {/* Interactive Cursor Trail - Reduced count and faster */}
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(3)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-[#D4AF37]/30 rounded-full"
-              animate={{
-                x: [0, 200, 400, 600, 800, 1000],
-                y: [0, 100, 200, 300, 400, 500],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                duration: 4 + i * 1,
-                repeat: Infinity,
-                delay: i * 0.3,
-              }}
-            />
-          ))}
-        </div>
+        {/* Cursor Trail removed */}
 
         <div className="container-premium relative z-10">
           {/* Main Heading - Single Animation */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            viewport={{ once: true }}
-            className="text-center mb-16 sm:mb-20"
-          >
+          <div className="text-center mb-16 sm:mb-20">
             {/* Elegant Decorative Line */}
             <div className="absolute left-1/2 transform -translate-x-1/2 -top-8 w-32 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
 
@@ -571,16 +505,10 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto mb-6 font-light">
               Discover what sets us apart as India's most trusted source for premium raw human hair.
             </p>
-          </motion.div>
+          </div>
 
           {/* Main Content - Single Animation */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            viewport={{ once: true }}
-            className="max-w-6xl mx-auto mb-12"
-          >
+          <div className="max-w-6xl mx-auto mb-12">
             <div className="body-premium text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-gray-800 relative text-justify">
               <div className={`${!showFullPhilosophy ? 'line-clamp-6 lg:line-clamp-none' : ''} space-y-4`}>
                 {/* Paragraphs - Ready to Display */}
@@ -659,16 +587,10 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                 </svg>
               </button>
             </div>
-          </motion.div>
+          </div>
 
           {/* Three Pillars - Single Animation */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-6 sm:gap-8 md:gap-12"
-          >
+          <div className="grid md:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
             {safeMap([
               {
                 title: 'Timeless Elegance',
@@ -707,11 +629,9 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
 
                   {/* Content */}
                   <div className="relative z-10 text-center">
-                    <motion.h3
-                      className="heading-premium text-base sm:text-lg md:text-xl lg:text-2xl text-premium mb-3 sm:mb-4 font-bold"
-                    >
+                    <h3 className="heading-premium text-base sm:text-lg md:text-xl lg:text-2xl text-premium mb-3 sm:mb-4 font-bold">
                       {item.title}
-                    </motion.h3>
+                    </h3>
                     <p className="body-premium text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed text-gray-700 transition-colors duration-300">
                       {item.description}
                     </p>
@@ -727,7 +647,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                 </div>
               </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
