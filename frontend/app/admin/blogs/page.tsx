@@ -1,25 +1,49 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { motion } from "framer-motion";
+// import Link from "next/link";
+// import { motion } from "framer-motion";
 // import { getImageUrl, supabase } from "@/lib/supabase";
-import { firestore, uploadBlogImagesToFirebase, getFirebaseStorageUrl, checkFirebaseStorageAccess } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, doc, deleteDoc, updateDoc } from "firebase/firestore";
+import {
+  firestore,
+  uploadBlogImagesToFirebase /* getFirebaseStorageUrl, checkFirebaseStorageAccess */,
+} from "@/lib/firebase";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  getDocs,
+  query /* orderBy */,
+  doc,
+  deleteDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Pencil, Trash2, UploadCloud, Image as ImageIcon } from "lucide-react";
+// import { Textarea } from "@/components/ui/textarea";
+import {
+  Loader2,
+  Pencil,
+  Trash2,
+  // UploadCloud,
+  // Image as ImageIcon,
+} from "lucide-react";
 import { toast } from "sonner";
-import RichTextEditor from "@/components/ui/RichTextEditor";
-import EnhancedEditor from "@/components/ui/EnhancedEditor";
+// import RichTextEditor from "@/components/ui/RichTextEditor";
+// import EnhancedEditor from "@/components/ui/EnhancedEditor";
 import TipTapEditor from "@/app/admin/components/TipTapEditor";
 import AIBlogGenerationDialog from "@/app/admin/components/AIBlogGenerationDialog";
-import PermissionGuard from '@/components/PermissionGuard';
+import PermissionGuard from "@/components/PermissionGuard";
 import { getSafeImageUrl } from "@/lib/utils";
+import Image from "next/image";
 
 interface Post {
   id: string;
@@ -58,7 +82,7 @@ function AdminBlogsPageContent() {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState("");
-  const [tagInput, setTagInput] = useState(""); 
+  const [tagInput, setTagInput] = useState("");
 
   const defaultImageUrl = "/default-image.jpg";
 
@@ -69,25 +93,33 @@ function AdminBlogsPageContent() {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const q = query(collection(firestore, 'blog_posts'));
+      const q = query(collection(firestore, "blog_posts"));
       const querySnapshot = await getDocs(q);
-      const firebasePosts: Post[] = querySnapshot.docs.map(doc => {
+      const firebasePosts: Post[] = querySnapshot.docs.map((doc) => {
         const d = doc.data();
         return {
           id: doc.id,
-          title: d.title || '',
-          slug: d.slug || '',
-          content: d.content || '',
-          featured_image_url: d.featured_image_url || '',
+          title: d.title || "",
+          slug: d.slug || "",
+          content: d.content || "",
+          featured_image_url: d.featured_image_url || "",
           gallery_urls: d.gallery_urls || [],
-          created_at: d.created_at && d.created_at.toDate ? d.created_at.toDate().toISOString() : (d.created_at || new Date().toISOString()),
-          updated_at: d.updated_at && d.updated_at.toDate ? d.updated_at.toDate().toISOString() : (d.updated_at || null),
+          created_at:
+            d.created_at && d.created_at.toDate
+              ? d.created_at.toDate().toISOString()
+              : d.created_at || new Date().toISOString(),
+          updated_at:
+            d.updated_at && d.updated_at.toDate
+              ? d.updated_at.toDate().toISOString()
+              : d.updated_at || null,
           keywords: d.keywords || [],
           tags: d.tags || [],
         };
       });
-      // Sort by created_at descending
-      firebasePosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      firebasePosts.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
       setPosts(firebasePosts);
     } catch (error) {
       console.error("Failed to fetch posts:", error);
@@ -103,57 +135,39 @@ function AdminBlogsPageContent() {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
+      reader.onerror = (error) => reject(error);
     });
   };
 
-  const stripHtmlAndTruncate = (html: string, maxLength: number = 100): string => {
-    // Create a temporary div to parse HTML
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    
-    // Get text content without HTML tags
-    const textContent = tempDiv.textContent || tempDiv.innerText || '';
-    
-    // Truncate and add ellipsis
-    return textContent.length > maxLength 
-      ? textContent.slice(0, maxLength) + '...'
-      : textContent;
-  };
+  // const stripHtmlAndTruncate = (html: string, maxLength: number = 100): string => {
+  //   const tempDiv = document.createElement("div");
+  //   tempDiv.innerHTML = html;
+  //   const textContent = tempDiv.textContent || tempDiv.innerText || "";
+  //   return textContent.length > maxLength
+  //     ? textContent.slice(0, maxLength) + "..."
+  //     : textContent;
+  // };
 
-  const truncateHtmlContent = (html: string, maxLength: number = 200): string => {
-    if (!html) return '';
-    
-    // Create a temporary div to work with the HTML
-    const tempDiv = document.createElement('div');
+  const truncateHtmlContent = (
+    html: string,
+    maxLength: number = 200
+  ): string => {
+    if (!html) return "";
+    const tempDiv = document.createElement("div");
     tempDiv.innerHTML = html;
-    
-    // Get the text content length
-    const textContent = tempDiv.textContent || tempDiv.innerText || '';
-    
-    // If the text is already short enough, return the original HTML
+    const textContent = tempDiv.textContent || tempDiv.innerText || "";
     if (textContent.length <= maxLength) {
       return html;
     }
-    
-    // If too long, truncate the text and add ellipsis
-    const truncatedText = textContent.slice(0, maxLength) + '...';
-    
-    // Try to preserve some basic formatting by returning a truncated version
-    // This is a simple approach - for more complex HTML truncation, you'd need a more sophisticated library
+    const truncatedText = textContent.slice(0, maxLength) + "...";
     return `<p>${truncatedText}</p>`;
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-
     setImageFiles(files);
-
-    // Clear previous previews
-    imagePreviews.forEach(url => URL.revokeObjectURL(url));
-    
-    // Convert files to base64 for preview
+    imagePreviews.forEach((url) => URL.revokeObjectURL(url));
     const previews = await Promise.all(
       Array.from(files).map(async (file) => {
         return await convertFileToBase64(file);
@@ -179,16 +193,14 @@ function AdminBlogsPageContent() {
       toast.error("Please fill all fields and upload at least one image.");
       return;
     }
-
     setIsProcessing(true);
-    const slug = title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-
+    const slug = title
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
     try {
-      // Upload images to Firebase Storage
       const filesArray = Array.from(imageFiles);
       const imageUrls = await uploadBlogImagesToFirebase(filesArray, slug);
-
-      // Save blog post to Firestore
       await addDoc(collection(firestore, "blog_posts"), {
         title,
         slug,
@@ -199,7 +211,6 @@ function AdminBlogsPageContent() {
         tags,
         created_at: serverTimestamp(),
       });
-
       resetForm();
       setDialogOpen(false);
       fetchPosts();
@@ -219,15 +230,12 @@ function AdminBlogsPageContent() {
     setTags(post.tags || []);
     setKeywordInput("");
     setTagInput("");
-
-    // Set image preview for edit with safe URL
     if (post.featured_image_url) {
       const safe = getSafeImageUrl(post.featured_image_url, defaultImageUrl);
       setImagePreviews([safe]);
     } else {
       setImagePreviews([]);
     }
-
     setDialogOpen(true);
   };
 
@@ -238,10 +246,9 @@ function AdminBlogsPageContent() {
 
   const handleDeletePost = async () => {
     if (!selectedPost) return;
-
     setIsProcessing(true);
     try {
-      await deleteDoc(doc(firestore, 'blog_posts', selectedPost.id));
+      await deleteDoc(doc(firestore, "blog_posts", selectedPost.id));
       setDeleteDialogOpen(false);
       setSelectedPost(null);
       fetchPosts();
@@ -258,11 +265,13 @@ function AdminBlogsPageContent() {
       toast.error("Please fill all required fields");
       return;
     }
-
     setIsProcessing(true);
     try {
-      const slug = title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-      let updateData: any = {
+      const slug = title
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
+      const updateData: Partial<Post> = {
         title,
         content,
         slug,
@@ -275,7 +284,7 @@ function AdminBlogsPageContent() {
         updateData.featured_image_url = imageUrls[0];
         updateData.gallery_urls = imageUrls;
       }
-      await updateDoc(doc(firestore, 'blog_posts', selectedPost.id), updateData);
+      await updateDoc(doc(firestore, "blog_posts", selectedPost.id), updateData);
       resetForm();
       setDialogOpen(false);
       fetchPosts();
@@ -298,23 +307,24 @@ function AdminBlogsPageContent() {
     setContent(blogData.content);
     setKeywords(blogData.keywords);
     setTags(blogData.tags);
-    // If AI provided images (data URLs), convert to FileList and set previews
     if (blogData.images && blogData.images.length > 0) {
       try {
         const files = await Promise.all(
           blogData.images.map(async (src, idx) => {
             const res = await fetch(src);
             const blob = await res.blob();
-            const ext = blob.type.split('/')[1] || 'png';
-            return new File([blob], `ai-image-${idx + 1}.${ext}`, { type: blob.type || 'image/png' });
+            const ext = blob.type.split("/")[1] || "png";
+            return new File([blob], `ai-image-${idx + 1}.${ext}`, {
+              type: blob.type || "image/png",
+            });
           })
         );
         const dt = new DataTransfer();
-        files.forEach(f => dt.items.add(f));
+        files.forEach((f) => dt.items.add(f));
         setImageFiles(dt.files);
         setImagePreviews(blogData.images);
       } catch (e) {
-        console.error('Failed to prepare AI images for upload', e);
+        console.error("Failed to prepare AI images for upload", e);
         setImagePreviews(blogData.images);
         setImageFiles(null);
       }
@@ -324,198 +334,223 @@ function AdminBlogsPageContent() {
   };
 
   return (
-    <div className="space-y-6 lg:space-y-8">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Blog Posts</h1>
-          <p className="text-gray-600 mt-1">Manage your blog content</p>
-        </div>
-        <div className="flex flex-row gap-3">
-        <Button onClick={() => {
-          resetForm();
-          setDialogOpen(true);
-        }} className="bg-black text-white hover:bg-gray-800 w-full sm:w-auto">
-          <UploadCloud className="mr-2 h-4 w-4" />
-          Create New Post
-        </Button>
-        <Button onClick={() => {
-          setAiDialogOpen(true);
-        }} className="bg-purple-600 text-white hover:bg-purple-700 w-full sm:w-auto">
-          <UploadCloud className="mr-2 h-4 w-4" />
-          Generate New Post with AI
-        </Button>
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Blog Posts</h1>
+        <div className="flex space-x-2">
+          <Button onClick={() => setAiDialogOpen(true)}>AI Generate Blog</Button>
+          <Button onClick={() => setDialogOpen(true)}>+ New Post</Button>
         </div>
       </div>
-      
 
-      {/* Add/Edit Post Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(open) => {
-        if (!open) resetForm();
-        setDialogOpen(open);
-      }}>
-        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
+      {loading ? (
+        <div className="flex justify-center items-center py-10">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      ) : posts.length === 0 ? (
+        <p className="text-center text-gray-500">No blog posts found.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {posts.map((post) => (
+            <Card key={post.id} className="overflow-hidden">
+              {post.featured_image_url && (
+                <Image
+                  src={getSafeImageUrl(
+                    post.featured_image_url,
+                    defaultImageUrl
+                  )}
+                  alt={post.title}
+                  width={600}
+                  height={400}
+                  className="w-full h-48 object-cover"
+                />
+              )}
+              <CardContent className="p-4">
+                <h2 className="font-bold text-lg">{post.title}</h2>
+                <div
+                  className="text-sm text-gray-600 line-clamp-3"
+                  dangerouslySetInnerHTML={{
+                    __html: truncateHtmlContent(post.content, 150),
+                  }}
+                />
+                <div className="flex justify-end space-x-2 mt-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEditClick(post)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDeleteClick(post)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Create / Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl">{selectedPost ? 'Edit Blog Post' : 'Create New Blog Post'}</DialogTitle>
+            <DialogTitle>
+              {selectedPost ? "Edit Post" : "Create New Post"}
+            </DialogTitle>
           </DialogHeader>
-
-          <div className="space-y-6 py-4">
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Title</Label>
+          <div className="space-y-4">
+            <div>
+              <Label>Title</Label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter blog title"
-                className="h-12"
+                placeholder="Enter post title"
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Content</Label>
-              <div className="rounded-lg overflow-hidden">
-                <TipTapEditor
-                  content={content}
-                  onChange={setContent}
-                  placeholder="Write your blog content"
-                />
+            <div>
+              <Label>Content</Label>
+              <TipTapEditor content={content} setContent={setContent} />
+            </div>
+            <div>
+              <Label>Upload Images</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageChange}
+              />
+              <div className="flex flex-wrap mt-2 gap-2">
+                {imagePreviews.map((src, idx) => (
+                  <Image
+                    key={idx}
+                    src={getSafeImageUrl(src, defaultImageUrl)}
+                    alt={`Preview ${idx + 1}`}
+                    width={100}
+                    height={100}
+                    className="w-24 h-24 object-cover rounded"
+                  />
+                ))}
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Featured Image</Label>
-              <div
-                className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors hover:border-gray-400 bg-gray-50 relative"
-                onClick={() => document.getElementById('featured-image-input')?.click()}
-                onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
-                onDrop={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const files = e.dataTransfer.files;
-                  if (files && files.length > 0) {
-                    const dt = new DataTransfer();
-                    Array.from(files).forEach(file => dt.items.add(file));
-                    setImageFiles(dt.files);
-                    imagePreviews.forEach(url => URL.revokeObjectURL(url));
-                    const previews = Array.from(files).map((file) => URL.createObjectURL(file));
-                    setImagePreviews(previews);
-                  }
-                }}
-              >
+            <div>
+              <Label>Keywords</Label>
+              <div className="flex space-x-2">
                 <Input
-                  id="featured-image-input"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                <UploadCloud className="w-10 h-10 text-gray-400 mb-2" />
-                <div className="font-medium text-gray-700">Click or drag images to upload</div>
-                <div className="text-xs text-gray-500 mt-1">PNG, JPG, JPEG up to 5MB each</div>
-              </div>
-              {imagePreviews.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
-                  {imagePreviews.map((src, idx) => (
-                    <div key={idx} className="relative group aspect-[4/3] rounded-lg overflow-hidden border">
-                      {/* Use regular img for previews; allow data:/blob: directly */}
-                      <img
-                        src={src && (src.startsWith('data:') || src.startsWith('blob:')) ? src : getSafeImageUrl(src, defaultImageUrl)}
-                        alt={`Preview ${idx + 1}`}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error('Preview image failed:', src);
-                          (e.currentTarget as HTMLImageElement).src = defaultImageUrl;
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-white hover:text-red-500"
-                          onClick={e => {
-                            e.stopPropagation();
-                            const newPreviews = [...imagePreviews];
-                            newPreviews.splice(idx, 1);
-                            setImagePreviews(newPreviews);
-                            const dt = new DataTransfer();
-                            const files = Array.from(imageFiles || []);
-                            files.splice(idx, 1);
-                            files.forEach(file => dt.items.add(file));
-                            setImageFiles(dt.files);
-                          }}
-                        >
-                          <UploadCloud className="h-5 w-5" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Keywords</Label>
-              <Input
-                value={keywordInput}
-                onChange={e => setKeywordInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === "Enter" || e.key === ",") {
-                    e.preventDefault();
-                    if (keywordInput.trim() && !keywords.includes(keywordInput.trim())) {
+                  value={keywordInput}
+                  onChange={(e) => setKeywordInput(e.target.value)}
+                  placeholder="Add keyword"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && keywordInput.trim()) {
+                      e.preventDefault();
                       setKeywords([...keywords, keywordInput.trim()]);
+                      setKeywordInput("");
                     }
-                    setKeywordInput("");
-                  }
-                }}
-                placeholder="Type a keyword and press Enter"
-              />
-              <div className="flex flex-wrap gap-2 mt-2">
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (keywordInput.trim()) {
+                      setKeywords([...keywords, keywordInput.trim()]);
+                      setKeywordInput("");
+                    }
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
+              <div className="flex flex-wrap mt-2 gap-2">
                 {keywords.map((kw, idx) => (
-                  <span key={idx} className="bg-gray-200 px-2 py-1 rounded">
+                  <span
+                    key={idx}
+                    className="px-2 py-1 bg-gray-200 rounded text-sm"
+                  >
                     {kw}
-                    <button onClick={() => setKeywords(keywords.filter((k, i) => i !== idx))} className="ml-1 text-red-500">×</button>
                   </span>
                 ))}
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Tags</Label>
-              <Input
-                value={tagInput}
-                onChange={e => setTagInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === "Enter" || e.key === ",") {
-                    e.preventDefault();
-                    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+            <div>
+              <Label>Tags</Label>
+              <div className="flex space-x-2">
+                <Input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  placeholder="Add tag"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && tagInput.trim()) {
+                      e.preventDefault();
                       setTags([...tags, tagInput.trim()]);
+                      setTagInput("");
                     }
-                    setTagInput("");
-                  }
-                }}
-                placeholder="Type a tag and press Enter"
-              />
-              <div className="flex flex-wrap gap-2 mt-2">
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (tagInput.trim()) {
+                      setTags([...tags, tagInput.trim()]);
+                      setTagInput("");
+                    }
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
+              <div className="flex flex-wrap mt-2 gap-2">
                 {tags.map((tag, idx) => (
-                  <span key={idx} className="bg-blue-200 px-2 py-1 rounded">
-                    #{tag}
-                    <button onClick={() => setTags(tags.filter((t, i) => i !== idx))} className="ml-1 text-red-500">×</button>
+                  <span
+                    key={idx}
+                    className="px-2 py-1 bg-gray-200 rounded text-sm"
+                  >
+                    {tag}
                   </span>
                 ))}
               </div>
             </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={selectedPost ? handleUpdatePost : handleCreatePost}
+                disabled={isProcessing}
+              >
+                {isProcessing && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {selectedPost ? "Update Post" : "Create Post"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-            <Button 
-              className="w-full h-12 text-base bg-black text-white hover:bg-gray-800 transition-colors" 
-              onClick={selectedPost ? handleUpdatePost : handleCreatePost}
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this post?</p>
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeletePost}
               disabled={isProcessing}
             >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  {selectedPost ? 'Updating...' : 'Publishing...'}
-                </>
-              ) : (
-                selectedPost ? 'Update Post' : 'Publish Post'
+              {isProcessing && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
+              Delete
             </Button>
           </div>
         </DialogContent>
@@ -527,148 +562,6 @@ function AdminBlogsPageContent() {
         onOpenChange={setAiDialogOpen}
         onBlogGenerated={handleAIBlogGenerated}
       />
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Delete Blog Post</DialogTitle>
-          </DialogHeader>
-          <p>Are you sure you want to delete this blog post? This action cannot be undone.</p>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              disabled={isProcessing}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeletePost}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                'Delete'
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Posts Grid */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
-      ) : posts.length > 0 ? (
-        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {posts.map((post) => {
-            let imageSrc = '';
-            if (post.featured_image_url) {
-              imageSrc = getSafeImageUrl(post.featured_image_url, defaultImageUrl);
-            }
-            return (
-              <motion.div
-                key={post.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <Card className="overflow-hidden group hover:shadow-lg transition-all duration-200 h-full flex flex-col">
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    {imageSrc ? (
-                      <img
-                        src={imageSrc}
-                        alt={post.title}
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={e => {
-                          console.error('Grid image failed:', imageSrc);
-                          (e.currentTarget as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a4 4 0 004 4h10a4 4 0 004-4V7a4 4 0 00-4-4H7a4 4 0 00-4 4z" /></svg>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200" />
-                  </div>
-                  <CardContent className="p-4 lg:p-5 flex-1 flex flex-col">
-                    <h3 className="font-bold text-lg lg:text-xl mb-2 group-hover:text-gray-900 transition line-clamp-2 min-h-[3.5rem]">
-                      {post.title}
-                    </h3>
-                    <div 
-                      className="text-sm text-gray-600 line-clamp-3 flex-1 mb-4"
-                      dangerouslySetInnerHTML={{
-                        __html: truncateHtmlContent(post.content || "", 120)
-                      }}
-                      style={{
-                        overflow: 'hidden',
-                        display: '-webkit-box',
-                        WebkitBoxOrient: 'vertical',
-                        WebkitLineClamp: 3,
-                      }}
-                    />
-                    <div className="mt-auto">
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-xs text-gray-500">
-                          {new Date(post.created_at).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </p>
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                          Published
-                        </span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          className="flex-1 bg-black text-white hover:bg-gray-800"
-                          onClick={() => handleEditClick(post)}
-                        >
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => handleDeleteClick(post)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="text-center py-16 lg:py-20">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-            <ImageIcon className="h-10 w-10 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No blog posts yet</h3>
-          <p className="text-gray-500 mb-6">Create your first blog post to get started</p>
-          <Button onClick={() => {
-            resetForm();
-            setDialogOpen(true);
-          }} className="bg-black text-white hover:bg-gray-800">
-            <UploadCloud className="mr-2 h-4 w-4" />
-            Create First Post
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

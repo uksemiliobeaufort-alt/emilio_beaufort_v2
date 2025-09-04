@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import BootstrapDropdown from "@/components/ui/BootstrapDropdown";
 import TipTapEditor, { TipTapEditorHandle } from "@/app/admin/components/TipTapEditor";
 import { Code, Cpu, User, Users, X } from "lucide-react";
-import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogTitle } from "@/components/ui/dialog";//DialogHeader,
 import { uploadJobPostImagesToFirebase } from '@/lib/firebase';
-import { Timestamp } from 'firebase/firestore';
+// import { Timestamp } from 'firebase/firestore';
 import { toast } from "sonner";
 
 // Error boundary component for TipTapEditor

@@ -6,15 +6,22 @@
 //     "react/no-unescaped-entities": "off"
 //   }
 // } 
+
 {
   "extends": ["next/core-web-vitals", "plugin:@typescript-eslint/recommended"],
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "unused-imports"],
   "parser": "@typescript-eslint/parser",
   "rules": {
     "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": [
+    "@typescript-eslint/no-unused-vars": "off",
+
+    // ❌ Automatically remove unused imports
+    "unused-imports/no-unused-imports": "error",
+
+    // ⚠️ Warn about unused variables (ignore if starts with _)
+    "unused-imports/no-unused-vars": [
       "warn",
-      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+      { "vars": "all", "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }
     ]
   }
 }

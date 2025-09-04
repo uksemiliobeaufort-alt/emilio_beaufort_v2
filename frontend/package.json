@@ -90,6 +90,7 @@
     "depcheck": "^1.4.7",
     "eslint": "^9.34.0",
     "eslint-config-next": "15.3.4",
+    "eslint-plugin-unused-imports": "^4.2.0",
     "framer-motion": "^12.20.4",
     "postcss": "^8.4.49",
     "react-hook-form": "^7.59.0",
