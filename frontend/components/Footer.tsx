@@ -5,12 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useEffect, useState } from "react";
-import FeedbackFormDialog from "@/components/ui/FeedbackFormDialog";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
   const router = useRouter();
-  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isQuickLinksOpen, setIsQuickLinksOpen] = useState(false);
 
@@ -82,7 +80,6 @@ export function Footer() {
                         { name: 'The House', href: '#house', isExternal: false },
                         { name: 'Journal', href: '#journal', isExternal: false },
                         { name: 'Track Order', href: '/track-order', isExternal: true },
-                        { name: 'Give Feedback', href: '#feedback', isExternal: false, isFeedback: true },
                         { name: 'Admin Login', href: '/admin/login', isExternal: true }
                       ].map((link: any) => (
                         <div key={link.name} className="flex justify-center">
@@ -93,16 +90,6 @@ export function Footer() {
                              >
                                {link.name}
                              </Link>
-                          ) : link.isFeedback ? (
-                                                         <button
-                               onClick={() => {
-                                 setIsFeedbackFormOpen(true);
-                                 setIsQuickLinksOpen(false);
-                               }}
-                               className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm py-2 px-3 min-h-[44px] flex items-center justify-center w-full"
-                             >
-                               {link.name}
-                             </button>
                           ) : (
                                                          <button
                                onClick={() => {
@@ -130,7 +117,6 @@ export function Footer() {
                     { name: 'The House', href: '#house', isExternal: false },
                     { name: 'Journal', href: '#journal', isExternal: false },
                     { name: 'Track Order', href: '/track-order', isExternal: true },
-                    { name: 'Give Feedback', href: '#feedback', isExternal: false, isFeedback: true },
                     { name: 'Admin Login', href: '/admin/login', isExternal: true }
                   ].map((link: any) => (
                     <div key={link.name} className="flex justify-center">
@@ -141,13 +127,6 @@ export function Footer() {
                         >
                           {link.name}
                         </Link>
-                      ) : link.isFeedback ? (
-                        <button
-                          onClick={() => setIsFeedbackFormOpen(true)}
-                          className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-1 sm:py-2 px-0 min-h-[44px] flex items-center footer-link-underline"
-                        >
-                          {link.name}
-                        </button>
                       ) : (
                         <button
                           onClick={() => document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' })}
@@ -217,7 +196,7 @@ export function Footer() {
           {/* Bottom Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-center border-t border-gray-700 pt-4 sm:pt-8 mt-4 sm:mt-8 gap-4 sm:gap-0">
             <p className="body-premium text-gray-400 text-sm text-center sm:text-left">
-              © {currentYear} Emilio Beaufort.Pvt.Ltd. All rights reserved.
+              © {currentYear} Emilio Beaufort Pvt. Ltd. All rights reserved.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-sm">
               <Link href="/privacy-policy" className="text-gray-400 hover:text-gold transition-premium font-plus-jakarta py-2 sm:py-0 footer-link-underline">
@@ -234,18 +213,17 @@ export function Footer() {
           
           {/* Brand Name at the End */}
           <div className="border-t border-gray-700 pt-4 sm:pt-6 mt-4 sm:mt-6 text-center">
-            <h2 className="heading-premium text-2xl sm:text-3xl lg:text-4xl text-white font-bold tracking-wider">
-              EMILIO BEAUFORT
-            </h2>
+            <div className="flex flex-col items-center">
+              <h2 className="heading-premium text-2xl sm:text-3xl lg:text-4xl text-white font-bold tracking-wider">
+                EMILIO BEAUFORT
+              </h2>
+              <span className="text-gray-400 text-sm sm:text-base font-sans-medium tracking-wide mt-1">
+                Private Limited
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Feedback Form Dialog */}
-        <FeedbackFormDialog 
-          isOpen={isFeedbackFormOpen}
-          onClose={() => setIsFeedbackFormOpen(false)}
-          isAutoTriggered={false}
-        />
       </footer>
       {/* Back to Top Button - Left Bottom */}
 

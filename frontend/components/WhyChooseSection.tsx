@@ -95,40 +95,40 @@ export default function WhyChooseSection() {
           </p>
         </div>
 
-        {/* Grid layout for 8 cards - 2 columns on small screens, 2 columns on medium+ */}
-        <div className="grid grid-cols-2 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+        {/* Grid layout for 8 cards - 2 columns with last card centered */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {cards.slice(0, 8).map((card, idx) => (
             <div key={card.title} className="bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] p-[2px] rounded-2xl">
               <div
-                className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 flex flex-col items-center text-center min-h-[140px] sm:min-h-[160px] md:min-h-[180px] transition-all duration-300 hover:shadow-[0_8px_32px_0_rgba(183,161,108,0.25),0_1.5px_8px_0_rgba(0,0,0,0.10)] hover:scale-105 hover:-translate-y-1"
+                className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:shadow-[0_8px_32px_0_rgba(183,161,108,0.25),0_1.5px_8px_0_rgba(0,0,0,0.10)] hover:scale-105 hover:-translate-y-1"
               >
                 {/* Badge for the fifth card */}
                 {card.badge && (
-                  <div className="absolute -top-3 sm:-top-5 left-1/2 -translate-x-1/2 bg-[#B7A16C] text-xs font-semibold text-black px-2 sm:px-4 py-1 rounded-full shadow z-10">
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#B7A16C] text-xs font-semibold text-black px-4 py-1 rounded-full shadow z-10">
                     {card.badge}
                   </div>
                 )}
-                <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-2 sm:mb-3 md:mb-4 shadow">
+                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-4 shadow">
                   {card.icon}
                 </div>
-                <span className="font-extrabold text-sm sm:text-lg md:text-xl text-black mb-1 sm:mb-2">{card.title}</span>
-                <span className="text-gray-700 text-xs sm:text-sm md:text-base">{card.text}</span>
+                <span className="font-extrabold text-xl text-black mb-2">{card.title}</span>
+                <span className="text-gray-700">{card.text}</span>
               </div>
             </div>
           ))}
         </div>
 
         {/* 9th card centered */}
-        <div className="flex justify-center mt-6 sm:mt-8">
-          <div className="bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] p-[2px] rounded-2xl w-full sm:w-3/4 md:w-1/2">
+        <div className="flex justify-center mt-8">
+          <div className="bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] p-[2px] rounded-2xl w-full md:w-1/2">
             <div
-              className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 flex flex-col items-center text-center min-h-[140px] sm:min-h-[160px] md:min-h-[180px] transition-all duration-300 hover:shadow-[0_8px_32px_0_rgba(183,161,108,0.25),0_1.5px_8px_0_rgba(0,0,0,0.10)] hover:scale-105 hover:-translate-y-1 w-full"
+              className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:shadow-[0_8px_32px_0_rgba(183,161,108,0.25),0_1.5px_8px_0_rgba(0,0,0,0.10)] hover:scale-105 hover:-translate-y-1 w-full"
             >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-2 sm:mb-3 md:mb-4 shadow">
+              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-4 shadow">
                 {cards[8].icon}
               </div>
-              <span className="font-extrabold text-sm sm:text-lg md:text-xl text-black mb-1 sm:mb-2">{cards[8].title}</span>
-              <span className="text-gray-700 text-xs sm:text-sm md:text-base">{cards[8].text}</span>
+              <span className="font-extrabold text-xl text-black mb-2">{cards[8].title}</span>
+              <span className="text-gray-700">{cards[8].text}</span>
             </div>
           </div>
         </div>

@@ -103,19 +103,7 @@ export const deleteProductImage = async (
   }
 };
 
-export async function saveFeedback(data: {
-  name?: string;
-  email?: string;
-  type: string;
-  message: string;
-}) {
-  const { error } = await supabase.from("feedback").insert([data]);
 
-  if (error) {
-    console.error("Supabase insert error:", error);
-    throw error;
-  }
-}
 export interface VariantType {
   id: string;
   length: string;
