@@ -11,6 +11,7 @@ import { collection, getDocs, query } from 'firebase/firestore';
 import { useRouter } from "next/navigation";
 import { Share2, Copy, MessageCircle, Linkedin, Twitter, Facebook, Check, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { getSafeImageUrl } from "@/lib/utils";
  
 
 interface BlogPost {
@@ -42,7 +43,7 @@ export default function JournalPage() {
         const querySnapshot = await getDocs(q);
         let firebasePosts: BlogPost[] = querySnapshot.docs.map(doc => {
           const d = doc.data();
-          return {
+          const post = {
             id: doc.id,
             title: d.title || '',
             slug: d.slug || '',
@@ -50,8 +51,16 @@ export default function JournalPage() {
             featured_image_url: d.featured_image_url || '',
             gallery_urls: d.gallery_urls || [],
             created_at: d.created_at && d.created_at.toDate ? d.created_at.toDate().toISOString() : (d.created_at || new Date().toISOString()),
-            updated_at: d.updated_at && d.updated_at.toDate ? d.updated_at.toDate().toISOString() : (d.updated_at || null),
+            updated_at: d.updated_at && d.updated_at.toDate ? d.updated_at.toDate() : (d.updated_at || null),
           };
+          
+          // Debug logging for image URLs
+          if (post.featured_image_url) {
+            console.log(`Post "${post.title}" image URL:`, post.featured_image_url);
+            console.log(`Is valid Firebase URL:`, post.featured_image_url.includes('firebasestorage.googleapis.com'));
+          }
+          
+          return post;
         });
         // Sort by created_at descending and limit to 10
         firebasePosts = firebasePosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10);
@@ -350,18 +359,37 @@ export default function JournalPage() {
                               <div className="relative aspect-[4/3] bg-gray-100">
                                 {post.featured_image_url ? (
                                   <img
-                                    src={post.featured_image_url}
+                                    src={getSafeImageUrl(post.featured_image_url)}
                                     alt={post.title || 'Blog post image'}
                                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                     loading="lazy"
                                     decoding="async"
-                                    onError={e => { e.currentTarget.style.display = 'none'; }}
+                                    onError={(e) => { 
+                                      console.error('Failed to load image:', post.featured_image_url);
+                                      e.currentTarget.style.display = 'none'; 
+                                      // Show fallback placeholder
+                                      const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback');
+                                      if (fallback) {
+                                        (fallback as HTMLElement).style.display = 'flex';
+                                      }
+                                    }}
+                                    onLoad={() => {
+                                      console.log('Image loaded successfully:', post.featured_image_url);
+                                    }}
                                   />
-                                ) : (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <p className="text-gray-500">No image available</p>
+                                ) : null}
+                                
+                                {/* Fallback placeholder */}
+                                <div className="image-fallback absolute inset-0 flex items-center justify-center" style={{ display: post.featured_image_url ? 'none' : 'flex' }}>
+                                  <div className="text-center">
+                                    <div className="w-12 h-12 mx-auto mb-2 bg-gray-300 rounded-full flex items-center justify-center">
+                                      <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                      </svg>
+                                    </div>
+                                    <p className="text-gray-500 text-xs">No image</p>
                                   </div>
-                                )}
+                                </div>
                               </div>
                               <CardContent className="p-5">
                                 <h3 className="font-semibold text-xl mb-1 group-hover:text-gray-900 transition-colors line-clamp-2">

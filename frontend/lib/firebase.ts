@@ -71,6 +71,44 @@ export const testFirebaseConnection = async () => {
 
 export { storage, firestore, auth };
 
+// Function to generate public Firebase Storage URLs
+export const getFirebaseStorageUrl = async (path: string): Promise<string> => {
+  try {
+    if (!path || !storage) {
+      console.error('Invalid path or storage not initialized');
+      return '';
+    }
+
+    // Remove leading slash if present
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    
+    // Create a reference to the file
+    const fileRef = ref(storage, cleanPath);
+    
+    // Get the download URL
+    const downloadURL = await getDownloadURL(fileRef);
+    console.log('Generated Firebase Storage URL:', downloadURL);
+    
+    return downloadURL;
+  } catch (error) {
+    console.error('Failed to generate Firebase Storage URL:', error);
+    return '';
+  }
+};
+
+// Function to check if Firebase Storage URL is accessible
+export const checkFirebaseStorageAccess = async (url: string): Promise<boolean> => {
+  try {
+    if (!url) return false;
+    
+    const response = await fetch(url, { method: 'HEAD' });
+    return response.ok;
+  } catch (error) {
+    console.error('Firebase Storage access check failed:', error);
+    return false;
+  }
+};
+
 // Helper function to generate unique filename
 const generateFileName = (originalName: string, productId: string, imageType: 'main' | 'gallery'): string => {
   const timestamp = Date.now();

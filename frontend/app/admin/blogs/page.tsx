@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 // import { getImageUrl, supabase } from "@/lib/supabase";
-import { firestore, uploadBlogImagesToFirebase } from "@/lib/firebase";
+import { firestore, uploadBlogImagesToFirebase, getFirebaseStorageUrl, checkFirebaseStorageAccess } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,7 @@ import EnhancedEditor from "@/components/ui/EnhancedEditor";
 import TipTapEditor from "@/app/admin/components/TipTapEditor";
 import AIBlogGenerationDialog from "@/app/admin/components/AIBlogGenerationDialog";
 import PermissionGuard from '@/components/PermissionGuard';
+import { getSafeImageUrl } from "@/lib/utils";
 
 interface Post {
   id: string;
@@ -220,9 +220,10 @@ function AdminBlogsPageContent() {
     setKeywordInput("");
     setTagInput("");
 
-    // Set image preview for edit
+    // Set image preview for edit with safe URL
     if (post.featured_image_url) {
-      setImagePreviews([post.featured_image_url]);
+      const safe = getSafeImageUrl(post.featured_image_url, defaultImageUrl);
+      setImagePreviews([safe]);
     } else {
       setImagePreviews([]);
     }
@@ -415,11 +416,15 @@ function AdminBlogsPageContent() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
                   {imagePreviews.map((src, idx) => (
                     <div key={idx} className="relative group aspect-[4/3] rounded-lg overflow-hidden border">
-                      <Image
-                        src={src}
+                      {/* Use regular img for previews; allow data:/blob: directly */}
+                      <img
+                        src={src && (src.startsWith('data:') || src.startsWith('blob:')) ? src : getSafeImageUrl(src, defaultImageUrl)}
                         alt={`Preview ${idx + 1}`}
-                        fill
-                        className="object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('Preview image failed:', src);
+                          (e.currentTarget as HTMLImageElement).src = defaultImageUrl;
+                        }}
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <Button
@@ -566,7 +571,7 @@ function AdminBlogsPageContent() {
           {posts.map((post) => {
             let imageSrc = '';
             if (post.featured_image_url) {
-              imageSrc = post.featured_image_url;
+              imageSrc = getSafeImageUrl(post.featured_image_url, defaultImageUrl);
             }
             return (
               <motion.div
@@ -583,8 +588,8 @@ function AdminBlogsPageContent() {
                         alt={post.title}
                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={e => {
-                          // Hide the image if it fails to load
-                          e.currentTarget.style.display = 'none';
+                          console.error('Grid image failed:', imageSrc);
+                          (e.currentTarget as HTMLImageElement).style.display = 'none';
                         }}
                       />
                     ) : (

@@ -6,13 +6,24 @@ import ConditionalNavbar from "@/components/ConditionalNavbar";
 import { Suspense } from "react";
 import { BagProvider } from '@/components/BagContext';
 import { Toaster as ReactHotToastToaster } from 'react-hot-toast';
-import ConditionalAutoFeedback from '@/components/ConditionalAutoFeedback';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import ScrollToTop from '@/components/ScrollToTop';
+import PerformanceMonitor from '@/components/PerformaceMonitor';
  
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
+const inter = Inter({ 
+  subsets: ["latin"], 
+  variable: "--font-inter",
+  display: 'swap', // Add this for better performance
+  preload: true
+});
+
+const playfair = Playfair_Display({ 
+  subsets: ["latin"], 
+  variable: "--font-playfair",
+  display: 'swap', // Add this for better performance
+  preload: true
+});
 
 // Updated favicon URL
 const faviconUrl = "https://mzvuuvtckcimzemivltz.supabase.co/storage/v1/object/public/the-house/favicon.ico";
@@ -63,6 +74,14 @@ export default function RootLayout({
       <head>
       </head>
       <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>
+        {/* Inline script to silence console.log/info/debug/warn. Errors remain. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              `(function(){try{var noop=function(){};if(typeof window!=="undefined"&&window.console){console.log=noop;console.info=noop;console.debug=noop;console.warn=noop;}}catch(e){}})();`,
+          }}
+        />
+        <PerformanceMonitor />
         <BagProvider>
           <ScrollToTop />
           <ConditionalNavbar />
@@ -70,7 +89,6 @@ export default function RootLayout({
             {children}
           </main>
         </BagProvider>
-        <ConditionalAutoFeedback />
         <Toaster position="top-center" richColors />
         <ReactHotToastToaster position="top-center" reverseOrder={false} />
         <GoogleAnalytics />
