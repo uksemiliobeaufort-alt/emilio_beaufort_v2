@@ -5,12 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useEffect, useState } from "react";
-import FeedbackFormDialog from "@/components/ui/FeedbackFormDialog";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
   const router = useRouter();
-  const [isFeedbackFormOpen, setIsFeedbackFormOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isQuickLinksOpen, setIsQuickLinksOpen] = useState(false);
 
@@ -82,7 +80,6 @@ export function Footer() {
                         { name: 'The House', href: '#house', isExternal: false },
                         { name: 'Journal', href: '#journal', isExternal: false },
                         { name: 'Track Order', href: '/track-order', isExternal: true },
-                        { name: 'Give Feedback', href: '#feedback', isExternal: false, isFeedback: true },
                         { name: 'Admin Login', href: '/admin/login', isExternal: true }
                       ].map((link: any) => (
                         <div key={link.name} className="flex justify-center">
@@ -93,16 +90,6 @@ export function Footer() {
                              >
                                {link.name}
                              </Link>
-                          ) : link.isFeedback ? (
-                                                         <button
-                               onClick={() => {
-                                 setIsFeedbackFormOpen(true);
-                                 setIsQuickLinksOpen(false);
-                               }}
-                               className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm py-2 px-3 min-h-[44px] flex items-center justify-center w-full"
-                             >
-                               {link.name}
-                             </button>
                           ) : (
                                                          <button
                                onClick={() => {
@@ -130,7 +117,6 @@ export function Footer() {
                     { name: 'The House', href: '#house', isExternal: false },
                     { name: 'Journal', href: '#journal', isExternal: false },
                     { name: 'Track Order', href: '/track-order', isExternal: true },
-                    { name: 'Give Feedback', href: '#feedback', isExternal: false, isFeedback: true },
                     { name: 'Admin Login', href: '/admin/login', isExternal: true }
                   ].map((link: any) => (
                     <div key={link.name} className="flex justify-center">
@@ -141,13 +127,6 @@ export function Footer() {
                         >
                           {link.name}
                         </Link>
-                      ) : link.isFeedback ? (
-                        <button
-                          onClick={() => setIsFeedbackFormOpen(true)}
-                          className="text-gray-300 hover:text-gold transition-premium font-sans-medium text-sm sm:text-base py-1 sm:py-2 px-0 min-h-[44px] flex items-center footer-link-underline"
-                        >
-                          {link.name}
-                        </button>
                       ) : (
                         <button
                           onClick={() => document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' })}
@@ -245,12 +224,6 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Feedback Form Dialog */}
-        <FeedbackFormDialog 
-          isOpen={isFeedbackFormOpen}
-          onClose={() => setIsFeedbackFormOpen(false)}
-          isAutoTriggered={false}
-        />
       </footer>
       {/* Back to Top Button - Left Bottom */}
 
