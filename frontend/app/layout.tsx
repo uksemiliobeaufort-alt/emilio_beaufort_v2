@@ -11,6 +11,7 @@ import ScrollToTop from '@/components/ScrollToTop';
 import PerformanceMonitor from '@/components/PerformaceMonitor';
  
 
+
 const inter = Inter({ 
   subsets: ["latin"], 
   variable: "--font-inter",
@@ -72,6 +73,26 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Preconnect to Google Fonts */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+
+        {/* Preconnect to Supabase storage (favicon + assets) */}
+        <link
+          rel="preconnect"
+          href="https://mzvuuvtckcimzemivltz.supabase.co"
+          crossOrigin=""
+        />
+
+        {/* Preconnect to analytics domains (if using GA / Vercel) */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
+        {/* Add these for complete optimization */}
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
+        <link rel="preconnect" href="https://checkout.razorpay.com" />
+        <link rel="preconnect" href="https://sheets.googleapis.com" />
+        <link rel="preconnect" href="https://encrypted-tbn0.gstatic.com" />
+        <link rel="preconnect" href="https://unpkg.com" />
       </head>
       <body className={`${inter.variable} ${playfair.variable} bg-white text-gray-900 font-sans`}>
         {/* Inline script to silence console.log/info/debug/warn. Errors remain. */}
