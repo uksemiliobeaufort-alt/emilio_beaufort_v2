@@ -146,6 +146,7 @@ export default function BlogsPage() {
                           src={src}
                           alt={`Preview ${idx + 1}`}
                           className="object-cover w-full h-full"
+                          loading="lazy"
                         />
                       </div>
                     ))}
@@ -178,6 +179,7 @@ export default function BlogsPage() {
                         <img
                           src={post.featuredImageUrl || defaultImageUrl}
                           alt={post.title}
+                          loading="lazy"
                           className="object-cover w-full h-full group-hover:scale-105 transition-transform"
                         />
                       </div>

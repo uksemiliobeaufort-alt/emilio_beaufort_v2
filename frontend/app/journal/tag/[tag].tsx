@@ -94,6 +94,7 @@ export default function TagArchivePage({ params }: { params: { tag: string } }) 
                           src={post.featured_image_url}
                           alt={post.title}
                           className="object-cover w-full h-full group-hover:scale-105 transition-transform"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-400">
@@ -161,4 +162,4 @@ export default function TagArchivePage({ params }: { params: { tag: string } }) 
       </div>
     </div>
   );
-} 
+}

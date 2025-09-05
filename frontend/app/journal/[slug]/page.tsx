@@ -6,7 +6,7 @@ import { Navbar } from "@/components/Navbar";
 import { firestore, getFirebaseStorageUrl, checkFirebaseStorageAccess } from '@/lib/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import HtmlContent from "@/components/ui/HtmlContent";
-import Head from "next/head";
+// import Head from "next/head"; // Unused import - Next.js App Router doesn't use Head component
 import Link from "next/link";
 import { getSafeImageUrl } from "@/lib/utils";
  
@@ -399,6 +399,7 @@ export default function BlogPostPage({ params }: Props) {
                     src={getPostImage(post)}
                     alt={post.title}
                     className="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
                     onError={handleImageError}
                     onLoad={handleImageLoad}
                   />
