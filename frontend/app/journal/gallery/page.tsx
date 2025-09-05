@@ -153,6 +153,17 @@ export default function BlogGalleryPage() {
                           src={post.featured_image_url}
                           alt={post.title}
                           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => { 
+                            console.error('Failed to load image:', post.featured_image_url);
+                            e.currentTarget.style.display = 'none'; 
+                            // Show fallback placeholder
+                            const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback');
+                            if (fallback) {
+                              (fallback as HTMLElement).style.display = 'flex';
+                            }
+                          }}
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -272,4 +283,4 @@ export default function BlogGalleryPage() {
       </div>
     </div>
   );
-} 
+}

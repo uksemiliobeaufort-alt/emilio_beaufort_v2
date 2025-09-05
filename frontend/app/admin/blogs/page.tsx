@@ -1,21 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+//import Link from "next/link";
 import { motion } from "framer-motion";
 // import { getImageUrl, supabase } from "@/lib/supabase";
-import { firestore, uploadBlogImagesToFirebase, getFirebaseStorageUrl, checkFirebaseStorageAccess } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { firestore, uploadBlogImagesToFirebase } from "@/lib/firebase";
+import { collection, addDoc, serverTimestamp, getDocs, query, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+// import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Pencil, Trash2, UploadCloud, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import RichTextEditor from "@/components/ui/RichTextEditor";
-import EnhancedEditor from "@/components/ui/EnhancedEditor";
+//import RichTextEditor from "@/components/ui/RichTextEditor";
+//import EnhancedEditor from "@/components/ui/EnhancedEditor";
 import TipTapEditor from "@/app/admin/components/TipTapEditor";
 import AIBlogGenerationDialog from "@/app/admin/components/AIBlogGenerationDialog";
 import PermissionGuard from '@/components/PermissionGuard';
