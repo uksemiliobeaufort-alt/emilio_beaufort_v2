@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Inter, Playfair_Display } from "next/font/google";
 import { Toaster } from "sonner";
-import PageTransitionProgressBar from "@/components/PageTransitionProgressBar";
+import InitialLoading from "@/components/InitialLoading";
 import ConditionalNavbar from "@/components/ConditionalNavbar";
 import { Suspense } from "react";
 import { BagProvider } from '@/components/BagContext';
@@ -102,6 +102,7 @@ export default function RootLayout({
               `(function(){try{var noop=function(){};if(typeof window!=="undefined"&&window.console){console.log=noop;console.info=noop;console.debug=noop;console.warn=noop;}}catch(e){}})();`,
           }}
         />
+        <InitialLoading />
         <PerformanceMonitor />
         <BagProvider>
           <ScrollToTop />
