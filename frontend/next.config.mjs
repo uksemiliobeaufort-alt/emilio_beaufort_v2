@@ -230,10 +230,10 @@ const nextConfig = {
   },
 
   // Webpack optimization + Critters
-  webpack: (config, { dev, isServer }) => {
+  webpack: async (config, { dev, isServer }) => {
     if (!dev && isServer) {
       // Only load Critters in production & server build
-      const Critters = require("critters-webpack-plugin").default;
+      const { default: Critters } = await import("critters-webpack-plugin");
       config.plugins.push(
         new Critters({
           preload: "swap",   // Preload fonts with swap
