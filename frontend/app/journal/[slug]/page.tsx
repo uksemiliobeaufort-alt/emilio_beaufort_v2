@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
-import { firestore, getFirebaseStorageUrl, checkFirebaseStorageAccess } from '@/lib/firebase';
+import { firestore } from '@/lib/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import HtmlContent from "@/components/ui/HtmlContent";
 import Head from "next/head";
 import Link from "next/link";
-import { getSafeImageUrl } from "@/lib/utils";
  
 
 interface BlogPost {
@@ -34,114 +33,57 @@ export default function BlogPostPage({ params }: Props) {
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const [imageRetryCount, setImageRetryCount] = useState(0);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string>('');
   const [slug, setSlug] = useState<string>('');
 
   // Default placeholder image
   const defaultImageUrl = "/default-image.jpg";
 
-  // Utility function to validate Firebase Storage URLs
-  const isValidFirebaseUrl = (url: string): boolean => {
-    if (!url) return false;
+  // Process journal images with WebP conversion - with fallback strategy
+  const processJournalImageUrl = (originalUrl: string | undefined): string => {
+    if (!originalUrl) return defaultImageUrl;
     
-    try {
-      const urlObj = new URL(url);
-      return urlObj.hostname.includes('firebasestorage.googleapis.com') && 
-             urlObj.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  };
-
-  // Utility function to get a safe image URL
-  const getSafeImageUrl = (url: string): string => {
-    if (isValidFirebaseUrl(url)) {
-      return url;
-    }
-    return defaultImageUrl;
-  };
-
-  // Function to determine if we should use Next.js Image or regular img tag
-  const shouldUseNextImage = (url: string): boolean => {
-    // Use regular img tag for Firebase Storage URLs to avoid optimization issues
-    if (isValidFirebaseUrl(url)) {
-      return false;
-    }
-    // Use Next.js Image for local images or other external URLs
-    return true;
-  };
-
-  // Function to preload and validate image
-  const preloadImage = (url: string): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (!url) {
-        resolve(false);
-        return;
+    // For Firebase images, try WebP conversion with fallback
+    if (originalUrl.includes('firebasestorage.googleapis.com') && process.env.NEXT_PUBLIC_IMAGE_PROCESSOR_URL) {
+      try {
+        const url = new URL(originalUrl);
+        const pathMatch = url.pathname.match(/\/o\/(.+?)\?/);
+        
+        if (pathMatch) {
+          const filePath = decodeURIComponent(pathMatch[1]);
+          const processorUrl = process.env.NEXT_PUBLIC_IMAGE_PROCESSOR_URL;
+          // Try WebP conversion with fallback to original if needed
+          const webpUrl = `${processorUrl}?path=${encodeURIComponent(filePath)}&format=webp&quality=85&force=true`;
+          
+          console.log('📰 Detail WebP URL generated:', {
+            original: originalUrl,
+            webp: webpUrl
+          });
+          
+          return webpUrl;
+        }
+      } catch (error) {
+        console.error('❌ WebP conversion failed:', error);
+        // Fallback to original image if WebP conversion fails
+        return originalUrl;
       }
-
-      const img = new Image();
-      img.onload = () => {
-        console.log('Image preloaded successfully:', url);
-        resolve(true);
-      };
-      img.onerror = () => {
-        console.error('Image preload failed:', url);
-        resolve(false);
-      };
-      img.src = url;
-    });
+    }
+    
+    // For non-Firebase images, return original
+    return originalUrl;
   };
 
-  // Enhanced image loading with Firebase Storage URL generation
-  const [imageFallbackIndex, setImageFallbackIndex] = useState(0);
-  const [generatedFirebaseUrl, setGeneratedFirebaseUrl] = useState<string>('');
+  // Simplified image handling - removed complex validation functions
+
   const fallbackImages = [
     '/default-image.jpg',
     'https://via.placeholder.com/800x450/cccccc/666666?text=Image+Unavailable',
     'https://via.placeholder.com/800x450/f0f0f0/999999?text=No+Image'
   ];
 
-  // Generate Firebase Storage URL when post changes
-  useEffect(() => {
-    if (post?.featured_image_url && isValidFirebaseUrl(post.featured_image_url)) {
-      const generateUrl = async () => {
-        try {
-          console.log('Generating Firebase Storage URL for:', post.featured_image_url);
-          
-          // Extract the path from the Firebase Storage URL
-          const url = new URL(post.featured_image_url);
-          const path = url.pathname.split('/o/')[1]?.split('?')[0];
-          
-          if (path) {
-            const decodedPath = decodeURIComponent(path);
-            console.log('Extracted path:', decodedPath);
-            
-            const generatedUrl = await getFirebaseStorageUrl(decodedPath);
-            if (generatedUrl) {
-              console.log('Generated URL:', generatedUrl);
-              setGeneratedFirebaseUrl(generatedUrl);
-              
-              // Check if the generated URL is accessible
-              const isAccessible = await checkFirebaseStorageAccess(generatedUrl);
-              console.log('URL accessible:', isAccessible);
-              
-              if (!isAccessible) {
-                console.log('Generated URL not accessible, will use fallback');
-                setImageError(true);
-              }
-            } else {
-              console.log('Failed to generate URL, will use fallback');
-              setImageError(true);
-            }
-          }
-        } catch (error) {
-          console.error('Error generating Firebase Storage URL:', error);
-          setImageError(true);
-        }
-      };
-      
-      generateUrl();
-    }
-  }, [post?.featured_image_url]);
+  // Simplified image loading - no need for complex Firebase URL generation
+  // The processJournalImageUrl function handles WebP conversion
 
   useEffect(() => {
     const initializeParams = async () => {
@@ -164,7 +106,6 @@ export default function BlogPostPage({ params }: Props) {
       // Reset image states when fetching new post
       setImageError(false);
       setImageLoading(true);
-      setImageFallbackIndex(0); // Reset fallback index for new post
       
       try {
         const q = query(collection(firestore, 'blog_posts'));
@@ -194,133 +135,60 @@ export default function BlogPostPage({ params }: Props) {
     fetchPost();
   }, [slug]);
 
-  // Add timeout mechanism for image loading
+  // Reset image state when post changes
   useEffect(() => {
-    if (imageLoading && post?.featured_image_url) {
-      const timeout = setTimeout(() => {
-        console.log('Image loading timeout, trying fallback');
-        if (imageFallbackIndex < fallbackImages.length - 1) {
-          setImageFallbackIndex(prev => prev + 1);
-          setImageLoading(true);
-        } else {
-          setImageError(true);
-          setImageLoading(false);
-        }
-      }, 10000); // 10 second timeout
-
-      return () => clearTimeout(timeout);
-    }
-  }, [imageLoading, post?.featured_image_url, imageFallbackIndex, fallbackImages.length]);
-
-  const handleImageError = () => {
-    console.error('Failed to load post image:', post?.featured_image_url);
-    
-    // Try next fallback image
-    if (imageFallbackIndex < fallbackImages.length - 1) {
-      console.log('Trying next fallback image');
-      setImageFallbackIndex(prev => prev + 1);
+    if (post) {
+      setImageError(false);
       setImageLoading(true);
-    } else {
-      console.log('All fallbacks exhausted, showing final error state');
-      setImageError(true);
-      setImageLoading(false);
+      setImageRetryCount(0);
+      setCurrentImageUrl('');
     }
+  }, [post]);
+
+  // Simplified image loading - removed complex timeout logic
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const img = e.currentTarget;
+    console.error('❌ Image failed to load:', img.src);
+    
+    // Retry logic: try original image if WebP fails
+    if (imageRetryCount === 0 && post?.featured_image_url && img.src.includes('format=webp')) {
+      console.log('🔄 Retrying with original image...');
+      setImageRetryCount(1);
+      setCurrentImageUrl(post.featured_image_url);
+      return;
+    }
+    
+    // Final fallback to default image
+    console.log('🔄 Using default image as final fallback');
+    setImageError(true);
+    setImageLoading(false);
+    setCurrentImageUrl(defaultImageUrl);
   };
 
   const handleImageLoad = () => {
-    console.log('Image loaded successfully:', post?.featured_image_url);
+    console.log('✅ Image loaded successfully:', currentImageUrl);
     setImageError(false);
     setImageLoading(false);
   };
 
   const getPostImage = (post: BlogPost) => {
-    if (imageError) {
-      console.log('Using fallback image due to previous error');
-      const fallbackUrl = fallbackImages[imageFallbackIndex] || fallbackImages[0];
-      console.log('Selected fallback URL:', fallbackUrl);
-      return fallbackUrl;
+    if (currentImageUrl) {
+      return currentImageUrl;
     }
     
-    const imageUrl = post.featured_image_url || '';
-    console.log('Processing image URL:', imageUrl);
-    
-    if (isValidFirebaseUrl(imageUrl)) {
-      // Use generated Firebase Storage URL if available
-      if (generatedFirebaseUrl) {
-        console.log('Using generated Firebase Storage URL:', generatedFirebaseUrl);
-        return generatedFirebaseUrl;
-      }
-      
-      console.log('No generated URL available, using original URL');
-      return imageUrl;
-    }
-    
-    console.log('URL is not valid Firebase Storage URL, using fallback');
-    return fallbackImages[0];
+    // Try WebP first, then fallback to original
+    const webpUrl = processJournalImageUrl(post.featured_image_url);
+    setCurrentImageUrl(webpUrl);
+    return webpUrl;
   };
 
   const handleBack = () => {
-    router.back();
+    // Proper redirection to journal section with hash navigation
+    router.push('/#journal');
   };
 
-  const testFirebaseStorageAccess = async () => {
-    if (!post?.featured_image_url) {
-      console.log('No image URL to test');
-      return;
-    }
-
-    console.log('=== Testing Firebase Storage Access ===');
-    console.log('Original URL:', post.featured_image_url);
-    
-    try {
-      // Test 1: Check if URL is valid Firebase Storage URL
-      const isValid = isValidFirebaseUrl(post.featured_image_url);
-      console.log('Is valid Firebase URL:', isValid);
-      
-      if (isValid) {
-        // Test 2: Try to generate a new URL
-        const url = new URL(post.featured_image_url);
-        const path = url.pathname.split('/o/')[1]?.split('?')[0];
-        
-        if (path) {
-          const decodedPath = decodeURIComponent(path);
-          console.log('Extracted path:', decodedPath);
-          
-          const generatedUrl = await getFirebaseStorageUrl(decodedPath);
-          console.log('Generated URL:', generatedUrl);
-          
-          if (generatedUrl) {
-            // Test 3: Check if generated URL is accessible
-            const isAccessible = await checkFirebaseStorageAccess(generatedUrl);
-            console.log('Generated URL accessible:', isAccessible);
-            
-            // Test 4: Try to fetch the image
-            try {
-              const response = await fetch(generatedUrl);
-              console.log('Fetch response status:', response.status);
-              console.log('Fetch response headers:', Object.fromEntries(response.headers.entries()));
-            } catch (fetchError) {
-              console.error('Fetch error:', fetchError);
-            }
-          }
-        }
-      }
-      
-      // Test 5: Try to access original URL directly
-      try {
-        const response = await fetch(post.featured_image_url, { method: 'HEAD' });
-        console.log('Original URL response status:', response.status);
-        console.log('Original URL headers:', Object.fromEntries(response.headers.entries()));
-      } catch (fetchError) {
-        console.error('Original URL fetch error:', fetchError);
-      }
-      
-    } catch (error) {
-      console.error('Test failed:', error);
-    }
-    
-    console.log('=== End Test ===');
-  };
+  // Removed complex test function to simplify image loading
 
   if (loading) {
     return (
@@ -394,13 +262,15 @@ export default function BlogPostPage({ params }: Props) {
                       </div>
                     </div>
                   )}
-                  {/* Use regular img tag for Firebase Storage URLs to avoid Next.js Image optimization issues */}
+                  {/* Use OptimizedImage for WebP conversion */}
                   <img
-                    src={getPostImage(post)}
+                    src={processJournalImageUrl(post.featured_image_url)}
                     alt={post.title}
                     className="absolute inset-0 w-full h-full object-cover"
-                    onError={handleImageError}
+                    loading="eager"
+                    decoding="async"
                     onLoad={handleImageLoad}
+                    onError={handleImageError}
                   />
                 </>
               ) : (
@@ -445,16 +315,7 @@ export default function BlogPostPage({ params }: Props) {
               <span className="text-sm font-medium group-hover:underline">Back to Journal</span>
             </button>
 
-            {/* Debug button for Firebase Storage testing */}
-            {process.env.NODE_ENV === 'development' && (
-              <button 
-                onClick={testFirebaseStorageAccess}
-                className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors duration-300 group mt-4 ml-8"
-              >
-                <span className="mr-2 text-sm font-medium">🔍</span>
-                <span className="text-sm font-medium group-hover:underline">Test Firebase Storage</span>
-              </button>
-            )}
+            {/* Removed debug button to simplify image loading */}
             
           </article>
         </div>

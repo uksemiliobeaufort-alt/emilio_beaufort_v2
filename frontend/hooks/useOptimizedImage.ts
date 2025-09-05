@@ -33,8 +33,19 @@ export function useOptimizedImage(
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Hydration effect
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const loadImage = useCallback(async () => {
+    // Only run on client side and after hydration
+    if (typeof window === 'undefined' || !isHydrated) {
+      return;
+    }
+
     if (!originalUrl) {
       setResult({
         url: options.fallbackUrl || '',
@@ -82,22 +93,25 @@ export function useOptimizedImage(
       setIsLoading(false);
       setIsError(true);
     }
-  }, [originalUrl, options, retryCount]);
+  }, [originalUrl, options, retryCount, isHydrated]);
 
   const retry = useCallback(() => {
     setRetryCount(prev => prev + 1);
   }, []);
 
   useEffect(() => {
-    loadImage();
-  }, [loadImage]);
+    // Only run on client side and after hydration
+    if (typeof window !== 'undefined' && isHydrated) {
+      loadImage();
+    }
+  }, [loadImage, isHydrated]);
 
   // Preload if requested
   useEffect(() => {
-    if (options.preload && originalUrl) {
+    if (typeof window !== 'undefined' && isHydrated && options.preload && originalUrl) {
       imageService.preloadImages([originalUrl], options);
     }
-  }, [originalUrl, options.preload, options]);
+  }, [originalUrl, options.preload, options, isHydrated]);
 
   return {
     imageUrl: result.url,
@@ -120,8 +134,19 @@ export function useBatchOptimizedImages(
   const [results, setResults] = useState<ImageLoadResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Hydration effect
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
+    // Only run on client side and after hydration
+    if (typeof window === 'undefined' || !isHydrated) {
+      return;
+    }
+
     if (!urls.length) {
       setResults([]);
       setIsLoading(false);
@@ -169,7 +194,7 @@ export function useBatchOptimizedImages(
     };
 
     loadAllImages();
-  }, [urls, options]);
+  }, [urls, options, isHydrated]);
 
   return {
     results,
