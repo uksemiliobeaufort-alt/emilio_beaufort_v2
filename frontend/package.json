@@ -17,6 +17,7 @@
     "@google/generative-ai": "^0.24.1",
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
+    "@next/bundle-analyzer": "^15.5.2",
     "@popperjs/core": "^2.11.8",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",
