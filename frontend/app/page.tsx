@@ -25,7 +25,7 @@ import Chatbot from "@/components/Chatbot";
 import Marquee from "react-fast-marquee";
 
 // Hero Section Component
-const HeroSection = ({ onHeroReady }: { onHeroReady?: () => void }) => {
+const HeroSection = () => {
   return (
     <section className="relative w-full min-h-[100svh] overflow-hidden pt-0 md:pt-20">
       {/* SINGLE IMAGE */}
@@ -37,12 +37,6 @@ const HeroSection = ({ onHeroReady }: { onHeroReady?: () => void }) => {
           loading="eager"
           fetchPriority="high"
           decoding="sync"
-          onLoad={() => {
-            if (onHeroReady) onHeroReady();
-          }}
-          onError={() => {
-            if (onHeroReady) onHeroReady();
-          }}
           draggable={false}
         />
         {/* Mobile readability overlay (extended upward to sit under navbar) */}
@@ -202,43 +196,33 @@ function InteractiveBackground() {
       } as CSSProperties}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 via-transparent to-[#B7A16C]/5" />
-      <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#D4AF37]/10 rounded-full blur-xl" />
-      <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-[#B7A16C]/10 rounded-full blur-xl" />
+      <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-[#D4AF37]/10 rounded-full" />
+      <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-[#B7A16C]/10 rounded-full" />
     </motion.div>
   );
 }
 
 export default function Home() {
-  const [contentLoaded, setContentLoaded] = useState(false);
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
   const router = useRouter();
   // const analytics = useAnalytics();
     const [showFullPhilosophy, setShowFullPhilosophy] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [showRest, setShowRest] = useState(false);
-  const [heroReady, setHeroReady] = useState(false);
-  const [hasHydrated, setHasHydrated] = useState(false);
-  const heroReadyBufferedRef = useRef(false);
 
   
 
 
 
   useEffect(() => {
-    // Set content as loaded almost immediately for better perceived performance
-    const timer = setTimeout(() => setContentLoaded(true), 50);
+    // Set showRest after a short delay
     const deferTimer = setTimeout(() => setShowRest(true), 200);
-    return () => clearTimeout(timer);
+    
+    return () => {
+      clearTimeout(deferTimer);
+    };
   }, []);
 
-  // Mark when hydration is complete and apply any buffered hero-ready signal
-  useEffect(() => {
-    setHasHydrated(true);
-    if (heroReadyBufferedRef.current) {
-      setHeroReady(true);
-      heroReadyBufferedRef.current = false;
-    }
-  }, []);
 
   // Handle hash navigation with accurate target and single smooth scroll
   useEffect(() => {
@@ -402,42 +386,15 @@ const thirdRow = founders.slice(6, 7); // Last founder (Pratibha)
 const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
   return (
     <>
-      {/* Render Hero immediately for best LCP with loading text overlay until ready */}
-      <div className="relative">
-        <HeroSection
-          onHeroReady={() => {
-            // Avoid state changes during hydration to prevent mismatches
-            if (!hasHydrated) {
-              heroReadyBufferedRef.current = true;
-              return;
-            }
-            setHeroReady(true);
-          }}
-        />
-        {!heroReady && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-[1px] z-20">
-            <span className="text-sm sm:text-base md:text-lg font-semibold text-premium">Loading...</span>
-          </div>
-        )}
-      </div>
+      {/* Render Hero immediately for best LCP */}
+      <HeroSection />
 
       <motion.div 
         className="min-h-screen bg-premium overflow-x-hidden"
         initial={{ opacity: 0 }}
-        animate={{ opacity: contentLoaded ? 1 : 0 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-      {/* Content Loading Indicator - Shows while content loads */}
-      {!contentLoaded && (
-        <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-gold to-premium z-50">
-          <motion.div
-            className="h-full bg-white"
-            initial={{ width: "0%" }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          />
-        </div>
-      )}
       
       {showRest && <AnimatedBackground />}
       {/* <Navbar /> */}

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import React from 'react';
 
 
 
@@ -435,8 +436,9 @@ export async function deleteProduct(id: string, category: string) {
 }
 
 // Helper function to get public URL for an image in a bucket
-export const getImageUrl = (bucketName: string, path: string) => {
+export const getImageUrl = (bucketName: string, path: string, format: 'webp' | 'original' = 'webp') => {
   if (!bucketName || !path) {
+    console.log(`getImageUrl: Missing bucketName (${bucketName}) or path (${path})`);
     return '';
   }
 
@@ -446,47 +448,60 @@ export const getImageUrl = (bucketName: string, path: string) => {
       .from(bucketName)
       .getPublicUrl(path);
 
+    console.log(`getImageUrl: Bucket: ${bucketName}, Path: ${path}, Data:`, data);
+
     if (!data?.publicUrl) {
+      console.log(`getImageUrl: No publicUrl returned for ${bucketName}/${path}`);
       return '';
     }
 
     // Ensure the URL is properly encoded and add cache-busting parameter
     const url = new URL(data.publicUrl);
+    
+    // Add WebP format transformation if requested
+    if (format === 'webp') {
+      url.searchParams.set('format', 'webp');
+      url.searchParams.set('quality', '85'); // Good quality with compression
+    }
+    
     url.searchParams.set('t', Date.now().toString());
-    return url.toString();
+    const finalUrl = url.toString();
+    console.log(`getImageUrl: Final URL (${format}): ${finalUrl}`);
+    return finalUrl;
   } catch (error) {
+    console.error(`getImageUrl: Error getting URL for ${bucketName}/${path}:`, error);
     return '';
   }
 };
 
 // Helper function to get founder image URL
-export const getFounderImageUrl = (founderName: string, imageName?: string) => {
+export const getFounderImageUrl = (founderName: string, imageName?: string, format: 'webp' | 'original' = 'webp') => {
   if (imageName) {
-    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, `${imageName}.jpg`);
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, `${imageName}.jpg`, format);
   }
   // Special case for Manish Jha
   if (founderName.toLowerCase().includes('manish')) {
-    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'manish sir.jpg');
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'manish sir.jpg', format);
   }
   // Special case for Aly Sayyad
   if (founderName.toLowerCase().includes('aly sayyad')) {
-    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Aly Sayyad Sir.jpg');
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Aly Sayyad Sir.jpg', format);
   }
   // Special case for Sreedeep Saha (or Shreedeep)
   if (founderName.toLowerCase().includes('sreedeep') || founderName.toLowerCase().includes('shreedeep')) {
-    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Shreedeep Sir.jpg');
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Shreedeep Sir.jpg', format);
   }
   // Special case for Uttam Kumar Singh
   if (founderName.toLowerCase().includes('uttam')) {
-    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Uttam.jpg');
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Uttam.jpg', format);
   }
   // Special case for Bani Sir
   if (founderName.toLowerCase().includes('bani')) {
-    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Bani Sir.jpg');
+    return getImageUrl(STORAGE_BUCKETS.FOUNDERS, 'Bani Sir.jpg', format);
   }
   // Default: normalized name
   const normalizedName = founderName.toLowerCase().replace(/\s+/g, '-');
-  return getImageUrl(STORAGE_BUCKETS.FOUNDERS, `${normalizedName}.jpg`);
+  return getImageUrl(STORAGE_BUCKETS.FOUNDERS, `${normalizedName}.jpg`, format);
 };
 
 // Helper function to upload an image to a bucket
@@ -694,12 +709,47 @@ export const subscribeToPageViews = (callback: (payload: any) => void) => {
     .subscribe();
 };
 
-export const getPartnerImageUrl = (partnerName: string, imageName?: string) => {
+export const getPartnerImageUrl = (partnerName: string, imageName?: string, format: 'webp' | 'original' = 'webp') => {
   // Special case for Aurélina London
   if (partnerName.trim().toLowerCase() === 'aurélina london') {
-    return getImageUrl('partners-image', 'aurelina-london.jpg');
+    const url = getImageUrl('partners-image', 'aurelina-london.jpg', format);
+    console.log(`Special case for Aurélina London (${format}): ${url}`);
+    return url;
   }
   // Default: normalize spaces and lowercase
   const fileName = imageName || `${partnerName.replace(/\s+/g, '-').toLowerCase()}.jpg`;
-  return getImageUrl('partners-image', fileName);
+  const url = getImageUrl('partners-image', fileName, format);
+  console.log(`Partner: ${partnerName}, FileName: ${fileName}, URL (${format}): ${url}`);
+  return url;
+};
+
+// Utility hook for WebP image loading with fallback
+export const useWebPImage = (bucketName: string, path: string) => {
+  const [useWebP, setUseWebP] = React.useState(true);
+  const [imageError, setImageError] = React.useState(false);
+  
+  const imageUrl = getImageUrl(bucketName, path, useWebP ? 'webp' : 'original');
+  
+  const handleImageError = () => {
+    if (useWebP) {
+      console.log(`WebP failed for ${bucketName}/${path}, trying original format`);
+      setUseWebP(false);
+    } else {
+      console.error(`Both WebP and original format failed for ${bucketName}/${path}`);
+      setImageError(true);
+    }
+  };
+  
+  const reset = () => {
+    setUseWebP(true);
+    setImageError(false);
+  };
+  
+  return {
+    imageUrl,
+    isWebP: useWebP,
+    hasError: imageError,
+    handleImageError,
+    reset
+  };
 }; 
