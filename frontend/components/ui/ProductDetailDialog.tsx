@@ -2,15 +2,15 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  DialogDescription,
+  // DialogDescription, // Unused import
 } from "@/components/ui/dialog";
 import { Product } from "@/lib/api";
-import { getProducts, isCosmeticsProduct, isHairExtensionsProduct, HairExtensionProduct, Cosmetics, UnifiedProduct, VariantType } from "@/lib/supabase";
+import { /* getProducts, */ isCosmeticsProduct, isHairExtensionsProduct, HairExtensionProduct, Cosmetics, UnifiedProduct, VariantType } from "@/lib/supabase";
 
 
 
 import Image from "next/image";
-import { X, Star, Package, ArrowLeft, ArrowRight, CheckCircle, Sparkles, Award, MessageCircle, Info, ShoppingBag, Heart, Share2, Shield, RotateCcw, Headphones, Box, Mail, Phone } from "lucide-react";
+import { X, Star, /* Package, */ ArrowLeft, ArrowRight, CheckCircle, Sparkles, Award, /* MessageCircle, */ Info, ShoppingBag, Heart, Share2, Shield, RotateCcw, Headphones, Box, Mail, Phone } from "lucide-react";
 import confetti from 'canvas-confetti';
 import { useBag } from '@/components/BagContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -400,6 +400,7 @@ export function ProductDetailDialog({
                       src={images[selectedImageIndex]}
                       alt={product.name}
                       className="w-full h-full object-contain transition-transform duration-500 hover:scale-105"
+                      loading="lazy"
                       onError={(e) => {
                         console.error(
                           "Failed to load product image:",

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import Script from 'next/script';
+// import Script from 'next/script'; // Unused import
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from './ui/sheet';
 
 interface BagModalProps {
@@ -205,4 +205,4 @@ export default function BagModal({ open, onClose, onBuyNow }: BagModalProps) {
       `}</style>
     </>
   );
-} 
+}
