@@ -6,6 +6,49 @@ import { useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { getImageUrl, getProducts, UnifiedProduct as SupabaseProduct } from '@/lib/supabase';
 import { getHairExtensionsFromFirebase } from '@/lib/firebase';
+import { imageService } from '@/lib/imageService';
+import OptimizedImage from '@/components/OptimizedImage';
+
+// Advanced image processing using the new image service
+const processImageUrl = (originalUrl: string | undefined, isFirebase: boolean = false): string => {
+  if (!originalUrl) {
+    console.log('⚠️ No original URL provided for image processing');
+    return '';
+  }
+  
+  if (isFirebase) {
+    console.log('🔥 Processing Firebase image for WebP conversion:', {
+      originalUrl,
+      isFirebase,
+      hasProcessorUrl: !!process.env.NEXT_PUBLIC_IMAGE_PROCESSOR_URL
+    });
+    
+    // Use the advanced image service for Firebase images
+    const webpUrl = imageService.generateOptimizedUrl(originalUrl, {
+      format: 'webp',
+      quality: 85,
+      force: true
+    });
+    
+    console.log('✅ Firebase WebP conversion result:', {
+      original: originalUrl,
+      webp: webpUrl,
+      converted: originalUrl !== webpUrl,
+      isWebP: webpUrl.includes('format=webp')
+    });
+    
+    return webpUrl;
+  }
+  
+  // For Supabase images, use the existing WebP format
+  const supabaseWebpUrl = getImageUrl("product-images", originalUrl, 'webp');
+  console.log('🗄️ Supabase WebP URL generated:', {
+    original: originalUrl,
+    webp: supabaseWebpUrl
+  });
+  
+  return supabaseWebpUrl;
+};
 
 interface DisplayProduct {
   title: string;
@@ -28,33 +71,122 @@ export default function ExclusiveProductsMarquee() {
     try {
       setRefreshing(true);
       
+      // Verify environment configuration
+      console.log('🔧 Environment Configuration Check:', {
+        hasImageProcessorUrl: !!process.env.NEXT_PUBLIC_IMAGE_PROCESSOR_URL,
+        processorUrl: process.env.NEXT_PUBLIC_IMAGE_PROCESSOR_URL,
+        isProduction: process.env.NODE_ENV === 'production'
+      });
+      
       // Fetch from both Firebase and Supabase
       const [firebaseProducts, supabaseProducts] = await Promise.all([
-        getHairExtensionsFromFirebase().catch(() => []),
-        getProducts().catch(() => [])
+        getHairExtensionsFromFirebase().catch((error) => {
+          console.error('❌ Failed to fetch Firebase products:', error);
+          return [];
+        }),
+        getProducts().catch((error) => {
+          console.error('❌ Failed to fetch Supabase products:', error);
+          return [];
+        })
       ]);
 
+      console.log('📊 Raw Data Fetch Results:', {
+        firebaseProductsCount: firebaseProducts.length,
+        supabaseProductsCount: supabaseProducts.length,
+        firebaseProducts: firebaseProducts.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          featured: p.featured,
+          hasImage: !!(p.main_image_url || p.image_url || p.image || p.thumbnail_url)
+        })),
+        supabaseProducts: supabaseProducts.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          featured: p.featured,
+          category: p.category,
+          hasImage: !!p.main_image_url
+        }))
+      });
+
       // Process Firebase hair extension products
+      console.log('🔍 Filtering Firebase products for featured items...');
       const firebaseFeaturedProducts = firebaseProducts
-        .filter((product: any) => product.featured === true && product.id)
-        .map((product: any) => ({
-          id: product.id || `firebase-${Date.now()}-${Math.random()}`,
-          title: product.name || 'Untitled Product',
-          description: product.description || product.detailed_description || 'Premium hair extension product',
-          image: product.main_image_url || getImageUrl("product-images", "cosmetics1.jpg"),
-          price: product.price || 0,
-          category: 'HAIR' as 'COSMETICS' | 'HAIR',
-          in_stock: product.in_stock !== false // Default to true if not specified
-        }));
+        .filter((product: any) => {
+          const isFeatured = product.featured === true;
+          const hasId = !!product.id;
+          console.log(`🔍 Firebase product "${product.name}":`, {
+            id: product.id,
+            featured: product.featured,
+            isFeatured,
+            hasId,
+            willInclude: isFeatured && hasId
+          });
+          return isFeatured && hasId;
+        })
+        .map((product: any) => {
+          // Get the first available image URL (main_image_url, image_url, or any other image field)
+          const imageUrl = product.main_image_url || product.image_url || product.image || product.thumbnail_url;
+          
+          console.log('🛍️ Processing Firebase product:', {
+            id: product.id,
+            name: product.name,
+            originalImageUrl: imageUrl,
+            hasImageUrl: !!imageUrl,
+            imageFields: {
+              main_image_url: product.main_image_url,
+              image_url: product.image_url,
+              image: product.image,
+              thumbnail_url: product.thumbnail_url
+            }
+          });
+          
+          // Use advanced image processing with proper type checking
+          const processedImageUrl = imageUrl ? processImageUrl(imageUrl, true) : getImageUrl("product-images", "cosmetics1.jpg", 'webp');
+          
+          console.log('🛍️ Firebase product processed:', {
+            id: product.id,
+            name: product.name,
+            originalImageUrl: imageUrl,
+            processedImageUrl: processedImageUrl,
+            urlChanged: imageUrl !== processedImageUrl,
+            isWebP: processedImageUrl.includes('format=webp'),
+            isProcessed: processedImageUrl.includes('ext-image-processing-api-handler')
+          });
+          
+          return {
+            id: product.id || `firebase-${Date.now()}-${Math.random()}`,
+            title: product.name || 'Untitled Product',
+            description: product.description || product.detailed_description || 'Premium hair extension product',
+            image: processedImageUrl,
+            price: product.price || 0,
+            category: 'HAIR' as 'COSMETICS' | 'HAIR',
+            in_stock: product.in_stock !== false // Default to true if not specified
+          };
+        });
 
       // Process Supabase cosmetics products
+      console.log('🔍 Filtering Supabase products for featured cosmetics...');
       const supabaseFeaturedProducts = supabaseProducts
-        .filter(product => product.featured === true && product.category === 'cosmetics' && product.id)
+        .filter(product => {
+          const isFeatured = product.featured === true;
+          const isCosmetics = product.category === 'cosmetics';
+          const hasId = !!product.id;
+          console.log(`🔍 Supabase product "${product.name}":`, {
+            id: product.id,
+            featured: product.featured,
+            category: product.category,
+            isFeatured,
+            isCosmetics,
+            hasId,
+            willInclude: isFeatured && isCosmetics && hasId
+          });
+          return isFeatured && isCosmetics && hasId;
+        })
         .map(product => ({
           id: product.id || `supabase-${Date.now()}-${Math.random()}`,
           title: product.name || 'Untitled Product',
           description: product.description || 'Premium cosmetic product',
-          image: product.main_image_url || getImageUrl("product-images", "cosmetics1.jpg"),
+          image: product.main_image_url ? processImageUrl(product.main_image_url, false) : getImageUrl("product-images", "cosmetics1.jpg", 'webp'),
           price: product.price || 0,
           category: 'COSMETICS' as 'COSMETICS' | 'HAIR',
           in_stock: product.in_stock !== false // Default to true if not specified
@@ -63,6 +195,35 @@ export default function ExclusiveProductsMarquee() {
       // Combine and sort by featured status
       const allFeaturedProducts = [...firebaseFeaturedProducts, ...supabaseFeaturedProducts];
       setExclusiveProducts(allFeaturedProducts);
+      
+      // Log summary of image processing
+      console.log('🖼️ Advanced Image Processing Summary:', {
+        totalProducts: allFeaturedProducts.length,
+        firebaseProducts: firebaseFeaturedProducts.length,
+        supabaseProducts: supabaseFeaturedProducts.length,
+        webpImages: allFeaturedProducts.filter(p => p.image.includes('format=webp')).length,
+        processedImages: allFeaturedProducts.filter(p => p.image.includes('ext-image-processing-api-handler')).length,
+        firebaseWebPImages: firebaseFeaturedProducts.filter(p => p.image.includes('format=webp')).length,
+        firebaseProcessedImages: firebaseFeaturedProducts.filter(p => p.image.includes('ext-image-processing-api-handler')).length,
+        environmentCheck: {
+          hasProcessorUrl: !!process.env.NEXT_PUBLIC_IMAGE_PROCESSOR_URL,
+          processorUrl: process.env.NEXT_PUBLIC_IMAGE_PROCESSOR_URL
+        }
+      });
+
+      // Preload images for better performance
+      const imageUrls = allFeaturedProducts.map(p => p.image).filter(Boolean);
+      if (imageUrls.length > 0) {
+        imageService.preloadImages(imageUrls, {
+          format: 'webp',
+          quality: 85,
+          force: true
+        }).then(() => {
+          console.log('🚀 Image preloading completed for', imageUrls.length, 'images');
+        }).catch(error => {
+          console.log('⚠️ Image preloading failed:', error);
+        });
+      }
     } catch (error) {
       // Silent error handling - remove console.error to prevent errors from appearing
       setExclusiveProducts([]);
@@ -78,7 +239,7 @@ export default function ExclusiveProductsMarquee() {
   }, []);
   
   const marqueeProducts = exclusiveProducts; // Use products without repetition
-  const fallbackImage = getImageUrl("product-images", "cosmetics1.jpg");
+  const fallbackImage = getImageUrl("product-images", "cosmetics1.jpg", 'webp');
   const [imageErrors, setImageErrors] = useState<{[key: string]: boolean}>({});
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -86,6 +247,17 @@ export default function ExclusiveProductsMarquee() {
   const handleImageError = (idx: number, productTitle: string) => {
     // Remove console.error to prevent the error from appearing
     setImageErrors(prev => ({ ...prev, [idx]: true }));
+  };
+
+  // Function to handle successful image load and verify format
+  const handleImageLoad = (idx: number, productTitle: string, imageUrl: string) => {
+    console.log(`✅ Image loaded successfully for ${productTitle}:`, {
+      index: idx,
+      url: imageUrl,
+      isWebP: imageUrl.includes('format=webp'),
+      isFirebase: imageUrl.includes('firebasestorage.googleapis.com'),
+      isProcessed: imageUrl.includes('ext-image-processing-api-handler')
+    });
   };
 
   // Scroll handler
