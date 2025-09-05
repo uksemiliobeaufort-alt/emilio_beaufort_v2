@@ -229,20 +229,8 @@ const nextConfig = {
     },
   },
 
-  // Webpack optimization + Critters
-  webpack: async (config, { dev, isServer }) => {
-    if (!dev && isServer) {
-      // Only load Critters in production & server build
-      const { default: Critters } = await import("critters-webpack-plugin");
-      config.plugins.push(
-        new Critters({
-          preload: "swap",   // Preload fonts with swap
-          pruneSource: true, // Remove inlined CSS from external files
-          compress: true,    // Minify critical CSS
-        })
-      );
-    }
-
+  // Webpack optimization
+  webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {
       // Enable tree shaking
       config.optimization.usedExports = true;
