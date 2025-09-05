@@ -198,12 +198,23 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "*.supabase.co",
-        pathname: "/storage/v1/object/public/",
+        pathname: "/storage/v1/object/public/**",
       },
       {
         protocol: "https",
         hostname: "*.supabase.co",
-        pathname: "/storage/v1/object/sign/",
+        pathname: "/storage/v1/object/sign/**",
+      },
+      // Add specific Supabase project domains (common patterns)
+      {
+        protocol: "https",
+        hostname: "*.supabase.in",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.supabase.in",
+        pathname: "/storage/v1/object/sign/**",
       },
       { protocol: "https", hostname: ".firebasestorage.googleapis.com", pathname: "/*" },
       { protocol: "https", hostname: "firebasestorage.googleapis.com", pathname: "/" },
