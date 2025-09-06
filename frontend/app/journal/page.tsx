@@ -36,6 +36,37 @@ export default function JournalPage() {
   // Default placeholder image
   const defaultImageUrl = "/default-image.jpg";
 
+  // Process journal images with WebP conversion
+  const processJournalImageUrl = (originalUrl: string | undefined): string => {
+    if (!originalUrl) return defaultImageUrl;
+    
+    // For Firebase images, add WebP parameters directly to avoid network requests
+    if (originalUrl.includes('firebasestorage.googleapis.com') && process.env.NEXT_PUBLIC_IMAGE_PROCESSOR_URL) {
+      try {
+        const url = new URL(originalUrl);
+        const pathMatch = url.pathname.match(/\/o\/(.+?)\?/);
+        
+        if (pathMatch) {
+          const filePath = decodeURIComponent(pathMatch[1]);
+          const processorUrl = process.env.NEXT_PUBLIC_IMAGE_PROCESSOR_URL;
+          const webpUrl = `${processorUrl}?path=${encodeURIComponent(filePath)}&format=webp&quality=85&force=true`;
+          
+          console.log('📰 Journal WebP URL generated:', {
+            original: originalUrl,
+            webp: webpUrl
+          });
+          
+          return webpUrl;
+        }
+      } catch (error) {
+        console.log('⚠️ WebP conversion failed, using original:', error);
+      }
+    }
+    
+    // Return original URL if WebP conversion fails or not needed
+    return originalUrl;
+  };
+
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -65,6 +96,8 @@ export default function JournalPage() {
         // Sort by created_at descending and limit to 10
         firebasePosts = firebasePosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10);
         setPosts(firebasePosts);
+
+        // Removed image preloading to prevent NetworkError
       } catch (error) {
         console.error("Failed to fetch posts:", error);
       } finally {
@@ -222,12 +255,21 @@ export default function JournalPage() {
                           <div className="relative aspect-[4/3] bg-gray-100">
                             {posts[currentIndex].featured_image_url ? (
                               <img
-                                src={posts[currentIndex].featured_image_url}
+                                src={processJournalImageUrl(posts[currentIndex].featured_image_url)}
                                 alt={posts[currentIndex].title || 'Blog post image'}
                                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                 loading="lazy"
                                 decoding="async"
-                                onError={e => { e.currentTarget.style.display = 'none'; }}
+                                onLoad={() => {
+                                  console.log('📰 Mobile journal image loaded:', posts[currentIndex].featured_image_url);
+                                }}
+                                onError={(e) => {
+                                  console.error('❌ Mobile journal image failed:', posts[currentIndex].featured_image_url);
+                                  // Fallback to original image
+                                  if (e.currentTarget.src !== posts[currentIndex].featured_image_url) {
+                                    e.currentTarget.src = posts[currentIndex].featured_image_url!;
+                                  }
+                                }}
                               />
                             ) : (
                               <div className="absolute inset-0 flex items-center justify-center">
@@ -359,22 +401,20 @@ export default function JournalPage() {
                               <div className="relative aspect-[4/3] bg-gray-100">
                                 {post.featured_image_url ? (
                                   <img
-                                    src={getSafeImageUrl(post.featured_image_url)}
+                                    src={processJournalImageUrl(post.featured_image_url)}
                                     alt={post.title || 'Blog post image'}
                                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                     loading="lazy"
                                     decoding="async"
-                                    onError={(e) => { 
-                                      console.error('Failed to load image:', post.featured_image_url);
-                                      e.currentTarget.style.display = 'none'; 
-                                      // Show fallback placeholder
-                                      const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback');
-                                      if (fallback) {
-                                        (fallback as HTMLElement).style.display = 'flex';
-                                      }
-                                    }}
                                     onLoad={() => {
-                                      console.log('Image loaded successfully:', post.featured_image_url);
+                                      console.log('📰 Desktop journal image loaded:', post.featured_image_url);
+                                    }}
+                                    onError={(e) => { 
+                                      console.error('❌ Desktop journal image failed:', post.featured_image_url);
+                                      // Fallback to original image
+                                      if (e.currentTarget.src !== post.featured_image_url) {
+                                        e.currentTarget.src = post.featured_image_url;
+                                      }
                                     }}
                                   />
                                 ) : null}

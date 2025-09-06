@@ -38,7 +38,13 @@ export default function OptimizedImage({
 }: OptimizedImageProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showPlaceholder, setShowPlaceholder] = useState(true);
+  const [isClient, setIsClient] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const processingOptions: ImageProcessingOptions = {
     format: 'webp',
@@ -61,6 +67,9 @@ export default function OptimizedImage({
     preload: priority,
     fallbackUrl: fallbackSrc
   });
+
+  // Show loading state if not hydrated or still loading
+  const shouldShowLoading = !isClient || isLoading;
 
   // Handle image load events
   const handleImageLoad = () => {
@@ -87,8 +96,8 @@ export default function OptimizedImage({
     onError?.(error || 'Image load failed');
   };
 
-  // Show placeholder while loading
-  if (showPlaceholder && (isLoading || !imageLoaded)) {
+  // Show placeholder while loading or on server side
+  if (shouldShowLoading || (showPlaceholder && !imageLoaded)) {
     return (
       <div 
         className={`bg-gray-200 animate-pulse flex items-center justify-center ${className}`}
@@ -96,7 +105,7 @@ export default function OptimizedImage({
       >
         {placeholder || (
           <div className="text-gray-400 text-sm">
-            {isLoading ? 'Loading...' : 'Loading image...'}
+            {!isClient ? 'Loading...' : (isLoading ? 'Loading...' : 'Loading image...')}
           </div>
         )}
       </div>

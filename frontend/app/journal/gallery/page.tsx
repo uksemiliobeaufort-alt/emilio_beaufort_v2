@@ -25,6 +25,37 @@ interface BlogPost {
 
 const POSTS_PER_PAGE = 6;
 
+// Process journal images with WebP conversion
+const processJournalImageUrl = (originalUrl: string | undefined): string => {
+  if (!originalUrl) return "/default-image.jpg";
+  
+  // For Firebase images, add WebP parameters directly to avoid network requests
+  if (originalUrl.includes('firebasestorage.googleapis.com') && process.env.NEXT_PUBLIC_IMAGE_PROCESSOR_URL) {
+    try {
+      const url = new URL(originalUrl);
+      const pathMatch = url.pathname.match(/\/o\/(.+?)\?/);
+      
+      if (pathMatch) {
+        const filePath = decodeURIComponent(pathMatch[1]);
+        const processorUrl = process.env.NEXT_PUBLIC_IMAGE_PROCESSOR_URL;
+        const webpUrl = `${processorUrl}?path=${encodeURIComponent(filePath)}&format=webp&quality=85&force=true`;
+        
+        console.log('📰 Gallery WebP URL generated:', {
+          original: originalUrl,
+          webp: webpUrl
+        });
+        
+        return webpUrl;
+      }
+    } catch (error) {
+      console.log('⚠️ WebP conversion failed, using original:', error);
+    }
+  }
+  
+  // Return original URL if WebP conversion fails or not needed
+  return originalUrl;
+};
+
 export default function BlogGalleryPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,6 +140,8 @@ export default function BlogGalleryPage() {
         // Sort by created_at descending
         firebasePosts = firebasePosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         setPosts(firebasePosts);
+
+        // Removed image preloading to prevent NetworkError
       } catch (error) {
         setPosts([]);
       } finally {
@@ -150,9 +183,21 @@ export default function BlogGalleryPage() {
                     <div className="relative aspect-[4/3] bg-gray-100">
                       {post.featured_image_url ? (
                         <img
-                          src={post.featured_image_url}
+                          src={processJournalImageUrl(post.featured_image_url)}
                           alt={post.title}
                           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                          decoding="async"
+                          onLoad={() => {
+                            console.log('📰 Gallery image loaded:', post.featured_image_url);
+                          }}
+                          onError={(e) => {
+                            console.error('❌ Gallery image failed:', post.featured_image_url);
+                            // Fallback to original image
+                            if (e.currentTarget.src !== post.featured_image_url) {
+                              e.currentTarget.src = post.featured_image_url;
+                            }
+                          }}
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">

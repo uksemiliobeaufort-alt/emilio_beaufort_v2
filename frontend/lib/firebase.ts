@@ -96,17 +96,11 @@ export const getFirebaseStorageUrl = async (path: string): Promise<string> => {
   }
 };
 
-// Function to check if Firebase Storage URL is accessible
+// Function to check if Firebase Storage URL is accessible (disabled to prevent CORS errors)
 export const checkFirebaseStorageAccess = async (url: string): Promise<boolean> => {
-  try {
-    if (!url) return false;
-    
-    const response = await fetch(url, { method: 'HEAD' });
-    return response.ok;
-  } catch (error) {
-    console.error('Firebase Storage access check failed:', error);
-    return false;
-  }
+  // Disabled to prevent CORS errors when scrolling
+  console.log('Firebase Storage access check disabled to prevent CORS errors:', url);
+  return true; // Always return true to avoid breaking functionality
 };
 
 // Helper function to generate unique filename
