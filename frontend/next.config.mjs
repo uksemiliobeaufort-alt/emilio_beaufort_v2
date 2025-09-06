@@ -236,18 +236,19 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ["framer-motion", "lucide-react", "react-fast-marquee"],
     optimizeCss: true,
-    turbo: {
-      rules: {
-        "*.svg": {
-          loaders: ["@svgr/webpack"],
-          as: "*.js",
-        },
+  },
+
+  // Turbopack configuration (moved from experimental)
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
       },
     },
   },
 
   // Production optimizations
-  swcMinify: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
@@ -316,12 +317,6 @@ const nextConfig = {
 
       // Enable module concatenation
       config.optimization.concatenateModules = true;
-      
-      // Optimize module resolution
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'framer-motion': 'framer-motion/dist/framer-motion',
-      };
     }
 
     return config;
