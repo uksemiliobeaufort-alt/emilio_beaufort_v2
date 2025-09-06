@@ -1,43 +1,51 @@
 "use client";
 
-import { useState, useEffect, useRef, type CSSProperties } from 'react';
-import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef, type CSSProperties, Suspense, lazy } from 'react';
+// Optimized Framer Motion imports
+import { motion } from 'framer-motion';
+import { useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 // import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import Journal from './journal/page';
-import CardGrid from '@/components/CardGrid';
-import PartnershipFormDialog from '@/components/ui/PartnershipFormDialog';
-import ExclusiveProductsMarquee from '@/components/ExclusiveProductsMarquee';
 import { getImageUrl, getFounderImageUrl } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Leaf, Globe, Shield, BadgePercent, Crown, Award, ChevronUp } from 'lucide-react';
-import AnimatedBackground from '@/components/AnimatedBackground';
-import CookieConsent from '@/components/CookieConsent';
 import { safeMap } from "@/lib/utils";
-import WhyChooseSection from '@/components/WhyChooseSection'; 
 import { trackEngagement, trackUserBehavior } from '@/lib/analytics';
-import TeamMemberSocialLinks from '@/components/TeamMemberSocialLinks';
-import PartnersMarquee from "@/components/PartnersMarquee";
-import Chatbot from "@/components/Chatbot";
-import Marquee from "react-fast-marquee";
+import ClientOnly from '@/components/ClientOnly';
+
+// Lazy load heavy components
+const Journal = lazy(() => import('./journal/page'));
+const CardGrid = lazy(() => import('@/components/CardGrid'));
+const PartnershipFormDialog = lazy(() => import('@/components/ui/PartnershipFormDialog'));
+const ExclusiveProductsMarquee = lazy(() => import('@/components/ExclusiveProductsMarquee'));
+const AnimatedBackground = lazy(() => import('@/components/AnimatedBackground'));
+const CookieConsent = lazy(() => import('@/components/CookieConsent'));
+const WhyChooseSection = lazy(() => import('@/components/WhyChooseSection'));
+const PartnersMarquee = lazy(() => import("@/components/PartnersMarquee"));
+const Chatbot = lazy(() => import("@/components/Chatbot"));
+const Marquee = lazy(() => import("react-fast-marquee"));
 
 // Hero Section Component
 const HeroSection = () => {
   return (
-    <section className="relative w-full min-h-[100svh] overflow-hidden pt-0 md:pt-20">
+    <section className="hero-section">
       {/* SINGLE IMAGE */}
-      <div className="absolute left-0 right-0 bottom-0 top-16 md:top-20 lg:top-12">
-        <img
+      <div className="hero-image-container">
+        <Image
           src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fhero.webp?alt=media&token=b62e69c7-11ab-4f0a-9ccc-f7f70680b55b"
-          className="w-full h-full block object-cover object-left md:object-left lg:object-center transform origin-left scale-[1.25] sm:scale-[1.25] md:scale-[1.15] lg:scale-100"
-          alt="Hero"
-          loading="eager"
-          fetchPriority="high"
-          decoding="sync"
-          draggable={false}
+          alt="Emilio Beaufort - Premium Hair Extensions and Luxury Grooming"
+          fill
+          priority
+          quality={90}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+          className="hero-image"
+          placeholder="blur"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
         />
         {/* Mobile readability overlay (extended upward to sit under navbar) */}
         <div className="absolute left-0 right-0 bottom-0 sm:bg-transparent bg-black/40" style={{ top: '-64px' }} />
@@ -389,18 +397,31 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       {/* Render Hero immediately for best LCP */}
       <HeroSection />
 
-      <motion.div 
-        className="min-h-screen bg-premium overflow-x-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
+      <ClientOnly fallback={<div className="min-h-screen bg-premium overflow-x-hidden" />}>
+        <motion.div 
+          className="min-h-screen bg-premium overflow-x-hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
       
-      {showRest && <AnimatedBackground />}
+      {showRest && (
+        <ClientOnly fallback={<div className="min-h-screen bg-premium" />}>
+          <Suspense fallback={<div className="min-h-screen bg-premium" />}>
+            <AnimatedBackground />
+          </Suspense>
+        </ClientOnly>
+      )}
       {/* <Navbar /> */}
 
       {/* Cookie Consent Popup */}
-      {showRest && <CookieConsent />}
+      {showRest && (
+        <ClientOnly fallback={null}>
+          <Suspense fallback={null}>
+            <CookieConsent />
+          </Suspense>
+        </ClientOnly>
+      )}
 
 
 
@@ -609,11 +630,22 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       </section>
 
       {/* Why Choose Emilio Beaufort Section */}
-      {showRest && <WhyChooseSection />}
-
+      {showRest && (
+        <ClientOnly fallback={<div className="py-20 bg-premium" />}>
+          <Suspense fallback={<div className="py-20 bg-premium" />}>
+            <WhyChooseSection />
+          </Suspense>
+        </ClientOnly>
+      )}
 
       {/* Exclusive Products Marquee Section */}
-      {showRest && <ExclusiveProductsMarquee />}
+      {showRest && (
+        <ClientOnly fallback={<div className="py-12 bg-white" />}>
+          <Suspense fallback={<div className="py-12 bg-white" />}>
+            <ExclusiveProductsMarquee />
+          </Suspense>
+        </ClientOnly>
+      )}
 
       {/* The House Section */}
       <section
@@ -639,7 +671,13 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
               Each product is designed to elevate your daily ritual.
             </p>
           </motion.div>
-          {showRest && <CardGrid />}
+          {showRest && (
+            <ClientOnly fallback={<div className="py-20 bg-premium" />}>
+              <Suspense fallback={<div className="py-20 bg-premium" />}>
+                <CardGrid />
+              </Suspense>
+            </ClientOnly>
+          )}
         </div>
       </section>
 
@@ -663,7 +701,13 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
               the intersection of style, culture, and the pursuit of excellence.
             </p>
           </motion.div> */}
-          {showRest && <Journal />}
+          {showRest && (
+            <ClientOnly fallback={<div className="py-12 bg-premium" />}>
+              <Suspense fallback={<div className="py-12 bg-premium" />}>
+                <Journal />
+              </Suspense>
+            </ClientOnly>
+          )}
         </div>
       </section>
 
@@ -720,7 +764,9 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                 }}
   
               >
-                <Marquee pauseOnHover={true} speed={40} gradient={false} style={{ overflow: "visible" }}>
+                <ClientOnly fallback={<div className="h-80 bg-white" />}>
+                  <Suspense fallback={<div className="h-80 bg-white" />}>
+                    <Marquee pauseOnHover={true} speed={40} gradient={false} style={{ overflow: "visible" }}>
                 {safeMap(allFounders, (founder: Founder, index: number) => (
                   <motion.div
                     key={index}
@@ -789,7 +835,9 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                     </div>
                   </motion.div>
                 ))}
-                </Marquee>
+                    </Marquee>
+                  </Suspense>
+                </ClientOnly>
                 </div>
                 
               </div>
@@ -856,7 +904,13 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
           <h2 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">Our Partners</h2>
           <p className="text-sm sm:text-sm md:text-base lg:text-lg text-gray-600">We proudly collaborate with these distinguished brands.</p>
         </div>
-        {showRest && <PartnersMarquee />}
+        {showRest && (
+          <ClientOnly fallback={<div className="py-12 bg-white" />}>
+            <Suspense fallback={<div className="py-12 bg-white" />}>
+              <PartnersMarquee />
+            </Suspense>
+          </ClientOnly>
+        )}
       </section>
 
       {/* Inspirational Quote Above Footer */}
@@ -870,13 +924,23 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
         <span className="block font-semibold text-xl md:text-2xl text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>Emilio Beaufort</span>
       </div> */}
 
-      {showRest && <Footer />}
+      {showRest && (
+        <ClientOnly fallback={null}>
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
+        </ClientOnly>
+      )}
 
       {showRest && (
-        <PartnershipFormDialog
-          isOpen={isPartnershipFormOpen}
-          onClose={() => setIsPartnershipFormOpen(false)}
-        />
+        <ClientOnly fallback={null}>
+          <Suspense fallback={null}>
+            <PartnershipFormDialog
+              isOpen={isPartnershipFormOpen}
+              onClose={() => setIsPartnershipFormOpen(false)}
+            />
+          </Suspense>
+        </ClientOnly>
       )}
 
       {/* Floating Action Button - Scroll to Top */}
@@ -898,8 +962,15 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       </AnimatePresence>
 
       {/* Chatbot Support System */}
-      {showRest && <Chatbot />}
-    </motion.div>
+      {showRest && (
+        <ClientOnly fallback={null}>
+          <Suspense fallback={null}>
+            <Chatbot />
+          </Suspense>
+        </ClientOnly>
+      )}
+        </motion.div>
+      </ClientOnly>
     </>
   );
 }
