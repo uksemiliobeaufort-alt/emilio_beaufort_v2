@@ -1,5 +1,3 @@
-import nodemailer from 'nodemailer';
-
 export interface JobApplicationEmailData {
   applicantName: string;
   applicantEmail: string;

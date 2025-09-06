@@ -370,7 +370,7 @@ export default function BlogPostPage({ params }: Props) {
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-4">{post.title}</h1>
               {/* Only show tags visually, not keywords */}
               {(post.tags && post.tags.length > 0) && (
-                <></> // Remove tags from the top
+                (<></>) // Remove tags from the top
               )}
               <p className="text-sm text-gray-500">
                 {new Date(post.created_at).toLocaleDateString("en-US", {

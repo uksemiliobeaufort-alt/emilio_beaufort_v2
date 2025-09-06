@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { google } from 'googleapis';
+import { google } from "googleapis/build/src/apis";
 
 // Google Sheets API configuration
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];

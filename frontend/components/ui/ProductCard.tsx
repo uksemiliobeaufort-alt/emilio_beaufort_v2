@@ -103,25 +103,21 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
         <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden flex items-center justify-center">
           {product.imageUrl && !imageError ? (
             // Always use regular img tag for Firebase Storage URLs to avoid Next.js Image issues
-            product.imageUrl.includes('firebasestorage.googleapis.com') || product.imageUrl.includes('emilio-beaufort.firebasestorage.app') ? (
-              <img
-                src={product.imageUrl}
-                alt={product.name}
-                className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110 p-6"
-                onError={() => setImageError(true)}
-                loading="lazy"
-              />
-            ) : (
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                className="object-contain transition-transform duration-500 group-hover:scale-110 p-6"
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              />
-            )
+            (product.imageUrl.includes('firebasestorage.googleapis.com') || product.imageUrl.includes('emilio-beaufort.firebasestorage.app') ? (<img
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110 p-6"
+              onError={() => setImageError(true)}
+              loading="lazy"
+            />) : (<Image
+              src={product.imageUrl}
+              alt={product.name}
+              fill
+              className="object-contain transition-transform duration-500 group-hover:scale-110 p-6"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />))
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
               <ImageIcon className="w-20 h-20 text-gray-400" />
@@ -294,23 +290,19 @@ export function ProductListItem({ product, onViewDetails }: ProductCardProps) {
       <div className="flex-shrink-0 w-20 h-20 relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
         {product.imageUrl && !imageError ? (
           // Check if the image URL is from Firebase Storage and use regular img tag as fallback
-          product.imageUrl.includes('firebasestorage.googleapis.com') || product.imageUrl.includes('emilio-beaufort.firebasestorage.app') ? (
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full h-full object-contain p-2"
-              onError={() => setImageError(true)}
-              loading="lazy"
-            />
-          ) : (
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              className="object-contain p-2"
-              sizes="80px"
-            />
-          )
+          (product.imageUrl.includes('firebasestorage.googleapis.com') || product.imageUrl.includes('emilio-beaufort.firebasestorage.app') ? (<img
+            src={product.imageUrl}
+            alt={product.name}
+            className="w-full h-full object-contain p-2"
+            onError={() => setImageError(true)}
+            loading="lazy"
+          />) : (<Image
+            src={product.imageUrl}
+            alt={product.name}
+            fill
+            className="object-contain p-2"
+            sizes="80px"
+          />))
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
             <ImageIcon className="w-10 h-10 text-gray-400" />

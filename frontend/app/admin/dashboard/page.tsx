@@ -23,15 +23,7 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { Bar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
+import { Chart } from "chart.js/auto";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 import { supabase } from '@/lib/supabase';
 import { getProducts } from '@/lib/supabase';

@@ -222,7 +222,7 @@ useEffect(() => {
               <AnimatePresence mode="wait">
                 {currentUser?.photoURL ? (
                   // ✅ Show uploaded profile picture
-                  <motion.img
+                  (<motion.img
                     key="avatar"
                     src={currentUser.photoURL}
                     alt={currentUser.displayName || "Profile"}
@@ -230,10 +230,10 @@ useEffect(() => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                  />
+                  />)
                 ) : currentUser?.displayName ? (
                   // ✅ No picture → use first letter of displayName
-                  <motion.div
+                  (<motion.div
                     key="initial-name"
                     className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full bg-gray-500 flex items-center justify-center text-white text-xs xs:text-sm font-semibold"
                     initial={{ opacity: 0 }}
@@ -241,10 +241,10 @@ useEffect(() => {
                     exit={{ opacity: 0 }}
                   >
                     {currentUser.displayName[0].toUpperCase()}
-                  </motion.div>
+                  </motion.div>)
                 ) : currentUser?.email ? (
                   // ✅ No picture & no name → use first letter of email
-                  <motion.div
+                  (<motion.div
                     key="initial-email"
                     className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full bg-gray-500 flex items-center justify-center text-white text-xs xs:text-sm font-semibold"
                     initial={{ opacity: 0 }}
@@ -252,10 +252,10 @@ useEffect(() => {
                     exit={{ opacity: 0 }}
                   >
                     {currentUser.email[0].toUpperCase()}
-                  </motion.div>
+                  </motion.div>)
                 ) : (
                   // ✅ Fallback icon
-                  <motion.div
+                  (<motion.div
                     key="icon"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -268,7 +268,7 @@ useEffect(() => {
                           : "text-premium hover:text-gold"
                       }`}
                     />
-                  </motion.div>
+                  </motion.div>)
                 )}
               </AnimatePresence>
             </div>

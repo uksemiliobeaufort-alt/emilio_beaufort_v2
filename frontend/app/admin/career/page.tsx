@@ -284,7 +284,6 @@ export default function AdminCareersPage() {
         <PlusCircle className="h-6 w-6" />
         Post Job
       </Button>
-      
       {/* Mobile Close Button */}
       {dialogOpen && (
         <Button
@@ -607,93 +606,93 @@ export default function AdminCareersPage() {
           ))}
         </div>
       )}
-                                                                                                               {selectedJob && expandedJobId === selectedJob.id && (
-          <Dialog open={true} onOpenChange={() => { setExpandedJobId(null); setSelectedJob(null); }}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-0 border-0">
-              <div className="p-6 sm:p-8">
-                {/* Header Section */}
-                <DialogHeader className="mb-6">
-                  <DialogTitle className="text-2xl sm:text-3xl font-bold text-black mb-2">
-                    {selectedJob.title}
-                  </DialogTitle>
-                  <div className="text-gray-600 text-sm sm:text-base">
-                    {selectedJob.department && `${selectedJob.department} • `}{selectedJob.location}
-                  </div>
-                </DialogHeader>
-                
-                <div className="space-y-6">
-                  {/* Job Badges */}
-                  <div className="flex flex-wrap gap-2">
-                    {selectedJob.type && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100 break-words max-w-full">
-                        {selectedJob.type}
-                      </span>
-                    )}
-                    {selectedJob.salary && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-semibold border border-yellow-100 break-words max-w-full">
-                        Salary: {selectedJob.salary}
-                      </span>
-                    )}
-                    {selectedJob.application_form_link && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold border border-orange-100 break-words max-w-full">
-                        External Form
-                      </span>
-                    )}
-                    {selectedJob.seats_available && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-100 break-words max-w-full">
-                        Seats: {selectedJob.seats_available}
-                      </span>
-                    )}
-                  </div>
-                  
-                  {/* Date Information */}
-                  <div className="text-xs text-gray-400 mb-4">
-                    {selectedJob.created_at && (typeof selectedJob.created_at === 'string' ? new Date(selectedJob.created_at).toLocaleDateString() : '')}
-                    {selectedJob.auto_delete_at && (
-                      <span className="ml-4 text-orange-600">
-                        Expires: {selectedJob.auto_delete_at.toDate ? selectedJob.auto_delete_at.toDate().toLocaleDateString() : new Date(selectedJob.auto_delete_at).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <hr className="my-4 border-gray-200" />
-                  
-                  {/* Description */}
-                  <div className="flex-1 overflow-y-auto">
-                    <div className="text-gray-800 text-base sm:text-lg leading-relaxed prose prose-gray max-w-none" style={{minHeight: 80}}>
-                      <div 
-                        className="rich-text-content"
-                        dangerouslySetInnerHTML={{ __html: selectedJob.description }} 
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100">
-                    {selectedJob.application_form_link && (
-                      <Button
-                        className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
-                        onClick={() => window.open(selectedJob.application_form_link, '_blank')}
-                      >
-                        <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6z" />
-                        </svg>
-                        Apply Now
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      className="w-full sm:w-auto border-gray-300 text-gray-700 font-semibold py-3 px-8 rounded-xl hover:bg-gray-50 transition-all duration-200"
-                      onClick={() => { setExpandedJobId(null); setSelectedJob(null); }}
-                    >
-                      Close
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+      {selectedJob && expandedJobId === selectedJob.id && (
+<Dialog open={true} onOpenChange={() => { setExpandedJobId(null); setSelectedJob(null); }}>
+<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-0 border-0">
+<div className="p-6 sm:p-8">
+{/* Header Section */}
+<DialogHeader className="mb-6">
+<DialogTitle className="text-2xl sm:text-3xl font-bold text-black mb-2">
+{selectedJob.title}
+</DialogTitle>
+<div className="text-gray-600 text-sm sm:text-base">
+{selectedJob.department && `${selectedJob.department} • `}{selectedJob.location}
+</div>
+</DialogHeader>
+
+<div className="space-y-6">
+{/* Job Badges */}
+<div className="flex flex-wrap gap-2">
+{selectedJob.type && (
+<span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100 break-words max-w-full">
+{selectedJob.type}
+</span>
+)}
+{selectedJob.salary && (
+<span className="inline-flex items-center px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-semibold border border-yellow-100 break-words max-w-full">
+Salary: {selectedJob.salary}
+</span>
+)}
+{selectedJob.application_form_link && (
+<span className="inline-flex items-center px-3 py-1 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold border border-orange-100 break-words max-w-full">
+External Form
+</span>
+)}
+{selectedJob.seats_available && (
+<span className="inline-flex items-center px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-100 break-words max-w-full">
+Seats: {selectedJob.seats_available}
+</span>
+)}
+</div>
+
+{/* Date Information */}
+<div className="text-xs text-gray-400 mb-4">
+{selectedJob.created_at && (typeof selectedJob.created_at === 'string' ? new Date(selectedJob.created_at).toLocaleDateString() : '')}
+{selectedJob.auto_delete_at && (
+<span className="ml-4 text-orange-600">
+Expires: {selectedJob.auto_delete_at.toDate ? selectedJob.auto_delete_at.toDate().toLocaleDateString() : new Date(selectedJob.auto_delete_at).toLocaleDateString()}
+</span>
+)}
+</div>
+
+<hr className="my-4 border-gray-200" />
+
+{/* Description */}
+<div className="flex-1 overflow-y-auto">
+<div className="text-gray-800 text-base sm:text-lg leading-relaxed prose prose-gray max-w-none" style={{minHeight: 80}}>
+<div 
+className="rich-text-content"
+dangerouslySetInnerHTML={{ __html: selectedJob.description }} 
+/>
+</div>
+</div>
+
+{/* Action Buttons */}
+<div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100">
+{selectedJob.application_form_link && (
+<Button
+className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105"
+onClick={() => window.open(selectedJob.application_form_link, '_blank')}
+>
+<svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6z" />
+</svg>
+Apply Now
+</Button>
+)}
+<Button
+variant="outline"
+className="w-full sm:w-auto border-gray-300 text-gray-700 font-semibold py-3 px-8 rounded-xl hover:bg-gray-50 transition-all duration-200"
+onClick={() => { setExpandedJobId(null); setSelectedJob(null); }}
+>
+Close
+</Button>
+</div>
+</div>
+</div>
+</DialogContent>
+</Dialog>
+)}
     </div>
   );
 }

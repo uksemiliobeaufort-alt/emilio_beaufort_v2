@@ -209,7 +209,7 @@ export default function AIBlogGenerationDialog({
         <div className="space-y-6 py-4">
           {!showPreview ? (
             // Generation Form
-            <div className="space-y-6">
+            (<div className="space-y-6">
               {/* Topic Input */}
               <div className="space-y-2">
                 <Label className="text-base font-medium">Blog Topic</Label>
@@ -236,7 +236,6 @@ export default function AIBlogGenerationDialog({
                   </Button>
                 </div>
               </div>
-
               {/* Blog Ideas */}
               {showIdeas && blogIdeas.length > 0 && (
                 <div className="space-y-2">
@@ -254,7 +253,6 @@ export default function AIBlogGenerationDialog({
                   </div>
                 </div>
               )}
-
               {/* Tone and Length */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -286,7 +284,6 @@ export default function AIBlogGenerationDialog({
                   </Select>
                 </div>
               </div>
-
               {/* Keywords */}
               <div className="space-y-2">
                 <Label className="text-base font-medium">Keywords (Optional)</Label>
@@ -328,7 +325,6 @@ export default function AIBlogGenerationDialog({
                   </div>
                 )}
               </div>
-
               {/* Target Audience */}
               <div className="space-y-2">
                 <Label className="text-base font-medium">Target Audience (Optional)</Label>
@@ -338,7 +334,6 @@ export default function AIBlogGenerationDialog({
                   placeholder="e.g., Women aged 25-40, beauty enthusiasts, professionals"
                 />
               </div>
-
               {/* Images Toggle */}
               <div className="flex items-center justify-between border rounded-lg p-3">
                 <div>
@@ -347,7 +342,6 @@ export default function AIBlogGenerationDialog({
                 </div>
                 <Switch checked={includeImages} onCheckedChange={setIncludeImages} />
               </div>
-
               {/* Generate Button */}
               <Button
                 onClick={handleGenerateBlog}
@@ -366,10 +360,10 @@ export default function AIBlogGenerationDialog({
                   </>
                 )}
               </Button>
-            </div>
+            </div>)
           ) : (
             // Preview Generated Content
-            <div className="space-y-6">
+            (<div className="space-y-6">
               {generatedContent && (
                 <>
                   {/* Generated Title */}
@@ -491,7 +485,7 @@ export default function AIBlogGenerationDialog({
                   </div>
                 </>
               )}
-            </div>
+            </div>)
           )}
         </div>
       </DialogContent>
