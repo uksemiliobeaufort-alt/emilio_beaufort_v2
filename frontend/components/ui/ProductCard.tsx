@@ -104,13 +104,18 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
           {product.imageUrl && !imageError ? (
             // Always use regular img tag for Firebase Storage URLs to avoid Next.js Image issues
             product.imageUrl.includes('firebasestorage.googleapis.com') || product.imageUrl.includes('emilio-beaufort.firebasestorage.app') ? (
-              <img
+              <Image
                 src={product.imageUrl}
                 alt={product.name}
                 className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110 p-6"
+                fill
+                sizes="(max-width: 640px) 480px,
+                       (max-width: 768px) 768px,
+                       (max-width: 1024px) 1024px,
+                       1920px"
                 onError={() => setImageError(true)}
                 loading="lazy"
-              />
+/>
             ) : (
               <Image
                 src={product.imageUrl}
@@ -295,13 +300,18 @@ export function ProductListItem({ product, onViewDetails }: ProductCardProps) {
         {product.imageUrl && !imageError ? (
           // Check if the image URL is from Firebase Storage and use regular img tag as fallback
           product.imageUrl.includes('firebasestorage.googleapis.com') || product.imageUrl.includes('emilio-beaufort.firebasestorage.app') ? (
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full h-full object-contain p-2"
-              onError={() => setImageError(true)}
-              loading="lazy"
-            />
+            <Image
+  src={product.imageUrl}
+  alt={product.name}
+  className="w-full h-full object-contain p-2"
+  fill
+  sizes="(max-width: 640px) 480px,
+         (max-width: 768px) 768px,
+         (max-width: 1024px) 1024px,
+         1920px"
+  onError={() => setImageError(true)}
+  loading="lazy"
+/>
           ) : (
             <Image
               src={product.imageUrl}

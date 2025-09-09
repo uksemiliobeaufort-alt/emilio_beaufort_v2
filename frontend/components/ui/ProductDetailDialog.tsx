@@ -396,21 +396,26 @@ export function ProductDetailDialog({
                   flex items-center justify-center p-8">
                   {/* Check if the image URL is from Firebase Storage and use regular img tag as fallback */}
                   {images[selectedImageIndex].includes('firebasestorage.googleapis.com') || images[selectedImageIndex].includes('emilio-beaufort.firebasestorage.app') ? (
-                    <img
-                      src={images[selectedImageIndex]}
-                      alt={product.name}
-                      className="w-full h-full object-contain transition-transform duration-500 hover:scale-105"
-                      onError={(e) => {
-                        console.error(
-                          "Failed to load product image:",
-                          images[selectedImageIndex]
-                        );
-                        e.currentTarget.style.display = "none";
-                        e.currentTarget.parentElement?.nextElementSibling?.classList.remove(
-                          "hidden"
-                        );
-                      }}
-                    />
+                    <Image
+                    src={images[selectedImageIndex]}
+                    alt={product.name}
+                    className="w-full h-full object-contain transition-transform duration-500 hover:scale-105"
+                    fill
+                    sizes="(max-width: 640px) 480px,
+                           (max-width: 768px) 768px,
+                           (max-width: 1024px) 1024px,
+                           1920px"
+                    onError={(e) => {
+                      console.error(
+                        "Failed to load product image:",
+                        images[selectedImageIndex]
+                      );
+                      e.currentTarget.style.display = "none";
+                      e.currentTarget.parentElement?.nextElementSibling?.classList.remove(
+                        "hidden"
+                      );
+                    }}
+                  />
                   ) : (
                     <Image
                       src={images[selectedImageIndex]}
