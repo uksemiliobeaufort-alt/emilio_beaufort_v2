@@ -91,9 +91,9 @@ export default function TagArchivePage({ params }: { params: { tag: string } }) 
                     <div className="relative aspect-[4/3]">
                       {post.featured_image_url ? (
                         <img
-                          src={post.featured_image_url}
+                          srcSet={post.featured_image_url}
                           alt={post.title}
-                          className="object-cover w-full h-full group-hover:scale-105 transition-transform"
+                          className="object-cover w-full h-full (max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px group-hover:scale-105 transition-transform"
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-400">

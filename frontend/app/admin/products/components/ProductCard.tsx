@@ -62,9 +62,9 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
       <div className="aspect-square relative bg-gray-100 overflow-hidden">
         {product.main_image_url ? (
           <img
-            src={product.main_image_url}
+            srcSet={product.main_image_url}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full (max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">

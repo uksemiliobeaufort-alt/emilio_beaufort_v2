@@ -143,9 +143,9 @@ export default function BlogsPage() {
                     {imagePreviews.map((src, idx) => (
                       <div key={idx} className="relative w-full aspect-[4/3] rounded-md overflow-hidden">
                         <img
-                          src={src}
+                          srcSet={src}
                           alt={`Preview ${idx + 1}`}
-                          className="object-cover w-full h-full"
+                          className="object-cover (max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px"
                         />
                       </div>
                     ))}
@@ -176,9 +176,9 @@ export default function BlogsPage() {
                     <Card className="overflow-hidden hover:shadow-lg cursor-pointer group transition">
                       <div className="relative aspect-[4/3]">
                         <img
-                          src={post.featuredImageUrl || defaultImageUrl}
+                          srcSet={post.featuredImageUrl || defaultImageUrl}
                           alt={post.title}
-                          className="object-cover w-full h-full group-hover:scale-105 transition-transform"
+                          className="object-cover (max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px group-hover:scale-105 transition-transform"
                         />
                       </div>
                       <CardContent className="p-5">

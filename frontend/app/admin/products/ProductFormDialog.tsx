@@ -1495,9 +1495,9 @@ useEffect(() => {
                                           {mainImageUrl ? (
                       <div className="relative w-40 h-40 rounded-lg overflow-hidden border-2 border-gray-200">
                         <img
-                          src={mainImageUrl}
+                          srcSet={mainImageUrl}
                           alt="Main product"
-                          className="w-full h-full object-cover"
+                          className="(max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px object-cover"
                         />
                         <Button
                           type="button"
@@ -1549,9 +1549,9 @@ useEffect(() => {
                                           {existingGalleryUrls.map((imageUrl, index) => (
                       <div key={`existing-${index}`} className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-200">
                         <img
-                          src={imageUrl}
+                          srcSet={imageUrl}
                           alt={`Gallery ${index + 1}`}
-                          className="w-full h-full object-cover"
+                          className="(max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px object-cover"
                         />
                         <Button
                           type="button"
@@ -1569,9 +1569,9 @@ useEffect(() => {
                     {galleryUrls.map((imageUrl, index) => (
                       <div key={`new-${index}`} className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-200">
                         <img
-                          src={imageUrl}
+                          srcSet={imageUrl}
                           alt={`New gallery ${index + 1}`}
-                          className="w-full h-full object-cover"
+                          className="(max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px object-cover"
                         />
                         <Button
                           type="button"

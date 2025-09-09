@@ -172,9 +172,9 @@ export default function FoundersPage() {
                     <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
                       {founder.imageUrl ? (
                         <img
-                          src={founder.imageUrl}
+                          srcSet={founder.imageUrl}
                           alt={founder.name}
-                          className="w-full h-full object-cover"
+                          className="(max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';

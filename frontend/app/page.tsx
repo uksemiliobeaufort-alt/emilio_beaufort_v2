@@ -32,8 +32,8 @@ const HeroSection = () => {
       {/* SINGLE IMAGE */}
       <div className="w-full">
         <img
-          src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fhero.svg?alt=media&token=09a984ec-c803-4ae7-a250-840d155b52ca"
-          className="w-full h-auto block"
+          srcSet="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fhero.svg?alt=media&token=09a984ec-c803-4ae7-a250-840d155b52ca"
+          className="(max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px"
           alt="Hero"
           draggable={false}
         />
@@ -189,37 +189,37 @@ interface Founder {
   linkedin?: string; // now full URL
   twitter?: string;  // now full URL
   instagram?: string; // now full URL
-  imageName?: string; // Added for specific image loading
+  // imageName?: string; // Added for specific image loading
 }
 
-function FounderAvatar({ founder }: { founder: Founder }) {
-  const [imgError, setImgError] = useState(false);
-  // Get founder initials for fallback
-  const initials = (founder.name || '').split(' ').map(n => n[0]).join('');
-  return (
-    <div className="relative mb-6">
-        {/* Founder Image from Supabase */}
-        {!imgError ? (
-          <img
-            src={getFounderImageUrl(founder.name, founder.imageName)}
-            alt={`${founder.name} - ${founder.role}`}
-            className="w-full h-full object-cover rounded-full"
-            onLoad={() => {
-              // Optionally log success
-              // console.log(`Image loaded successfully for ${founder.name}`);
-            }}
-            onError={() => {
-              setImgError(true);
-            }}
-          />
-        ) : (
-          <span className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold text-gray-600 bg-gradient-to-br from-gray-200 to-gray-300">
-            {initials}
-          </span>
-        )}
-    </div>
-  );
-}
+// function FounderAvatar({ founder }: { founder: Founder }) {
+//   const [imgError, setImgError] = useState(false);
+//   // Get founder initials for fallback
+//   const initials = (founder.name || '').split(' ').map(n => n[0]).join('');
+//   return (
+//     <div className="relative mb-6">
+//         {/* Founder Image from Supabase */}
+//         {!imgError ? (
+//           <img
+//             srcSet={getFounderImageUrl(founder.name, founder.imageName)}
+//             alt={`${founder.name} - ${founder.role}`}
+//             className="(max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px object-cover rounded-full "
+//             onLoad={() => {
+//               // Optionally log success
+//               // console.log(`Image loaded successfully for ${founder.name}`);
+//             }}
+//             onError={() => {
+//               setImgError(true);
+//             }}
+//           />
+//         ) : (
+//           <span className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold text-gray-600 bg-gradient-to-br from-gray-200 to-gray-300">
+//             {initials}
+//           </span>
+//         )}
+//     </div>
+//   );
+// }
 
 // Mouse Tracking Component for Interactive Effects
 function MouseTracker() {

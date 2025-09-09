@@ -279,9 +279,9 @@ export default function TeamMemberForm() {
               {imagePreview ? (
                 <div className="relative inline-block">
                   <img
-                    src={imagePreview}
+                    srcSet={imagePreview}
                     alt="Preview"
-                    className="w-36 h-36 object-cover rounded-full ring-2 ring-black/10"
+                    className="w-36 h-36 (max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px object-cover rounded-full ring-2 ring-black/10"
                   />
                   <button
                     type="button"

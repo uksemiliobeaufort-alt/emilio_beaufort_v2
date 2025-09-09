@@ -149,9 +149,9 @@ export default function OrderDetailsDialog({
                 >
                   {item.imageUrl ? (
                     <img
-                      src={item.imageUrl}
+                      srcSet={item.imageUrl}
                       alt={item.name || "Item"}
-                      className="w-28 h-28 rounded-lg object-cover border"
+                      className="w-28 h-28 (max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px rounded-lg object-cover border"
                     />
                   ) : (
                     <div className="w-28 h-28 rounded-lg bg-gray-100 border" />
