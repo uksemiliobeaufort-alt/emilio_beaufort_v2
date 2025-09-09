@@ -133,6 +133,10 @@ export default function OptimizedImage({
             className="max-w-full max-h-full object-contain"
             onLoad={handleImageLoad}
             onError={handleImageError}
+            sizes="(max-width: 640px) 480px,
+         (max-width: 768px) 768px,
+         (max-width: 1024px) 1024px,
+         1920px"
           />
         )}
       </div>
@@ -155,6 +159,10 @@ export default function OptimizedImage({
           opacity: imageLoaded ? 1 : 0,
           transition: 'opacity 0.3s ease-in-out'
         }}
+        sizes="(max-width: 640px) 480px,
+         (max-width: 768px) 768px,
+         (max-width: 1024px) 1024px,
+         1920px"
       />
       
       {/* Debug info (only in development) */}

@@ -124,7 +124,10 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
                 className="object-contain transition-transform duration-500 group-hover:scale-110 p-6"
                 placeholder="blur"
                 blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                sizes="(max-width: 640px) 480px,
+       (max-width: 768px) 768px,
+       (max-width: 1024px) 1024px,
+       1920px"
               />
             )
           ) : (
@@ -314,12 +317,15 @@ export function ProductListItem({ product, onViewDetails }: ProductCardProps) {
 />
           ) : (
             <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              className="object-contain p-2"
-              sizes="80px"
-            />
+  src={product.imageUrl}
+  alt={product.name}
+  fill
+  className="object-contain p-2"
+  sizes="(max-width: 640px) 480px,
+         (max-width: 768px) 768px,
+         (max-width: 1024px) 1024px,
+         1920px"
+/>
           )
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">

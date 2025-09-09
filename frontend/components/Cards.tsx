@@ -71,7 +71,12 @@ export function Cards() {
                 onError={(e) => {
                   // Hide the image on error without logging to console
                   e.currentTarget.style.display = 'none';
+                  
                 }}
+                sizes="(max-width: 640px) 480px,
+         (max-width: 768px) 768px,
+         (max-width: 1024px) 1024px,
+         1920px"
               />
             </div>
             <CardContent className="p-4 sm:p-5 md:p-6 lg:p-7 bg-gray-50 sm:bg-gray-100 md:bg-gray-50 lg:bg-gray-100 min-h-[140px] sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px]">

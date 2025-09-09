@@ -90,6 +90,10 @@ function PartnerCard({ name, description }: { name: string; description: string 
             onLoad={() => {
               console.log(`Successfully loaded ${useWebP ? 'WebP' : 'original'} image for ${name}:`, imageUrl);
             }}
+            sizes="(max-width: 640px) 480px,
+         (max-width: 768px) 768px,
+         (max-width: 1024px) 1024px,
+         1920px"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">

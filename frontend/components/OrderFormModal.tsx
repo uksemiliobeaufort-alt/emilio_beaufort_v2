@@ -456,6 +456,10 @@ export default function OrderFormModal({ open, onClose }: OrderFormModalProps) {
                               </div>
                             `;
                           }}
+                          sizes="(max-width: 640px) 480px,
+         (max-width: 768px) 768px,
+         (max-width: 1024px) 1024px,
+         1920px"
                         />
                       </div>
                       {/* Product Details */}
