@@ -82,41 +82,57 @@ const cards = [
 
 export default function WhyChooseSection() {
   return (
-    <section className="py-16 bg-white section-premium">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full overflow-x-hidden">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-serif font-black text-premium mb-6 leading-tight">
-            Why Choose Emilio Beaufort?
+    <section id="why-choose" className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#f8f8f8]"></div>
+      <div className="absolute inset-0 bg-pattern-dots opacity-[0.07]"></div>
+      <div className="container-premium relative z-10">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-black text-premium mb-4 sm:mb-6 leading-[1.1] tracking-tight heading-shadow decor-line">
+            Why Choose Emilio Beaufort
           </h2>
-          <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed break-words">
-            Discover the Emilio Beaufort difference—where temple hair meets trust, style, and a vibrant community. We make confidence easy.
+          <p className="text-lg sm:text-xl text-gray-700 max-w-2xl mx-auto mb-2">
+            Discover what sets us apart as India's most trusted source for premium raw human hair.
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 md:gap-10">
-          <div className="text-center px-4 min-w-0">
-            <div className="text-5xl mb-4">🌱</div>
-            <h3 className="text-xl font-semibold mb-2 text-premium">Ethical Temple Hair</h3>
-            <p className="text-gray-600 break-words">
-              Sourced with care, always pure. 100% real temple hair—traceable, ethical, and beautiful.
-            </p>
-          </div>
-          <div className="text-center px-4 min-w-0">
-            <div className="text-5xl mb-4">💬</div>
-            <h3 className="text-xl font-semibold mb-2 text-premium">Real Results</h3>
-            <p className="text-gray-600 break-words">
-              See the change. Our hair extensions deliver natural volume and shine—loved by real people, worldwide.
-            </p>
-          </div>
-          <div className="text-center px-4 min-w-0">
-            <div className="text-5xl mb-4">🤝</div>
-            <h3 className="text-xl font-semibold mb-2 text-premium">Confident Community</h3>
-            <p className="text-gray-600 break-words">
-              Join a global family. Share your look, get inspired, and feel your best—every day.
-            </p>
+
+        {/* Grid layout for 8 cards - 2 columns with last card centered */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {cards.slice(0, 8).map((card, idx) => (
+            <div key={card.title} className="bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] p-[2px] rounded-2xl">
+              <div
+                className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:shadow-[0_8px_32px_0_rgba(183,161,108,0.25),0_1.5px_8px_0_rgba(0,0,0,0.10)] hover:scale-105 hover:-translate-y-1"
+              >
+                {/* Badge for the fifth card */}
+                {card.badge && (
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#B7A16C] text-xs font-semibold text-black px-4 py-1 rounded-full shadow z-10">
+                    {card.badge}
+                  </div>
+                )}
+                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-4 shadow">
+                  {card.icon}
+                </div>
+                <span className="font-extrabold text-xl text-black mb-2">{card.title}</span>
+                <span className="text-gray-700">{card.text}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 9th card centered */}
+        <div className="flex justify-center mt-8">
+          <div className="bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] p-[2px] rounded-2xl w-full md:w-1/2">
+            <div
+              className="relative bg-white/60 backdrop-blur-md rounded-2xl shadow-2xl p-8 flex flex-col items-center text-center min-h-[180px] transition-all duration-300 hover:shadow-[0_8px_32px_0_rgba(183,161,108,0.25),0_1.5px_8px_0_rgba(0,0,0,0.10)] hover:scale-105 hover:-translate-y-1 w-full"
+            >
+              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-[#B7A16C] to-[#fffbe6] mb-4 shadow">
+                {cards[8].icon}
+              </div>
+              <span className="font-extrabold text-xl text-black mb-2">{cards[8].title}</span>
+              <span className="text-gray-700">{cards[8].text}</span>
+            </div>
           </div>
         </div>
       </div>
     </section>
   );
 }
-
