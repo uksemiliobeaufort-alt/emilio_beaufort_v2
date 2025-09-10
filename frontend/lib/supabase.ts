@@ -723,6 +723,39 @@ export const getPartnerImageUrl = (partnerName: string, imageName?: string, form
   return url;
 };
 
+// Subscribe to realtime changes for products tables and invoke callback
+export function subscribeToProductsChanges(
+  onChange: () => void
+) {
+  try {
+    const cosmeticsChannel = supabase
+      .channel('realtime:cosmetics_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'cosmetics' },
+        () => onChange()
+      )
+      .subscribe();
+
+    const hairChannel = supabase
+      .channel('realtime:hair_extensions_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'hair_extensions' },
+        () => onChange()
+      )
+      .subscribe();
+
+    return () => {
+      if (cosmeticsChannel) supabase.removeChannel(cosmeticsChannel);
+      if (hairChannel) supabase.removeChannel(hairChannel);
+    };
+  } catch (error) {
+    console.error('Failed to subscribe to product changes:', error);
+    return () => {};
+  }
+}
+
 // Utility hook for WebP image loading with fallback
 export const useWebPImage = (bucketName: string, path: string) => {
   const [useWebP, setUseWebP] = React.useState(true);

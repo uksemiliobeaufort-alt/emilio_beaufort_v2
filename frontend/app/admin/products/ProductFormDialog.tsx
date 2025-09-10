@@ -84,7 +84,7 @@ interface ProductFormDialogProps {
   product: ProductFormData | null;
   selectedCategory?: string;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (updated?: any) => void;
 }
 
 const categoryOptions = [
@@ -509,13 +509,14 @@ useEffect(() => {
       if (product?.id) {
         // Update existing product
         await updateDoc(doc(firestore, collectionName, product.id), productData);
+        onSuccess({ id: product.id, ...productData });
       } else {
         // Create new product
         const docRef = await addDoc(collection(firestore, collectionName), productData);
         const newId = docRef.id;
-
+        onSuccess({ id: newId, ...productData });
       }
-      onSuccess();
+      // onSuccess already called with updated data
     } catch (error) {
       toast.error('Failed to save product');
       console.error(error);

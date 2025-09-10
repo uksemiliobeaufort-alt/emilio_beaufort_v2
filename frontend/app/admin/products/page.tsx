@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from '@/lib/auth';
 import { firestore, deleteProductImageFromFirebase } from '@/lib/firebase';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, onSnapshot, QuerySnapshot } from 'firebase/firestore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -195,12 +195,47 @@ function ProductsAdminContent() {
       return;
     }
     fetchProducts();
+
+    // Realtime updates for both collections
+    const cosmeticsRef = collection(firestore, 'cosmetics');
+    const hairRef = collection(firestore, 'hair_extensions');
+
+    const handleSnapshot = (snap: QuerySnapshot) => {
+      try {
+        // We'll re-run fetchProducts to keep normalization/dedup logic centralized
+        fetchProducts();
+      } catch (err) {
+        console.warn('Failed processing realtime update:', err);
+      }
+    };
+
+    const unsubCosmetics = onSnapshot(cosmeticsRef, handleSnapshot);
+    const unsubHair = onSnapshot(hairRef, handleSnapshot);
+
+    return () => {
+      unsubCosmetics();
+      unsubHair();
+    };
   }, [router]);
 
   // Add/Edit/Delete handlers
-  const handleProductFormSuccess = async () => {
+  const handleProductFormSuccess = async (updated?: any) => {
     setProductFormDialog({ open: false, product: productSchema.parse({}) });
-    await fetchProducts();
+    if (updated) {
+      setProducts(prev => {
+        const normalized = normalizeProduct(updated);
+        if (!normalized || !normalized.id) return prev;
+        const idx = prev.findIndex(p => p.id === normalized.id);
+        if (idx >= 0) {
+          const next = [...prev];
+          next[idx] = { ...prev[idx], ...normalized };
+          return next;
+        }
+        return [normalized, ...prev];
+      });
+    } else {
+      await fetchProducts();
+    }
   };
 
   const handleDeleteProduct = async () => {
