@@ -139,6 +139,7 @@ export default function BagModal({ open, onClose, onBuyNow }: BagModalProps) {
                         target.style.display = 'none';
                         // You could also show a fallback icon here
                       }}
+                      loading="lazy"
                     />
                     <div className="flex-1">
                       <div className="font-semibold text-premium-dark text-base sm:text-base md:text-lg">{item.name}</div>

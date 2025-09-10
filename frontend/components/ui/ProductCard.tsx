@@ -128,6 +128,7 @@ export function ProductCard({ product, onViewDetails }: ProductCardProps) {
        (max-width: 768px) 768px,
        (max-width: 1024px) 1024px,
        1920px"
+       loading="lazy"
               />
             )
           ) : (
@@ -325,6 +326,7 @@ export function ProductListItem({ product, onViewDetails }: ProductCardProps) {
          (max-width: 768px) 768px,
          (max-width: 1024px) 1024px,
          1920px"
+         loading="lazy"
 />
           )
         ) : (

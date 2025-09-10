@@ -405,6 +405,7 @@ export function ProductDetailDialog({
                            (max-width: 768px) 768px,
                            (max-width: 1024px) 1024px,
                            1920px"
+                           loading="lazy"
                     onError={(e) => {
                       console.error(
                         "Failed to load product image:",
@@ -433,6 +434,7 @@ export function ProductDetailDialog({
                           "hidden"
                         );
                       }}
+                      loading="lazy"
                     />
                   )}
                 </div>

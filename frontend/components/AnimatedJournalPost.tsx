@@ -40,6 +40,7 @@ export default function AnimatedJournalPost({ post }: AnimatedJournalPostProps) 
             target.style.display = 'none';
             // You could also show a fallback icon here
           }}
+          loading="lazy"
         />
       </motion.div>
 
