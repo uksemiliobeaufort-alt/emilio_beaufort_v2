@@ -712,7 +712,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       </section>
 
        {/*Meet My Team Section */}
-       <section
+             <section
         id="team"
         className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-visible"
         onMouseEnter={() => trackUserBehavior.sectionView('team')}
@@ -849,7 +849,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
 
 
         </div>
-      </section> 
+      </section> The issue you're facing — unwanted white space and overflow on mobile/desktop views only fix this issue 
 
       {/* Partnership Section */}
       <section
