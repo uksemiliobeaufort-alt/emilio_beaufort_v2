@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { getImageUrl, getProducts, UnifiedProduct as SupabaseProduct } from '@/lib/supabase';
 import { getHairExtensionsFromFirebase } from '@/lib/firebase';
+import { subscribeToProductsChanges } from '@/lib/supabase';
+import { firestore } from '@/lib/firebase';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { imageService } from '@/lib/imageService';
 import OptimizedImage from '@/components/OptimizedImage';
 
@@ -236,6 +239,20 @@ export default function ExclusiveProductsMarquee() {
   useEffect(() => {
     // Initial data fetch
     fetchProducts();
+    // Realtime updates: Supabase (cosmetics) + Firestore (hair_extensions)
+    const unsubscribeSupabase = subscribeToProductsChanges(() => {
+      setRefreshing(true);
+      fetchProducts();
+    });
+    const hairRef = collection(firestore, 'hair_extensions');
+    const unsubscribeFirebase = onSnapshot(hairRef, () => {
+      setRefreshing(true);
+      fetchProducts();
+    });
+    return () => {
+      unsubscribeSupabase();
+      unsubscribeFirebase();
+    };
   }, []);
   
   const marqueeProducts = exclusiveProducts; // Use products without repetition

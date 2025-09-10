@@ -400,6 +400,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       <ClientOnly fallback={<div className="min-h-screen bg-premium overflow-x-hidden" />}>
         <motion.div 
           className="min-h-screen bg-premium overflow-x-hidden"
+          suppressHydrationWarning
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -431,6 +432,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       <section
         id="philosophy"
         className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium min-h-screen"
+        suppressHydrationWarning
         onMouseEnter={() => trackUserBehavior.sectionView('philosophy')}
       >
         {/* Interactive Background */}

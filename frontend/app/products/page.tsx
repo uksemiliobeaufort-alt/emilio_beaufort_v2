@@ -99,10 +99,15 @@ function ProductsPageContent() {
   // Fetch products for selected category
   const fetchProducts = async () => {
     try {
+      const sortByDateDesc = (a: Product, b: Product) => {
+        const aTime = new Date(a.createdAt || a.updatedAt || '').getTime();
+        const bTime = new Date(b.createdAt || b.updatedAt || '').getTime();
+        return (isNaN(bTime) ? 0 : bTime) - (isNaN(aTime) ? 0 : aTime);
+      };
       if (selectedCategory === 'COSMETICS') {
         const supabaseProducts = await getProducts();
         const mappedProducts = safeMap(supabaseProducts, mapSupabaseProductToAPIProduct);
-        setProducts(mappedProducts);
+        setProducts([...mappedProducts].sort(sortByDateDesc));
       } else {
         const firebaseProducts = await getHairExtensionsFromFirebase();
         const mappedProducts = firebaseProducts.map((p: any) => ({
@@ -118,7 +123,7 @@ function ProductsPageContent() {
           createdAt: p.created_at || new Date().toISOString(),
           updatedAt: p.updated_at || new Date().toISOString(),
         }));
-        setProducts(mappedProducts);
+        setProducts([...mappedProducts].sort(sortByDateDesc));
       }
     } catch (error) {
       console.error('Failed to fetch products:', error);
@@ -189,8 +194,12 @@ function ProductsPageContent() {
         createdAt: p.created_at || new Date().toISOString(),
         updatedAt: p.updated_at || new Date().toISOString(),
       }));
-
-      setProducts(mapped);
+      const sortByDateDesc = (a: Product, b: Product) => {
+        const aTime = new Date(a.createdAt || a.updatedAt || '').getTime();
+        const bTime = new Date(b.createdAt || b.updatedAt || '').getTime();
+        return (isNaN(bTime) ? 0 : bTime) - (isNaN(aTime) ? 0 : aTime);
+      };
+      setProducts([...mapped].sort(sortByDateDesc));
       setLoading(false);
       setRefreshing(false);
     }, (error) => {

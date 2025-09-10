@@ -226,6 +226,14 @@ export function ProductDetailDialog({
             ...virginVariants.map((v: any) => ({ ...v, type: "virgin" as const }))
           ];
           setAllVariants(combinedVariants);
+          // Prefer virgin; if absent, fall back to remy
+          const hasVirgin = combinedVariants.some(v => v.type === 'virgin');
+          const hasRemy = combinedVariants.some(v => v.type === 'remy');
+          if (!hasVirgin && hasRemy) {
+            setActiveVariantType('remy');
+          } else if (hasVirgin) {
+            setActiveVariantType('virgin');
+          }
 
         } else {
           setAllVariants([]);
@@ -248,6 +256,18 @@ export function ProductDetailDialog({
     const filtered = allVariants.filter(v => v.type === activeVariantType);
     setVariants(filtered);
     setSelectedVariantIdx(0); // Reset selected variant when tab changes
+  }, [allVariants, activeVariantType]);
+
+  // Ensure we always display a variant type: prefer virgin, else remy
+  useEffect(() => {
+    if (!allVariants || allVariants.length === 0) return;
+    const currentHas = allVariants.some(v => v.type === activeVariantType);
+    if (!currentHas) {
+      const hasVirgin = allVariants.some(v => v.type === 'virgin');
+      const hasRemy = allVariants.some(v => v.type === 'remy');
+      if (hasVirgin) setActiveVariantType('virgin');
+      else if (hasRemy) setActiveVariantType('remy');
+    }
   }, [allVariants, activeVariantType]);
 
 
