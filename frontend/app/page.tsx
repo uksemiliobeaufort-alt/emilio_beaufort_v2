@@ -400,7 +400,6 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       <ClientOnly fallback={<div className="min-h-screen bg-premium overflow-x-hidden" />}>
         <motion.div 
           className="min-h-screen bg-premium overflow-x-hidden"
-          suppressHydrationWarning
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -432,7 +431,6 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       <section
         id="philosophy"
         className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium min-h-screen"
-        suppressHydrationWarning
         onMouseEnter={() => trackUserBehavior.sectionView('philosophy')}
       >
         {/* Interactive Background */}
@@ -714,7 +712,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
       </section>
 
        {/*Meet My Team Section */}
-             <section
+      <section
         id="team"
         className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-visible"
         onMouseEnter={() => trackUserBehavior.sectionView('team')}
@@ -745,13 +743,13 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             viewport={{ once: true }}
           >
             <div
-    className="relative w-full px-4 sm:px-6 overflow-visible"
-    style={{
-          minHeight: "250px",   
-      paddingTop: "5px",   
-      paddingBottom: "5px" 
-    }}
-  >
+              className="relative w-full px-4 sm:px-6 overflow-visible"
+              style={{
+                    minHeight: "250px",   
+                paddingTop: "5px",   
+                paddingBottom: "5px" 
+              }}
+            >
 
 
               <div className="w-full">
@@ -844,14 +842,13 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                 
               </div>
 
-
             </div>
           </motion.div>
 
 
 
         </div>
-      </section> The issue you're facing — unwanted white space and overflow on mobile/desktop views only fix this issue 
+      </section>
 
       {/* Partnership Section */}
       <section
