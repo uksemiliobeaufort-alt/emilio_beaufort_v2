@@ -174,6 +174,7 @@ export default function FoundersPage() {
                         <img
                           srcSet={founder.imageUrl}
                           alt={founder.name}
+                          loading='lazy'
                           className="(max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;

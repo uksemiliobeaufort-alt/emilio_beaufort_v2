@@ -444,6 +444,7 @@ export default function AdminViewTeamMembers() {
                       <img
                         srcSet={imagePreview}
                         alt="Preview"
+                        loading='lazy'
                         className="w-36 h-36 (max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px object-cover rounded-full ring-2 ring-black/10"
                       />
                       <button

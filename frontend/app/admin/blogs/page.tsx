@@ -582,6 +582,7 @@ function AdminBlogsPageContent() {
                         srcSet={imageSrc}
                         alt={post.title}
                         className="absolute inset-0 (max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
                         onError={e => {
                           // Hide the image if it fails to load
                           e.currentTarget.style.display = 'none';
