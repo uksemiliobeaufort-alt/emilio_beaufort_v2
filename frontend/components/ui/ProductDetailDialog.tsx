@@ -641,7 +641,7 @@ export function ProductDetailDialog({
                             
                             {/* Scrollable container wraps the existing buttons layout */}
                             <div className="max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-                              <div className="flex flex-wrap gap-2">  
+                              <div className="flex flex-wrap gap-2">   
                                 {variants.map((variant, idx) => (
                                   <button
                                     type="button"
