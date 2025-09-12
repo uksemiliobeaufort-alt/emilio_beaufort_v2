@@ -735,9 +735,11 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.2] tracking-tight">
+            <h2 className="pb-2.5 text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.35] tracking-tight">
               Our People
             </h2>
+
+
             <p className="body-premium text-sm sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-2xl mx-auto leading-relaxed">
               Insights, vision, and wisdom from our leadership team shaping the future of luxury grooming
             </p>
