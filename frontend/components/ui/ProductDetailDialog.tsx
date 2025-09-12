@@ -638,25 +638,30 @@ export function ProductDetailDialog({
                                 {selectedVariant?.length} Inch{"\u00A0\u00A0"}{selectedVariant?.topper_size}
                               </span>
                             </p>
-                            <div className="flex flex-wrap gap-2">
-                              {variants.map((variant, idx) => (
-                                <button
-                                  type="button"
-                                  key={variant.id}
-                                  onClick={() => {
-                                    setSelectedVariantIdx(idx);
-                                  }}
-                                  className={`px-4 py-2 border text-sm min-w-[140px] text-center transition-all rounded-sm
-                ${idx === selectedVariantIdx
-                                      ? "border-black font-semibold bg-white shadow-sm"
-                                      : "border-gray-300 bg-white hover:border-black"
-                                    }`}
-                                >
-                                  {variant.length}Inch{"\u00A0"} {variant.topper_size}
-                                </button>
-                              ))}
+                            
+                            {/* Scrollable container wraps the existing buttons layout */}
+                            <div className="max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+                              <div className="flex flex-wrap gap-2">  
+                                {variants.map((variant, idx) => (
+                                  <button
+                                    type="button"
+                                    key={variant.id}
+                                    onClick={() => {
+                                      setSelectedVariantIdx(idx);
+                                    }}
+                                    className={`px-4 py-2 border text-sm min-w-[140px] text-center transition-all rounded-sm
+                                      ${idx === selectedVariantIdx
+                                        ? "border-black font-semibold bg-white shadow-sm"
+                                        : "border-gray-300 bg-white hover:border-black"
+                                      }`}
+                                  >
+                                    {variant.length}Inch{"\u00A0"} {variant.topper_size}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
                           </div>
+
 
                           {/* Color Section */}
                           {mappedColors.length > 0 && (
