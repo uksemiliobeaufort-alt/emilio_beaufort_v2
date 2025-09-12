@@ -189,39 +189,8 @@ interface Founder {
   linkedin?: string; // now full URL
   twitter?: string;  // now full URL
   instagram?: string; // now full URL
-  // imageName?: string; // Added for specific image loading
 }
 
-// function FounderAvatar({ founder }: { founder: Founder }) {
-//   const [imgError, setImgError] = useState(false);
-//   // Get founder initials for fallback
-//   const initials = (founder.name || '').split(' ').map(n => n[0]).join('');
-//   return (
-//     <div className="relative mb-6">
-//         {/* Founder Image from Supabase */}
-//         {!imgError ? (
-//           <img
-//             srcSet={getFounderImageUrl(founder.name, founder.imageName)}
-//             alt={`${founder.name} - ${founder.role}`}
-//             className="(max-width: 480px) 320px, (max-width: 640px) 480px, (max-width: 768px) 600px, (max-width: 1024px) 900px, 1600px object-cover rounded-full "
-//             onLoad={() => {
-//               // Optionally log success
-//               // console.log(`Image loaded successfully for ${founder.name}`);
-//             }}
-//             onError={() => {
-//               setImgError(true);
-//             }}
-//           />
-//         ) : (
-//           <span className="w-full h-full flex items-center justify-center text-2xl sm:text-3xl md:text-4xl font-bold text-gray-600 bg-gradient-to-br from-gray-200 to-gray-300">
-//             {initials}
-//           </span>
-//         )}
-//     </div>
-//   );
-// }
-
-// Mouse Tracking Component for Interactive Effects
 function MouseTracker() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -437,12 +406,8 @@ export default function Home() {
      linkedin: "https://www.linkedin.com/in/pratibha-sharma-7771a6215//",
     twitter: "/",
      instagram: "https://www.instagram.com/aashii2509?igsh=MTg0NDNja3NqMnpmcw==/",
-     //imageName: "Pratibha Mam"
     },
   ];
-  //const firstRow = founders.slice(0, 3);
-  //const secondRow = founders.slice(3, 6);
-  //const thirdRow = founders.slice(6, 7); // Rahul Pandey
 
   const firstRow = founders.slice(0, 3); // First 3 founders
 const secondRow = founders.slice(3, 6); // Next 3 founders (Sreedeep, Uttam, Rahul)
@@ -591,13 +556,7 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
           </motion.div>
 
           {/* Main Content - Single Animation */}
-          <motion.div
-            // initial={{ opacity: 0, y: 20 }}
-            // whileInView={{ opacity: 1, y: 0 }}
-            // transition={{ duration: 0.4, ease: "easeOut" }}
-            // viewport={{ once: true }}
-            // className="max-w-6xl mx-auto mb-12"
-          >
+          <motion.div>
             <div className="body-premium text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-gray-800 relative text-justify">
               <div className={`${!showFullPhilosophy ? 'line-clamp-6 lg:line-clamp-none' : ''} space-y-4`}>
                 {/* Paragraphs - Ready to Display */}
@@ -623,21 +582,6 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
                   <span className="inline">
                     By cutting out middlemen, we provide transparent pricing, Higher margins, consistent stock, and reliable delivery. Beyond just supplying hair, we offer expert training, marketing support, and partnership guidance to help you build lasting customer loyalty and scale your business sustainably.{' '}
                   </span>
-                  {/*<span className="text-gold font-bold inline relative ripple-effect">
-                    timeless
-                  </span>
-                  <span className="inline">
-                    . He removed the barriers that kept excellence out of reach, ensuring that salons, retailers, and grooming houses, whether boutique or global, could offer their clients uncompromising quality without prohibitive barriers.
-                  </span>
-                </div>
-
-                <div className="relative magnetic-hover">
-                  <span className="inline">
-                    Today,{' '}
-                  </span>
-                  <strong className="text-premium font-bold relative ripple-effect inline">
-                    Emilio Beaufort
-                  </strong>*/}
                   <span className="inline">
                     {' '}Our ethical and traceable sourcing resonates with conscious consumers, giving you a true competitive edge.
                   </span>
@@ -787,21 +731,6 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
         <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#fafafa]"></div>
         <div className="absolute inset-0 bg-pattern-diagonal opacity-[0.1] rotate-180"></div>
         <div className="container-premium relative z-10">
-          {/* <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
-          >
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight">
-              Journal
-            </h2>
-            <p className="body-premium text-lg sm:text-xl max-w-4xl mx-auto leading-relaxed">
-              Insights, stories, and the art of living well. Our journal explores 
-              the intersection of style, culture, and the pursuit of excellence.
-            </p>
-          </motion.div> */}
           <Journal />
         </div>
       </section>
@@ -1009,10 +938,6 @@ const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
           ~ We built trust when others chased profits. Now the world wants what we've perfected.
         </span>
       </div>
-      {/* Author signature - separate white background */}
-      {/* <div className="w-full flex flex-col items-center justify-center bg-white py-2">
-        <span className="block font-semibold text-xl md:text-2xl text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>Emilio Beaufort</span>
-      </div> */}
 
       <Footer />
 
