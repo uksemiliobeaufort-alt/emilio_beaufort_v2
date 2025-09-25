@@ -14,10 +14,9 @@ export default function ClientOnly({ children, fallback = null }: ClientOnlyProp
     setHasMounted(true);
   }, []);
 
-  // Always return the same structure to prevent hydration mismatches
   if (!hasMounted) {
-    return <div suppressHydrationWarning>{fallback}</div>;
+    return <>{fallback}</>;
   }
 
-  return <div suppressHydrationWarning>{children}</div>;
+  return <>{children}</>;
 }

@@ -6,8 +6,7 @@ import { motion } from 'framer-motion';
 import { useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
-import HydrationSafeImage from '@/components/HydrationSafeImage';
-import { getFirebaseStorageUrl } from '@/lib/firebase';
+import Image from 'next/image';
 // import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -31,80 +30,55 @@ const PartnersMarquee = lazy(() => import("@/components/PartnersMarquee"));
 const Chatbot = lazy(() => import("@/components/Chatbot"));
 const Marquee = lazy(() => import("react-fast-marquee"));
 
-// Hero Section Component - Hydration Safe
+// Hero Section Component
 const HeroSection = () => {
-  const [isClient, setIsClient] = useState(false);
-  const [desktopHeroUrl, setDesktopHeroUrl] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    setIsClient(true);
-    // Resolve Firebase URL on client to avoid SSR token/CORS issues
-    (async () => {
-      try {
-        const url = await getFirebaseStorageUrl('herosection_images/EM Banner.webp');
-        if (url) setDesktopHeroUrl(url);
-      } catch {
-        // silently ignore, fallback will be used
-      }
-    })();
-  }, []);
-
   return (
     <section className="hero-section">
       {/* SINGLE IMAGE */}
-      <div className="hero-image-container" suppressHydrationWarning>
-        <HydrationSafeImage
-          // Base fallback is a local static image to ensure production never shows a broken state
-          src="/hero-fallback.jpg"
+      <div className="hero-image-container">
+        <Image
+          src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fhero.webp?alt=media&token=b62e69c7-11ab-4f0a-9ccc-f7f70680b55b"
           alt="Emilio Beaufort - Premium Hair Extensions and Luxury Grooming"
           fill
           priority
-          quality={85}
-          sizes="(max-width: 375px) 100vw, (max-width: 480px) 100vw, (max-width: 640px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 100vw, (max-width: 1280px) 100vw, (max-width: 1440px) 100vw, (max-width: 1920px) 100vw, 100vw"
+          quality={90}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
           className="hero-image"
           placeholder="blur"
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-          unoptimized
-          referrerPolicy="no-referrer"
-          // Responsive image sources - Mobile & tablet Plus an on-demand Firebase URL for desktop fetched client-side
-          mobileSrc="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-12.webp?alt=media&token=716b25e1-adcf-4f09-80e9-2e94211187bd"
-          tabletSrc="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-12.webp?alt=media&token=716b25e1-adcf-4f09-80e9-2e94211187bd"
-          desktopSrc={desktopHeroUrl}
-          largeScreenSrc="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-12.webp?alt=media&token=716b25e1-adcf-4f09-80e9-2e94211187bd"
         />
-        {/* Mobile readability overlay - enhanced for better text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/30 sm:bg-transparent" />
-        {/* Small screen, tablet, and ultra-wide screen dimmed background overlay for better text focus */}
-        <div className="absolute inset-0 bg-black/40 lg:bg-transparent" />
+        {/* Mobile readability overlay (extended upward to sit under navbar) */}
+        <div className="absolute left-0 right-0 bottom-0 sm:bg-transparent bg-black/40" style={{ top: '-64px' }} />
       </div>
 
-      {/* Centered Content - Hidden on large screens */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-4 sm:px-6 z-10 lg:hidden">
-        <div className="flex flex-col items-center gap-4 sm:gap-6">
+      {/* Centered Content */}
+      <div className="absolute left-0 right-0 bottom-0 top-16 md:top-20 lg:top-12 flex flex-col items-center justify-center text-center text-white px-4 sm:px-6 z-10">
+        
+        <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row gap-6">
           <motion.div
-            className="relative z-20 flex flex-col items-center max-w-4xl mx-auto w-full px-4"
-            initial={{ opacity: 0, y: 30 }}
+            className="relative z-20 flex flex-col items-center px-4 sm:px-6 max-w-5xl mx-auto w-full"
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="mb-3 sm:mb-4 w-full"
+              transition={{ duration: 1, delay: 0.3 }}
+              className="mb-4 sm:mb-6 w-full"
             >
-              <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white leading-tight tracking-tight text-center w-full">
+              <h1 className="text-4xl sm:text-6xl md:text-9xl font-serif font-bold text-white mb-2 leading-tight tracking-tight text-center w-full">
                 Emilio Beaufort
               </h1>
             </motion.div>
             <motion.p
-              className="text-sm sm:text-base md:text-lg lg:text-xl body-premium mb-4 sm:mb-6 max-w-2xl leading-relaxed text-center mx-auto text-white/90 relative z-40"
-              initial={{ opacity: 0, y: 20 }}
+              className="text-base sm:text-lg md:text-2xl body-premium mb-6 max-w-3xl leading-relaxed text-center mx-auto text-white/95 relative z-40"
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
+              transition={{ duration: 1, delay: 0.6 }}
               style={{
-                textShadow: '0 2px 8px rgba(0, 0, 0, 0.7)',
-                filter: 'drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5))'
+                textShadow: '0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 255, 0.2)',
+                filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6))'
               } as CSSProperties}
             >
               Emilio Beaufort Pvt Ltd stands at the forefront of the international and domestic B2B market, delivering 100% authentic temple hair and luxury extensions.
@@ -112,21 +86,21 @@ const HeroSection = () => {
               Ethically sourced, meticulously crafted, and trusted by salons, distributors, and beauty brands across India, USA, UK, Europe, Middle East, China, and Africa.
             </motion.p>
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
+              transition={{ duration: 1, delay: 0.9 }}
               className="w-full flex justify-center relative z-40"
             >
               <Button
                 size="lg"
-                className="text-xs sm:text-sm md:text-base px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 font-sans-medium transition-all duration-300 bg-black/80 text-white hover:bg-white hover:text-black border border-white backdrop-blur-sm hover:backdrop-blur-md hover:shadow-2xl hover:shadow-white/20"
+                className="text-sm sm:text-lg px-8 sm:px-12 py-4 sm:py-6 text-base font-sans-medium transition-all duration-300 bg-black/80 text-white hover:bg-white hover:text-black border border-white backdrop-blur-sm hover:backdrop-blur-md hover:shadow-2xl hover:shadow-white/20"
                 onClick={() => {
                   document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' });
                   trackEngagement.buttonClick('Discover Our Philosophy', 'hero-section');
                 }}
                 style={{
-                  textShadow: '0 1px 3px rgba(0,0,0,0.5)',
-                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 255, 255, 0.1)'
+                  textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                  boxShadow: '0 8px 25px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)'
                 }}
               >
                 Discover Our Philosophy
@@ -240,16 +214,18 @@ export default function Home() {
   const [isPartnershipFormOpen, setIsPartnershipFormOpen] = useState(false);
   const router = useRouter();
   // const analytics = useAnalytics();
-  const [showFullPhilosophy, setShowFullPhilosophy] = useState(false);
+    const [showFullPhilosophy, setShowFullPhilosophy] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [showRest, setShowRest] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+
+  
+
+
 
   useEffect(() => {
-    setIsMounted(true);
     // Set showRest after a short delay
     const deferTimer = setTimeout(() => setShowRest(true), 200);
-
+    
     return () => {
       clearTimeout(deferTimer);
     };
@@ -315,7 +291,7 @@ export default function Home() {
       if (philosophySection) {
         const philosophyTop = philosophySection.offsetTop;
         const scrollPosition = window.scrollY + window.innerHeight;
-
+        
         // Show scroll-to-top button when user scrolls past philosophy section
         if (scrollPosition > philosophyTop + 100) {
           setShowScrollToTop(true);
@@ -326,7 +302,7 @@ export default function Home() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
@@ -385,7 +361,7 @@ export default function Home() {
       twitter: "/",
       instagram: "/"
     },
-
+    
     // New founder card for Rahul Pandey
     {
       name: "Rahul Pandey",
@@ -397,15 +373,15 @@ export default function Home() {
       instagram: "/",
       imageName: "Rahul Sir"
     },
-    {
-      name: "Pratibha Sharma",
+      {
+       name: "Pratibha Sharma",
       role: "HR Lead",
       description: "HR Lead @ Emilio Beaufort | Certifications in Talent Acquisition, HR Analytics ",
-      gradient: "from-gray-600 via-slate-600 to-zinc-600",
-      linkedin: "https://www.linkedin.com/in/pratibha-sharma-7771a6215//",
-      twitter: "/",
-      instagram: "https://www.instagram.com/aashii2509?igsh=MTg0NDNja3NqMnpmcw==/",
-      //imageName: "Pratibha Mam"
+     gradient: "from-gray-600 via-slate-600 to-zinc-600",
+     linkedin: "https://www.linkedin.com/in/pratibha-sharma-7771a6215//",
+    twitter: "/",
+     instagram: "https://www.instagram.com/aashii2509?igsh=MTg0NDNja3NqMnpmcw==/",
+     //imageName: "Pratibha Mam"
     },
   ];
   //const firstRow = founders.slice(0, 3);
@@ -413,138 +389,135 @@ export default function Home() {
   //const thirdRow = founders.slice(6, 7); // Rahul Pandey
 
   const firstRow = founders.slice(0, 3); // First 3 founders
-  const secondRow = founders.slice(3, 6); // Next 3 founders (Sreedeep, Uttam, Rahul)
-  // Exclude Pratibha Sharma from marquee
-  const allFounders = [...firstRow, ...secondRow] as Founder[];
-  // Don't render anything until mounted to prevent hydration issues
-  if (!isMounted) {
-    return (
-      <>
-        <HeroSection />
-        <div className="min-h-screen bg-premium overflow-x-hidden" />
-      </>
-    );
-  }
-
+const secondRow = founders.slice(3, 6); // Next 3 founders (Sreedeep, Uttam, Rahul)
+const thirdRow = founders.slice(6, 7); // Last founder (Pratibha)
+const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
   return (
     <>
       {/* Render Hero immediately for best LCP */}
       <HeroSection />
 
-      <motion.div
-        className="min-h-screen bg-premium overflow-x-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
-
-        {showRest && (
+      <ClientOnly fallback={<div className="min-h-screen bg-premium overflow-x-hidden" />}>
+        <motion.div 
+          className="min-h-screen bg-premium overflow-x-hidden"
+          suppressHydrationWarning
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+      
+      {showRest && (
+        <ClientOnly fallback={<div className="min-h-screen bg-premium" />}>
           <Suspense fallback={<div className="min-h-screen bg-premium" />}>
             <AnimatedBackground />
           </Suspense>
-        )}
-        {/* <Navbar /> */}
+        </ClientOnly>
+      )}
+      {/* <Navbar /> */}
 
-        {/* Cookie Consent Popup */}
-        {showRest && (
+      {/* Cookie Consent Popup */}
+      {showRest && (
+        <ClientOnly fallback={null}>
           <Suspense fallback={null}>
             <CookieConsent />
           </Suspense>
-        )}
+        </ClientOnly>
+      )}
 
 
 
-        {/* Rest of the content appears after a tiny delay */}
+      {/* Rest of the content appears after a tiny delay */}
 
-        {/* Philosophy Section */}
-        <section
-          id="philosophy"
-          className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium min-h-screen"
-          onMouseEnter={() => trackUserBehavior.sectionView('philosophy')}
-        >
-          {/* Interactive Background */}
-          {/* <InteractiveBackground /> */}
+      {/* Philosophy Section */}
+      <section
+        id="philosophy"
+        className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium min-h-screen"
+        suppressHydrationWarning
+        onMouseEnter={() => trackUserBehavior.sectionView('philosophy')}
+      >
+        {/* Interactive Background */}
+        {/* <InteractiveBackground /> */}
 
-          {/* Animated Background Layers */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100"></div>
+        {/* Animated Background Layers */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100"></div>
 
-          {/* Floating Particles - Reduced count and faster animation */}
-          {/* Floating Particles removed */}
+        {/* Floating Particles - Reduced count and faster animation */}
+        {/* Floating Particles removed */}
 
-          {/* Animated Grid Pattern */}
-          <div className="absolute inset-0 opacity-[0.03]">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `radial-gradient(circle at 1px 1px, #D4AF37 1px, transparent 0)`,
-              backgroundSize: '40px 40px'
-            }}></div>
+        {/* Animated Grid Pattern */}
+        <div className="absolute inset-0 opacity-[0.03]">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, #D4AF37 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }}></div>
+        </div>
+
+        {/* Glowing Orbs - Faster animation */}
+        {/* Glowing Orbs removed */}
+
+        {/* Interactive Cursor Trail - Reduced count and faster */}
+        {/* Cursor Trail removed */}
+
+        <div className="container-premium relative z-10">
+          {/* Main Heading - Single Animation */}
+          <div className="text-center mb-16 sm:mb-20">
+            {/* Elegant Decorative Line */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 -top-8 w-32 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
+
+            <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-tight sm:leading-[0.9] tracking-tight relative">
+              <span className="relative inline-block">
+                {/* Main Title */}
+                <span className="block gradient-text-animate">
+                  Why Partner With
+                </span>
+
+                {/* Subtitle */}
+                <span className="block text-premium font-bold">
+                  Emilio Beaufort
+                </span>
+
+                {/* Underline */}
+                <div className="absolute -bottom-2 sm:-bottom-4 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
+              </span>
+            </h2>
+
+            {/* Subtitle */}
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto mb-6 font-light">
+              Discover what sets us apart as India's most trusted source for premium raw human hair.
+            </p>
           </div>
 
-          {/* Glowing Orbs - Faster animation */}
-          {/* Glowing Orbs removed */}
-
-          {/* Interactive Cursor Trail - Reduced count and faster */}
-          {/* Cursor Trail removed */}
-
-          <div className="container-premium relative z-10">
-            {/* Main Heading - Single Animation */}
-            <div className="text-center mb-16 sm:mb-20">
-              {/* Elegant Decorative Line */}
-              <div className="absolute left-1/2 transform -translate-x-1/2 -top-8 w-32 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
-
-              <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-tight sm:leading-[0.9] tracking-tight relative">
-                <span className="relative inline-block">
-                  {/* Main Title */}
-                  <span className="block gradient-text-animate">
-                    Why Partner With
+          {/* Main Content - Single Animation */}
+          <div className="max-w-6xl mx-auto mb-12">
+            <div className="body-premium text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-gray-800 relative text-justify">
+              <div className={`${!showFullPhilosophy ? 'line-clamp-6 lg:line-clamp-none' : ''} space-y-4`}>
+                {/* Paragraphs - Ready to Display */}
+                <div className="relative">
+                  <span className="inline">
+                    At {' '}
                   </span>
-
-                  {/* Subtitle */}
-                  <span className="block text-premium font-bold">
+                  <strong className="text-premium font-bold relative inline">
                     Emilio Beaufort
+                  </strong>
+                  <span className="inline">
+                    , we've redefined luxury hair supply by combining India's rich tradition and modern scalability to deliver ethically sourced, 100% Temple Virgin Remy hair of premium quality.
                   </span>
+                </div>
 
-                  {/* Underline */}
-                  <div className="absolute -bottom-2 sm:-bottom-4 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
-                </span>
-              </h2>
-
-              {/* Subtitle */}
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto mb-6 font-light">
-                Discover what sets us apart as India's most trusted source for premium raw human hair.
-              </p>
-            </div>
-
-            {/* Main Content - Single Animation */}
-            <div className="max-w-6xl mx-auto mb-12">
-              <div className="body-premium text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-gray-800 relative text-justify">
-                <div className={`${!showFullPhilosophy ? 'line-clamp-6 lg:line-clamp-none' : ''} space-y-4`}>
-                  {/* Paragraphs - Ready to Display */}
-                  <div className="relative">
-                    <span className="inline">
-                      At {' '}
-                    </span>
-                    <strong className="text-premium font-bold relative inline">
-                      Emilio Beaufort
-                    </strong>
-                    <span className="inline">
-                      , we've redefined luxury hair supply by combining India's rich tradition and modern scalability to deliver ethically sourced, 100% Temple Virgin Remy hair of premium quality.
-                    </span>
-                  </div>
-
-                  <div className="relative">
-                    {/*<strong className="text-gold font-bold relative ripple-effect inline">
+                <div className="relative">
+                  {/*<strong className="text-gold font-bold relative ripple-effect inline">
                     Slow Beauty
                   </strong>*/}
-                    <span className="inline">
-                      The art of creating products with patience and precision. From premium hair extensions to refined grooming essentials, every Emilio Beaufort creation begins with the finest ethically sourced materials.
-                    </span>
-                  </div>
+                  <span className="inline">
+                    The art of creating products with patience and precision. From premium hair extensions to refined grooming essentials, every Emilio Beaufort creation begins with the finest ethically sourced materials.
+                  </span>
+                </div>
 
-                  <div className="relative">
-                    <span className="inline">
-                      By cutting out middlemen, we provide transparent pricing, Higher margins, consistent stock, and reliable delivery. Beyond just supplying hair, we offer expert training, marketing support, and partnership guidance to help you build lasting customer loyalty and scale your business sustainably.{' '}
-                    </span>
-                    {/*<span className="text-gold font-bold inline relative ripple-effect">
+                <div className="relative">
+                  <span className="inline">
+                    By cutting out middlemen, we provide transparent pricing, Higher margins, consistent stock, and reliable delivery. Beyond just supplying hair, we offer expert training, marketing support, and partnership guidance to help you build lasting customer loyalty and scale your business sustainably.{' '}
+                  </span>
+                  {/*<span className="text-gold font-bold inline relative ripple-effect">
                     timeless
                   </span>
                   <span className="inline">
@@ -559,157 +532,163 @@ export default function Home() {
                   <strong className="text-premium font-bold relative inline">
                     Emilio Beaufort
                   </strong>*/}
-                    <span className="inline">
-                      {' '}Our ethical and traceable sourcing resonates with conscious consumers, giving you a true competitive edge.
-                    </span>
-
-                  </div>
-                  <div className="relative">
-                    <span className="text-gold font-bold inline relative">
-                      <center>Your Success Story Starts with Emilio Beaufort.</center>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Read More Button - Ready to Display */}
-                <button
-                  onClick={() => setShowFullPhilosophy(!showFullPhilosophy)}
-                  className="mt-6 lg:hidden inline-flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#8B4513] via-[#A0522D] to-[#D4AF37] text-white rounded-full transition-all duration-300 text-xs sm:text-sm md:text-base font-bold shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[120px] sm:min-w-[140px] border border-[#D4AF37]/30 hover:border-[#D4AF37]/50"
-                  style={{
-                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                    boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3), 0 2px 4px rgba(0,0,0,0.1)'
-                  }}
-                >
-                  <span className="whitespace-nowrap">
-                    {showFullPhilosophy ? 'Read Less' : 'Read More'}
+                  <span className="inline">
+                    {' '}Our ethical and traceable sourcing resonates with conscious consumers, giving you a true competitive edge.
                   </span>
-                  <svg
-                    className={`ml-2 w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 flex-shrink-0`}
-                    style={{ transform: showFullPhilosophy ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Three Pillars - Single Animation */}
-            <div className="grid md:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
-              {safeMap([
-                {
-                  title: 'Timeless Elegance',
-                  description: 'Our creations are designed to outlast fleeting trends, embodying a classic beauty and sophistication that endures for generations. Each bundle reflects a legacy of refinement and grace.',
-                  icon: <Crown className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-premium" />,
-                  gradient: 'from-[#D4AF37] to-[#B7A16C]'
-                },
-                {
-                  title: 'Sustainable Luxury',
-                  description: 'We believe true luxury honors the earth. Our hair is sourced with respect for both people and planet, ensuring ethical practices and sustainability at every step.',
-                  icon: <Leaf className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-premium" />,
-                  gradient: 'from-[#B7A16C] to-[#D4AF37]'
-                },
-                {
-                  title: 'Uncompromising Quality',
-                  description: 'Excellence is our standard. Every strand is meticulously selected and handled with care, guaranteeing purity, authenticity, and unmatched craftsmanship in every product.',
-                  icon: <Award className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-premium" />,
-                  gradient: 'from-[#D4AF37] to-[#B7A16C]'
-                }
-              ], (item, index) => (
-                <div
-                  key={index}
-                  className="relative perspective-1000"
-                >
-                  {/* 3D Card Container */}
-                  <div className="relative h-full bg-white rounded-3xl p-6 sm:p-8 shadow-2xl transition-all duration-500 transform border border-gray-100 card-3d">
-                    {/* Gradient Border Effect */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} rounded-3xl opacity-10 transition-opacity duration-500`}></div>
-
-                    {/* Floating Icon */}
-                    <div className="flex justify-center mb-4 sm:mb-6 relative z-10">
-                      <div className={`p-3 sm:p-4 bg-gradient-to-br ${item.gradient} rounded-2xl shadow-lg transition-all duration-300 glow-premium`}>
-                        {item.icon}
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="relative z-10 text-center">
-                      <h3 className="heading-premium text-base sm:text-lg md:text-xl lg:text-2xl text-premium mb-3 sm:mb-4 font-bold">
-                        {item.title}
-                      </h3>
-                      <p className="body-premium text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed text-gray-700 transition-colors duration-300">
-                        {item.description}
-                      </p>
-                    </div>
-
-                    {/* Animated Background Elements */}
-                    <div
-                      className={`absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br ${item.gradient} rounded-full opacity-20 transition-opacity duration-500`}
-                    />
-                    <div
-                      className={`absolute -bottom-4 -left-4 w-10 h-10 bg-gradient-to-br ${item.gradient} rounded-full opacity-20 transition-opacity duration-500`}
-                    />
-                  </div>
+                  
                 </div>
-              ))}
+                <div className="relative">
+                <span className="text-gold font-bold inline relative">
+                    <center>Your Success Story Starts with Emilio Beaufort.</center>
+                </span>
+                </div>
+              </div>
+
+              {/* Read More Button - Ready to Display */}
+              <button
+                onClick={() => setShowFullPhilosophy(!showFullPhilosophy)}
+                className="mt-6 lg:hidden inline-flex items-center justify-center px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-[#8B4513] via-[#A0522D] to-[#D4AF37] text-white rounded-full transition-all duration-300 text-xs sm:text-sm md:text-base font-bold shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[120px] sm:min-w-[140px] border border-[#D4AF37]/30 hover:border-[#D4AF37]/50"
+                style={{
+                  textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                  boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3), 0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                <span className="whitespace-nowrap">
+                  {showFullPhilosophy ? 'Read Less' : 'Read More'}
+                </span>
+                <svg
+                  className={`ml-2 w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 flex-shrink-0`}
+                  style={{ transform: showFullPhilosophy ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
             </div>
           </div>
-        </section>
 
-        {/* Why Choose Emilio Beaufort Section */}
-        {showRest && (
+          {/* Three Pillars - Single Animation */}
+          <div className="grid md:grid-cols-3 gap-6 sm:gap-8 md:gap-12">
+            {safeMap([
+              {
+                title: 'Timeless Elegance',
+                description: 'Our creations are designed to outlast fleeting trends, embodying a classic beauty and sophistication that endures for generations. Each bundle reflects a legacy of refinement and grace.',
+                icon: <Crown className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-premium" />,
+                gradient: 'from-[#D4AF37] to-[#B7A16C]'
+              },
+              {
+                title: 'Sustainable Luxury',
+                description: 'We believe true luxury honors the earth. Our hair is sourced with respect for both people and planet, ensuring ethical practices and sustainability at every step.',
+                icon: <Leaf className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-premium" />,
+                gradient: 'from-[#B7A16C] to-[#D4AF37]'
+              },
+              {
+                title: 'Uncompromising Quality',
+                description: 'Excellence is our standard. Every strand is meticulously selected and handled with care, guaranteeing purity, authenticity, and unmatched craftsmanship in every product.',
+                icon: <Award className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-premium" />,
+                gradient: 'from-[#D4AF37] to-[#B7A16C]'
+              }
+            ], (item, index) => (
+              <div
+                key={index}
+                className="relative perspective-1000"
+              >
+                {/* 3D Card Container */}
+                <div className="relative h-full bg-white rounded-3xl p-6 sm:p-8 shadow-2xl transition-all duration-500 transform border border-gray-100 card-3d">
+                  {/* Gradient Border Effect */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} rounded-3xl opacity-10 transition-opacity duration-500`}></div>
+
+                  {/* Floating Icon */}
+                  <div className="flex justify-center mb-4 sm:mb-6 relative z-10">
+                    <div className={`p-3 sm:p-4 bg-gradient-to-br ${item.gradient} rounded-2xl shadow-lg transition-all duration-300 glow-premium`}>
+                      {item.icon}
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative z-10 text-center">
+                    <h3 className="heading-premium text-base sm:text-lg md:text-xl lg:text-2xl text-premium mb-3 sm:mb-4 font-bold">
+                      {item.title}
+                    </h3>
+                    <p className="body-premium text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed text-gray-700 transition-colors duration-300">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  {/* Animated Background Elements */}
+                  <div
+                    className={`absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br ${item.gradient} rounded-full opacity-20 transition-opacity duration-500`}
+                  />
+                  <div
+                    className={`absolute -bottom-4 -left-4 w-10 h-10 bg-gradient-to-br ${item.gradient} rounded-full opacity-20 transition-opacity duration-500`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Why Choose Emilio Beaufort Section */}
+      {showRest && (
+        <ClientOnly fallback={<div className="py-20 bg-premium" />}>
           <Suspense fallback={<div className="py-20 bg-premium" />}>
             <WhyChooseSection />
           </Suspense>
-        )}
+        </ClientOnly>
+      )}
 
-        {/* Exclusive Products Marquee Section */}
-        {showRest && (
+      {/* Exclusive Products Marquee Section */}
+      {showRest && (
+        <ClientOnly fallback={<div className="py-12 bg-white" />}>
           <Suspense fallback={<div className="py-12 bg-white" />}>
             <ExclusiveProductsMarquee />
           </Suspense>
-        )}
+        </ClientOnly>
+      )}
 
-        {/* The House Section */}
-        <section
-          id="house"
-          className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium"
-          onMouseEnter={() => trackUserBehavior.sectionView('house')}
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-[#f8f8f8] via-white to-[#f5f5f5]"></div>
-          <div className="absolute inset-0 bg-pattern-grid opacity-[0.07]"></div>
-          <div className="container-premium relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              viewport={{ once: true }}
-              className="text-center mb-16 sm:mb-20"
-            >
-              <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
-                The House
-              </h2>
-              <p className="body-premium text-lg sm:text-xl max-w-4xl mx-auto leading-relaxed">
-                Our curated collection represents the pinnacle of grooming excellence.
-                Each product is designed to elevate your daily ritual.
-              </p>
-            </motion.div>
-            {showRest && (
+      {/* The House Section */}
+      <section
+        id="house"
+        className="py-20 sm:py-24 md:py-28 lg:py-32 relative overflow-hidden section-premium"
+        onMouseEnter={() => trackUserBehavior.sectionView('house')}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-[#f8f8f8] via-white to-[#f5f5f5]"></div>
+        <div className="absolute inset-0 bg-pattern-grid opacity-[0.07]"></div>
+        <div className="container-premium relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            viewport={{ once: true }}
+            className="text-center mb-16 sm:mb-20"
+          >
+            <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
+              The House
+            </h2>
+            <p className="body-premium text-lg sm:text-xl max-w-4xl mx-auto leading-relaxed">
+              Our curated collection represents the pinnacle of grooming excellence.
+              Each product is designed to elevate your daily ritual.
+            </p>
+          </motion.div>
+          {showRest && (
+            <ClientOnly fallback={<div className="py-20 bg-premium" />}>
               <Suspense fallback={<div className="py-20 bg-premium" />}>
                 <CardGrid />
               </Suspense>
-            )}
-          </div>
-        </section>
+            </ClientOnly>
+          )}
+        </div>
+      </section>
 
-        {/* Journal Section */}
-        <section id="journal" className="py-12 sm:py-16 md:py-20 lg:py-24 relative overflow-hidden section-premium">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#fafafa]"></div>
-          <div className="absolute inset-0 bg-pattern-diagonal opacity-[0.1] rotate-180"></div>
-          <div className="container-premium relative z-10">
-            {/* <motion.div
+      {/* Journal Section */}
+      <section id="journal" className="py-12 sm:py-16 md:py-20 lg:py-24 relative overflow-hidden section-premium">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#f5f5f5] via-white to-[#fafafa]"></div>
+        <div className="absolute inset-0 bg-pattern-diagonal opacity-[0.1] rotate-180"></div>
+        <div className="container-premium relative z-10">
+          {/* <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
@@ -724,263 +703,276 @@ export default function Home() {
               the intersection of style, culture, and the pursuit of excellence.
             </p>
           </motion.div> */}
-            {showRest && (
+          {showRest && (
+            <ClientOnly fallback={<div className="py-12 bg-premium" />}>
               <Suspense fallback={<div className="py-12 bg-premium" />}>
                 <Journal />
               </Suspense>
-            )}
-          </div>
-        </section>
+            </ClientOnly>
+          )}
+        </div>
+      </section>
 
-        {/*Meet My Team Section */}
-        <section
-          id="team"
-          className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-visible"
-          onMouseEnter={() => trackUserBehavior.sectionView('team')}
-        >
-          <div className="absolute inset-0 bg-white z-0"></div>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 overflow-visible pt-6 sm:pt-8">
+       {/*Meet My Team Section */}
+       <section
+        id="team"
+        className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-visible"
+        onMouseEnter={() => trackUserBehavior.sectionView('team')}
+      >
+        <div className="absolute inset-0 bg-white z-0"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 overflow-visible pt-6 sm:pt-8">
 
-            <motion.div
-              className="text-center mb-16 sm:mb-20"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.2] tracking-tight">
-                Our People
-              </h2>
-              <p className="body-premium text-sm sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-2xl mx-auto leading-relaxed">
-                Insights, vision, and wisdom from our leadership team shaping the future of luxury grooming
-              </p>
-            </motion.div>
+          <motion.div
+            className="text-center mb-16 sm:mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.2] tracking-tight">
+              Our People
+            </h2>
+            <p className="body-premium text-sm sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-2xl mx-auto leading-relaxed">
+              Insights, vision, and wisdom from our leadership team shaping the future of luxury grooming
+            </p>
+          </motion.div>
 
-            <motion.div
-              className="mb-4 sm:mb-6 overflow-visible"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-              <div
-                className="relative w-full px-4 sm:px-6 overflow-visible"
+          <motion.div
+            className="mb-4 sm:mb-6 overflow-visible"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            <div
+    className="relative w-full px-4 sm:px-6 overflow-visible"
+    style={{
+          minHeight: "250px",   
+      paddingTop: "5px",   
+      paddingBottom: "5px" 
+    }}
+  >
+
+
+              <div className="w-full">
+                <div className="w-full"
                 style={{
-                  minHeight: "250px",
-                  paddingTop: "5px",
-                  paddingBottom: "5px"
+                  display: "flex",
+                  alignItems: "center",
+                  lineHeight: 0,               
+                  width: "100vw",              
+                  marginLeft: "calc(-50vw + 50%)", 
+                  overflow: "visible", 
                 }}
+  
               >
-
-
-                <div className="w-full">
-                  <div className="w-full"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      lineHeight: 0,
-                      width: "100vw",
-                      marginLeft: "calc(-50vw + 50%)",
-                      overflow: "visible",
-                    }}
-
+                <ClientOnly fallback={<div className="h-80 bg-white" />}>
+                  <Suspense fallback={<div className="h-80 bg-white" />}>
+                    <Marquee pauseOnHover={true} speed={40} gradient={false} style={{ overflow: "visible" }}>
+                {safeMap(allFounders, (founder: Founder, index: number) => (
+                  <motion.div
+                    key={index}
+                    className={`founder-card group relative w-72 sm:w-80 mx-4 transition-all duration-700 ease-out cursor-pointer ${index === allFounders.length - 1 ? 'lg:col-start-2' : ''}`}
+                    initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.8, delay: index * 0.15, ease: [0.25, 0.25, 0, 1] }}
+                    viewport={{ once: true }}
+                    whileHover={{ y: -20, scale: 1.05, zIndex: 50, position: "relative", transition: { duration: 0.4, ease: [0.25, 0.25, 0, 1] } }}
                   >
-                    <Suspense fallback={<div className="h-80 bg-white" />}>
-                        <Marquee pauseOnHover={true} speed={40} gradient={false} style={{ overflow: "visible" }}>
-                        {safeMap(allFounders, (founder: Founder, index: number) => (
-                          <motion.div
-                            key={index}
-                            className={`founder-card group relative w-72 sm:w-80 mx-4 transition-all duration-700 ease-out cursor-pointer ${index === allFounders.length - 1 ? 'lg:col-start-2' : ''}`}
-                            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ duration: 0.8, delay: index * 0.15, ease: [0.25, 0.25, 0, 1] }}
-                            viewport={{ once: true }}
-                            whileHover={{ y: -20, scale: 1.05, zIndex: 50, position: "relative", transition: { duration: 0.4, ease: [0.25, 0.25, 0, 1] } }}
-                          >
-                            <div className="relative h-[220px] sm:h-[240px] md:h-[360px] lg:h-[280px] xl:h-[300px] bg-white rounded-3xl border border-black shadow-md hover:shadow-2xl transition-all duration-700">
-                              <div className="relative z-10 p-4 sm:p-5 md:p-6 lg:p-7 xl:p-8 h-full flex flex-col justify-between">
-                                <div className="text-center flex-1">
-                                  {/* <FounderAvatar founder={founder} /> */}
-                                  <h4 className="font-serif font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-premium mb-2 sm:mb-3">
-                                    {founder.name}
-                                  </h4>
-                                  <p className="text-[#B7A16C] font-semibold text-sm sm:text-base md:text-lg lg:text-xl mb-2 sm:mb-3 group-hover:scale-105 transition-transform duration-300">
-                                    {founder.role}
-                                  </p>
-                                  <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed mb-3 sm:mb-4 line-clamp-4">
-                                    {founder.description}
-                                  </p>
-                                </div>
-                                <div className="flex items-center justify-center space-x-2 sm:space-x-3 mt-auto">
-                                  {founder.linkedin && (
-                                    <a
-                                      href={founder.linkedin}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="group/social p-2 rounded-full bg-gray-100 transition-all duration-300 transform hover:scale-110"
-                                    >
-                                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                                      </svg>
-                                    </a>
-                                  )}
-                                  {founder.twitter && (
-                                    <a
-                                      href={founder.twitter}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="group/social p-2 rounded-full bg-gray-100 transition-all duration-300 transform hover:scale-110"
-                                    >
-                                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                      </svg>
-                                    </a>
-                                  )}
-                                  {founder.instagram && (
-                                    <a
-                                      href={founder.instagram}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="group/social p-2 rounded-full bg-gray-100 transition-all duration-300 transform hover:scale-110"
-                                    >
-                                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                                      </svg>
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-                              <div className={`absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br ${founder.gradient} rounded-full opacity-10 transition-all duration-700`}></div>
-                              <div className={`absolute -bottom-4 -left-4 w-12 h-12 bg-gradient-to-br ${founder.gradient} rounded-full opacity-10 transition-all duration-700`}></div>
-                            </div>
-                          </motion.div>
-                        ))}
-                        </Marquee>
-                    </Suspense>
-                  </div>
-
+                    <div className="relative h-[220px] sm:h-[240px] md:h-[360px] lg:h-[280px] xl:h-[300px] bg-white rounded-3xl border border-black shadow-md hover:shadow-2xl transition-all duration-700">
+                      <div className="relative z-10 p-4 sm:p-5 md:p-6 lg:p-7 xl:p-8 h-full flex flex-col justify-between">
+                        <div className="text-center flex-1">
+                          {/* <FounderAvatar founder={founder} /> */}
+                          <h4 className="font-serif font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-premium mb-2 sm:mb-3">
+                            {founder.name}
+                          </h4>
+                          <p className="text-[#B7A16C] font-semibold text-sm sm:text-base md:text-lg lg:text-xl mb-2 sm:mb-3 group-hover:scale-105 transition-transform duration-300">
+                            {founder.role}
+                          </p>
+                          <p className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed mb-3 sm:mb-4 line-clamp-4">
+                            {founder.description}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-center space-x-2 sm:space-x-3 mt-auto">
+                          {founder.linkedin && (
+                            <a
+                              href={founder.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group/social p-2 rounded-full bg-gray-100 transition-all duration-300 transform hover:scale-110"
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                              </svg>
+                            </a>
+                          )}
+                          {founder.twitter && (
+                            <a
+                              href={founder.twitter}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group/social p-2 rounded-full bg-gray-100 transition-all duration-300 transform hover:scale-110"
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                              </svg>
+                            </a>
+                          )}
+                          {founder.instagram && (
+                            <a
+                              href={founder.instagram}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group/social p-2 rounded-full bg-gray-100 transition-all duration-300 transform hover:scale-110"
+                            >
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                              </svg>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <div className={`absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br ${founder.gradient} rounded-full opacity-10 transition-all duration-700`}></div>
+                      <div className={`absolute -bottom-4 -left-4 w-12 h-12 bg-gradient-to-br ${founder.gradient} rounded-full opacity-10 transition-all duration-700`}></div>
+                    </div>
+                  </motion.div>
+                ))}
+                    </Marquee>
+                  </Suspense>
+                </ClientOnly>
                 </div>
-
-
+                
               </div>
-            </motion.div>
+
+
+            </div>
+          </motion.div>
 
 
 
-          </div>
-        </section>
+        </div>
+      </section> 
 
-        {/* Partnership Section */}
-        <section
-          id="partnership"
-          className="py-6 sm:py-8 md:py-12 lg:py-16 relative overflow-hidden"
-          onMouseEnter={() => trackUserBehavior.sectionView('partnership')}
-        >
-          <div className="absolute inset-0 bg-white"></div>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <motion.div
-              className="text-center mb-8 sm:mb-12"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+      {/* Partnership Section */}
+      <section
+        id="partnership"
+        className="py-6 sm:py-8 md:py-12 lg:py-16 relative overflow-hidden"
+        onMouseEnter={() => trackUserBehavior.sectionView('partnership')}
+      >
+        <div className="absolute inset-0 bg-white"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div
+            className="text-center mb-8 sm:mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
+              Emilio Beaufort Global
+            </h2>
+            <p className="body-premium text-sm sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-8">
+              We're more than a luxury grooming brand—we're a global leader in ethical temple hair and hair extensions. Trusted by salons and clients in 35+ countries, we deliver premium, single-donor hair and innovative grooming solutions. Our mission: empower confidence, celebrate culture, and set new standards for quality and sustainability.
+            </p>
+            <p className="body-premium text-sm sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-3xl mx-auto leading-relaxed">
+              Ready to create something extraordinary? Let's partner for impact and growth—locally and worldwide.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            viewport={{ once: true }}
+            className="text-center mb-2 sm:mb-4 md:mb-6"
+          >
+            <Button
+              size="lg"
+              className="bg-black hover:bg-gray-800 text-white text-sm sm:text-sm md:text-base lg:text-lg px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-6 font-sans-medium transition-colors duration-300"
+              onClick={() => {
+                setIsPartnershipFormOpen(true);
+                trackEngagement.buttonClick('Fill Partnership Form', 'partnership-section');
+              }}
             >
-              <h2 className="text-2xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-black text-premium mb-6 sm:mb-8 leading-[1.1] tracking-tight heading-shadow decor-line">
-                Emilio Beaufort Global
-              </h2>
-              <p className="body-premium text-sm sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-8">
-                We're more than a luxury grooming brand—we're a global leader in ethical temple hair and hair extensions. Trusted by salons and clients in 35+ countries, we deliver premium, single-donor hair and innovative grooming solutions. Our mission: empower confidence, celebrate culture, and set new standards for quality and sustainability.
-              </p>
-              <p className="body-premium text-sm sm:text-sm md:text-base lg:text-lg xl:text-xl max-w-3xl mx-auto leading-relaxed">
-                Ready to create something extraordinary? Let's partner for impact and growth—locally and worldwide.
-              </p>
-            </motion.div>
+              Fill Partnership Form
+            </Button>
+          </motion.div>
+        </div>
+      </section>
 
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              viewport={{ once: true }}
-              className="text-center mb-2 sm:mb-4 md:mb-6"
-            >
-              <Button
-                size="lg"
-                className="bg-black hover:bg-gray-800 text-white text-sm sm:text-sm md:text-base lg:text-lg px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-6 font-sans-medium transition-colors duration-300"
-                onClick={() => {
-                  setIsPartnershipFormOpen(true);
-                  trackEngagement.buttonClick('Fill Partnership Form', 'partnership-section');
-                }}
-              >
-                Fill Partnership Form
-              </Button>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Partners Section (marquee) */}
-        <section id="partners" className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-white">
-          <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">Our Partners</h2>
-            <p className="text-sm sm:text-sm md:text-base lg:text-lg text-gray-600">We proudly collaborate with these distinguished brands.</p>
-          </div>
-          {showRest && (
+      {/* Partners Section (marquee) */}
+      <section id="partners" className="py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-4xl mx-auto text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">Our Partners</h2>
+          <p className="text-sm sm:text-sm md:text-base lg:text-lg text-gray-600">We proudly collaborate with these distinguished brands.</p>
+        </div>
+        {showRest && (
+          <ClientOnly fallback={<div className="py-12 bg-white" />}>
             <Suspense fallback={<div className="py-12 bg-white" />}>
               <PartnersMarquee />
             </Suspense>
-          )}
-        </section>
+          </ClientOnly>
+        )}
+      </section>
 
-        {/* Inspirational Quote Above Footer */}
-        <div className="relative w-full flex flex-col items-center justify-center py-6 sm:py-8 md:py-12 px-4 sm:px-6 md:px-8 overflow-hidden" style={{ background: 'linear-gradient(90deg, #f5e9c6 0%, #fffbe6 40%, #fffbe6 60%, #f5e9c6 100%)' }}>
-          <span className="relative z-10 text-center font-serif italic text-base sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-[#4b2e1e] leading-relaxed px-4 sm:px-6 md:px-8 max-w-6xl mx-auto lg:whitespace-nowrap flex justify-center items-center" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', textShadow: '0 2px 8px rgba(212,175,55,0.08)' }}>
-            ~ We built trust when others chased profits. Now the world wants what we've perfected.
-          </span>
-        </div>
-        {/* Author signature - separate white background */}
-        {/* <div className="w-full flex flex-col items-center justify-center bg-white py-2">
+      {/* Inspirational Quote Above Footer */}
+      <div className="relative w-full flex flex-col items-center justify-center py-6 sm:py-8 md:py-12 px-4 sm:px-6 md:px-8 overflow-hidden" style={{ background: 'linear-gradient(90deg, #f5e9c6 0%, #fffbe6 40%, #fffbe6 60%, #f5e9c6 100%)' }}>
+        <span className="relative z-10 text-center font-serif italic text-base sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-[#4b2e1e] leading-relaxed px-4 sm:px-6 md:px-8 max-w-6xl mx-auto lg:whitespace-nowrap flex justify-center items-center" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.01em', textShadow: '0 2px 8px rgba(212,175,55,0.08)' }}>
+          ~ We built trust when others chased profits. Now the world wants what we've perfected.
+        </span>
+      </div>
+      {/* Author signature - separate white background */}
+      {/* <div className="w-full flex flex-col items-center justify-center bg-white py-2">
         <span className="block font-semibold text-xl md:text-2xl text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>Emilio Beaufort</span>
       </div> */}
 
-        {showRest && (
+      {showRest && (
+        <ClientOnly fallback={null}>
           <Suspense fallback={null}>
             <Footer />
           </Suspense>
-        )}
+        </ClientOnly>
+      )}
 
-        {showRest && (
+      {showRest && (
+        <ClientOnly fallback={null}>
           <Suspense fallback={null}>
             <PartnershipFormDialog
               isOpen={isPartnershipFormOpen}
               onClose={() => setIsPartnershipFormOpen(false)}
             />
           </Suspense>
+        </ClientOnly>
+      )}
+
+      {/* Floating Action Button - Scroll to Top */}
+      <AnimatePresence>
+        {showScrollToTop && (
+          <motion.button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 bg-gradient-to-r from-[#8B4513] to-[#D4AF37] text-white p-3 sm:p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
+          </motion.button>
         )}
+      </AnimatePresence>
 
-        {/* Floating Action Button - Scroll to Top */}
-        <AnimatePresence>
-          {showScrollToTop && (
-            <motion.button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 bg-gradient-to-r from-[#8B4513] to-[#D4AF37] text-white p-3 sm:p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* Chatbot Support System */}
-        {showRest && (
+      {/* Chatbot Support System */}
+      {showRest && (
+        <ClientOnly fallback={null}>
           <Suspense fallback={null}>
             <Chatbot />
           </Suspense>
-        )}
-      </motion.div>
+        </ClientOnly>
+      )}
+        </motion.div>
+      </ClientOnly>
     </>
   );
 }

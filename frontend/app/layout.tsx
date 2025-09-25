@@ -103,167 +103,54 @@ export default function RootLayout({
             .hero-section {
               position: relative;
               width: 100%;
-              height: 100vh;
-              height: 100dvh; /* Dynamic viewport height for mobile */
+              min-height: 100svh;
               overflow: hidden;
-              padding: 0;
-              margin: 0;
+              padding-top: 0;
             }
-            
-            /* Reduce hero section height on mobile and tablet devices */
-            @media (max-width: 1024px) {
+            @media (min-width: 768px) {
               .hero-section {
-                height: 60vh;
-                height: 60dvh; /* Dynamic viewport height for mobile and tablets */
-              }
-            }
-            
-            @media (max-width: 768px) {
-              .hero-section {
-                height: 50vh;
-                height: 50dvh; /* Dynamic viewport height for mobile */
-              }
-            }
-            
-            /* Apply mobile logic for ultra-wide screens (1400px+) */
-            @media (min-width: 1400px) {
-              .hero-section {
-                height: 60vh;
-                height: 60dvh; /* Dynamic viewport height for ultra-wide screens */
-              }
-              /* Dimmed background for ultra-wide screens */
-              .hero-section .bg-black\/40 {
-                background-color: rgba(0, 0, 0, 0.4) !important;
+                padding-top: 5rem;
               }
             }
             .hero-image-container {
               position: absolute;
-              top: 48px; /* Start exactly after mobile navbar (h-12 = 48px) */
               left: 0;
               right: 0;
               bottom: 0;
-              width: 100vw;
-              height: calc(100vh - 48px); /* Full height minus navbar height */
+              top: 4rem;
             }
-            /* Responsive navbar height adjustments - exact navbar heights */
-            @media (min-width: 480px) {
+            @media (min-width: 768px) {
               .hero-image-container {
-                top: 56px; /* Start exactly after small screen navbar (h-14 = 56px) */
-                height: calc(100vh - 56px);
+                top: 5rem;
               }
             }
-            @media (min-width: 640px) {
+            @media (min-width: 1024px) {
               .hero-image-container {
-                top: 64px; /* Start exactly after large screen navbar (h-16 = 64px) */
-                height: calc(100vh - 64px);
+                top: 3rem;
               }
             }
             .hero-image {
-              width: 100vw;
-              height: 100vh;
+              width: 100%;
+              height: 100%;
               object-fit: cover;
-              object-position: center center;
-              transform: scale(1);
-              transition: transform 0.3s ease;
+              object-position: left;
+              transform-origin: left;
+              transform: scale(1.25);
             }
-            
-            /* Ultra-small mobile devices (320px - 375px) */
-            @media (max-width: 375px) {
+            @media (min-width: 640px) {
               .hero-image {
-                width: 100vw;
-                height: 50vh;
-                object-position: center 30%;
-                object-fit: cover;
+                transform: scale(1.25);
+              }
+            }
+            @media (min-width: 768px) {
+              .hero-image {
+                transform: scale(1.15);
+              }
+            }
+            @media (min-width: 1024px) {
+              .hero-image {
+                object-position: center;
                 transform: scale(1);
-              }
-            }
-            
-            /* Small mobile devices (376px - 480px) */
-            @media (min-width: 376px) and (max-width: 480px) {
-              .hero-image {
-                width: 100vw;
-                height: 50vh;
-                object-position: center 25%;
-                object-fit: cover;
-                transform: scale(1);
-              }
-            }
-            
-            /* Medium mobile devices (481px - 640px) */
-            @media (min-width: 481px) and (max-width: 640px) {
-              .hero-image {
-                width: 100vw;
-                height: 60vh;
-                object-position: center 20%;
-                transform: scale(1.05);
-              }
-            }
-            
-            /* Large mobile / Small tablet (641px - 768px) */
-            @media (min-width: 641px) and (max-width: 768px) {
-              .hero-image {
-                width: 100vw;
-                height: 60vh;
-                object-position: center 15%;
-                transform: scale(1.02);
-              }
-            }
-            
-            /* Tablet portrait (769px - 1024px) */
-            @media (min-width: 769px) and (max-width: 1024px) {
-              .hero-image {
-                width: 100vw;
-                height: 100vh;
-                object-position: center 10%;
-                transform: scale(1);
-              }
-            }
-            
-            /* Small desktop (1025px - 1280px) */
-            @media (min-width: 1025px) and (max-width: 1280px) {
-              .hero-image {
-                width: 100vw;
-                height: 100vh;
-                object-position: center center;
-                transform: scale(1);
-              }
-            }
-            
-            /* Medium desktop (1281px - 1440px) */
-            @media (min-width: 1281px) and (max-width: 1440px) {
-              .hero-image {
-                width: 100vw;
-                height: 100vh;
-                object-position: center center;
-                transform: scale(1);
-              }
-            }
-            
-            /* Large desktop (1441px - 1920px) */
-            @media (min-width: 1441px) and (max-width: 1920px) {
-              .hero-image {
-                width: 100vw;
-                height: 100vh;
-                object-position: center center;
-                transform: scale(1);
-              }
-            }
-            
-            /* Ultra-wide screens (1921px+) */
-            @media (min-width: 1921px) {
-              .hero-image {
-                width: 100vw;
-                height: 100vh;
-                object-position: center center;
-                transform: scale(1.05);
-              }
-            }
-            
-            /* High DPI / Retina displays */
-            @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-              .hero-image {
-                image-rendering: -webkit-optimize-contrast;
-                image-rendering: crisp-edges;
               }
             }
           `
