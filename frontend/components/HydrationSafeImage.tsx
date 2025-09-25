@@ -46,6 +46,7 @@ export default function HydrationSafeImage({
   largeScreenSrc,
 }: HydrationSafeImageProps) {
   const [currentSrc, setCurrentSrc] = useState(src);
+  const [fallbackTried, setFallbackTried] = useState<string[]>([]);
 
   // Handle responsive image selection
   useEffect(() => {
@@ -71,6 +72,28 @@ export default function HydrationSafeImage({
     return () => window.removeEventListener('resize', updateImageSrc);
   }, [src, mobileSrc, tabletSrc, desktopSrc, largeScreenSrc]);
 
+  // Build ordered fallback list without duplicates
+  const fallbackList = Array.from(
+    new Set(
+      [currentSrc, largeScreenSrc, desktopSrc, tabletSrc, mobileSrc, src].filter(
+        (u): u is string => Boolean(u)
+      )
+    )
+  );
+
+  const handleError = () => {
+    // Try next available source not yet tried
+    const tried = new Set(fallbackTried.concat([currentSrc]));
+    const next = fallbackList.find((u) => !tried.has(u));
+    if (next && next !== currentSrc) {
+      setFallbackTried(Array.from(tried));
+      setCurrentSrc(next);
+      return;
+    }
+    // As last resort, keep currentSrc (avoid swapping to a text placeholder that may break layout)
+    onError?.();
+  };
+
   return (
     <Image
       src={currentSrc}
@@ -86,9 +109,7 @@ export default function HydrationSafeImage({
       height={height}
       style={style}
       onLoad={onLoad}
-      onError={() => {
-        onError?.();
-      }}
+      onError={handleError}
     />
   );
 }
