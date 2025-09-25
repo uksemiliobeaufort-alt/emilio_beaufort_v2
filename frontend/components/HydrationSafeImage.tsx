@@ -45,18 +45,10 @@ export default function HydrationSafeImage({
   desktopSrc,
   largeScreenSrc,
 }: HydrationSafeImageProps) {
-  const [isClient, setIsClient] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   // Handle responsive image selection
   useEffect(() => {
-    if (!isClient) return;
-
     const updateImageSrc = () => {
       const width = window.innerWidth;
       
@@ -77,35 +69,7 @@ export default function HydrationSafeImage({
     window.addEventListener('resize', updateImageSrc);
     
     return () => window.removeEventListener('resize', updateImageSrc);
-  }, [isClient, src, mobileSrc, tabletSrc, desktopSrc, largeScreenSrc]);
-
-  // Show a placeholder during SSR and initial client render
-  if (!isClient) {
-    return (
-      <div 
-        className={`${className} bg-gray-200 animate-pulse`}
-        style={{
-          ...style,
-          ...(fill ? { position: 'absolute', inset: 0 } : { width, height })
-        }}
-      />
-    );
-  }
-
-  // If there's an image error, show a fallback
-  if (imageError) {
-    return (
-      <div 
-        className={`${className} bg-gray-200 flex items-center justify-center`}
-        style={{
-          ...style,
-          ...(fill ? { position: 'absolute', inset: 0 } : { width, height })
-        }}
-      >
-        <span className="text-gray-500 text-sm">Image unavailable</span>
-      </div>
-    );
-  }
+  }, [src, mobileSrc, tabletSrc, desktopSrc, largeScreenSrc]);
 
   return (
     <Image
@@ -123,7 +87,6 @@ export default function HydrationSafeImage({
       style={style}
       onLoad={onLoad}
       onError={() => {
-        setImageError(true);
         onError?.();
       }}
     />

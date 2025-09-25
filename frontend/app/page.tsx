@@ -41,7 +41,7 @@ const HeroSection = () => {
   return (
     <section className="hero-section">
       {/* SINGLE IMAGE */}
-      <div className="hero-image-container">
+      <div className="hero-image-container" suppressHydrationWarning>
         <HydrationSafeImage
           src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2FEM%20Banner.webp?alt=media&token=deb37527-471d-462a-81ff-d9182109a8c2"
           alt="Emilio Beaufort - Premium Hair Extensions and Luxury Grooming"
@@ -66,98 +66,59 @@ const HeroSection = () => {
 
       {/* Centered Content - Hidden on large screens */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-4 sm:px-6 z-10 lg:hidden">
-
         <div className="flex flex-col items-center gap-4 sm:gap-6">
-          {isClient ? (
+          <motion.div
+            className="relative z-20 flex flex-col items-center max-w-4xl mx-auto w-full px-4"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+          >
             <motion.div
-              className="relative z-20 flex flex-col items-center max-w-4xl mx-auto w-full px-4"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="mb-3 sm:mb-4 w-full"
             >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="mb-3 sm:mb-4 w-full"
-              >
-                <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white leading-tight tracking-tight text-center w-full">
-                  Emilio Beaufort
-                </h1>
-              </motion.div>
-              <motion.p
-                className="text-sm sm:text-base md:text-lg lg:text-xl body-premium mb-4 sm:mb-6 max-w-2xl leading-relaxed text-center mx-auto text-white/90 relative z-40"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                style={{
-                  textShadow: '0 2px 8px rgba(0, 0, 0, 0.7)',
-                  filter: 'drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5))'
-                } as CSSProperties}
-              >
-                Emilio Beaufort Pvt Ltd stands at the forefront of the international and domestic B2B market, delivering 100% authentic temple hair and luxury extensions.
-
-                Ethically sourced, meticulously crafted, and trusted by salons, distributors, and beauty brands across India, USA, UK, Europe, Middle East, China, and Africa.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.6 }}
-                className="w-full flex justify-center relative z-40"
-              >
-                <Button
-                  size="lg"
-                  className="text-xs sm:text-sm md:text-base px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 font-sans-medium transition-all duration-300 bg-black/80 text-white hover:bg-white hover:text-black border border-white backdrop-blur-sm hover:backdrop-blur-md hover:shadow-2xl hover:shadow-white/20"
-                  onClick={() => {
-                    document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' });
-                    trackEngagement.buttonClick('Discover Our Philosophy', 'hero-section');
-                  }}
-                  style={{
-                    textShadow: '0 1px 3px rgba(0,0,0,0.5)',
-                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 255, 255, 0.1)'
-                  }}
-                >
-                  Discover Our Philosophy
-                </Button>
-              </motion.div>
+              <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white leading-tight tracking-tight text-center w-full">
+                Emilio Beaufort
+              </h1>
             </motion.div>
-          ) : (
-            // Static fallback for SSR
-            <div className="relative z-20 flex flex-col items-center max-w-4xl mx-auto w-full px-4">
-              <div className="mb-3 sm:mb-4 w-full">
-                <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white leading-tight tracking-tight text-center w-full">
-                  Emilio Beaufort
-                </h1>
-              </div>
-              <p
-                className="text-sm sm:text-base md:text-lg lg:text-xl body-premium mb-4 sm:mb-6 max-w-2xl leading-relaxed text-center mx-auto text-white/90 relative z-40"
-                style={{
-                  textShadow: '0 2px 8px rgba(0, 0, 0, 0.7)',
-                  filter: 'drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5))'
-                } as CSSProperties}
-              >
-                Emilio Beaufort Pvt Ltd stands at the forefront of the international and domestic B2B market, delivering 100% authentic temple hair and luxury extensions.
+            <motion.p
+              className="text-sm sm:text-base md:text-lg lg:text-xl body-premium mb-4 sm:mb-6 max-w-2xl leading-relaxed text-center mx-auto text-white/90 relative z-40"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              style={{
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.7)',
+                filter: 'drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5))'
+              } as CSSProperties}
+            >
+              Emilio Beaufort Pvt Ltd stands at the forefront of the international and domestic B2B market, delivering 100% authentic temple hair and luxury extensions.
 
-                Ethically sourced, meticulously crafted, and trusted by salons, distributors, and beauty brands across India, USA, UK, Europe, Middle East, China, and Africa.
-              </p>
-              <div className="w-full flex justify-center relative z-40">
-                <Button
-                  size="lg"
-                  className="text-xs sm:text-sm md:text-base px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 font-sans-medium transition-all duration-300 bg-black/80 text-white hover:bg-white hover:text-black border border-white backdrop-blur-sm hover:backdrop-blur-md hover:shadow-2xl hover:shadow-white/20"
-                  onClick={() => {
-                    document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' });
-                    trackEngagement.buttonClick('Discover Our Philosophy', 'hero-section');
-                  }}
-                  style={{
-                    textShadow: '0 1px 3px rgba(0,0,0,0.5)',
-                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 255, 255, 0.1)'
-                  }}
-                >
-                  Discover Our Philosophy
-                </Button>
-              </div>
-            </div>
-          )}
+              Ethically sourced, meticulously crafted, and trusted by salons, distributors, and beauty brands across India, USA, UK, Europe, Middle East, China, and Africa.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="w-full flex justify-center relative z-40"
+            >
+              <Button
+                size="lg"
+                className="text-xs sm:text-sm md:text-base px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 font-sans-medium transition-all duration-300 bg-black/80 text-white hover:bg-white hover:text-black border border-white backdrop-blur-sm hover:backdrop-blur-md hover:shadow-2xl hover:shadow-white/20"
+                onClick={() => {
+                  document.getElementById('philosophy')?.scrollIntoView({ behavior: 'smooth' });
+                  trackEngagement.buttonClick('Discover Our Philosophy', 'hero-section');
+                }}
+                style={{
+                  textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                Discover Our Philosophy
+              </Button>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     </section>
