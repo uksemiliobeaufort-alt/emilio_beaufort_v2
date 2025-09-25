@@ -18,6 +18,8 @@ interface HydrationSafeImageProps {
   style?: React.CSSProperties;
   onLoad?: () => void;
   onError?: () => void;
+  unoptimized?: boolean;
+  referrerPolicy?: React.HTMLAttributes<HTMLImageElement>["referrerPolicy"];
   // Responsive image sources
   mobileSrc?: string;
   tabletSrc?: string;
@@ -40,6 +42,8 @@ export default function HydrationSafeImage({
   style,
   onLoad,
   onError,
+  unoptimized,
+  referrerPolicy,
   mobileSrc,
   tabletSrc,
   desktopSrc,
@@ -47,6 +51,7 @@ export default function HydrationSafeImage({
 }: HydrationSafeImageProps) {
   const [currentSrc, setCurrentSrc] = useState(src);
   const [fallbackTried, setFallbackTried] = useState<string[]>([]);
+  const [useNativeImg, setUseNativeImg] = useState(false);
 
   // Handle responsive image selection
   useEffect(() => {
@@ -90,9 +95,30 @@ export default function HydrationSafeImage({
       setCurrentSrc(next);
       return;
     }
-    // As last resort, keep currentSrc (avoid swapping to a text placeholder that may break layout)
+    // As last resort, switch to native <img> to bypass Next optimizer in case of remote fetch issues
+    setUseNativeImg(true);
     onError?.();
   };
+
+  if (useNativeImg) {
+    return (
+      <img
+        src={currentSrc}
+        alt={alt}
+        className={className}
+        style={style}
+        width={width}
+        height={height}
+        loading={priority ? 'eager' : 'lazy'}
+        referrerPolicy={referrerPolicy ?? 'no-referrer'}
+        crossOrigin="anonymous"
+        onLoad={onLoad as any}
+        onError={() => {
+          onError?.();
+        }}
+      />
+    );
+  }
 
   return (
     <Image
@@ -108,6 +134,8 @@ export default function HydrationSafeImage({
       width={width}
       height={height}
       style={style}
+      unoptimized={unoptimized}
+      referrerPolicy={referrerPolicy ?? 'no-referrer'}
       onLoad={onLoad}
       onError={handleError}
     />

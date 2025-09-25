@@ -96,6 +96,12 @@ export const getFirebaseStorageUrl = async (path: string): Promise<string> => {
   }
 };
 
+// Convenience: get hero image for big screens from herosection_images/EM Banner.webp
+export const getHeroBigScreenUrl = async (): Promise<string> => {
+  // Note: spaces in file names are supported; storage SDK handles encoding
+  return await getFirebaseStorageUrl('herosection_images/EM Banner.webp');
+};
+
 // Function to check if Firebase Storage URL is accessible (disabled to prevent CORS errors)
 export const checkFirebaseStorageAccess = async (url: string): Promise<boolean> => {
   // Disabled to prevent CORS errors when scrolling

@@ -7,6 +7,7 @@ import { useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import HydrationSafeImage from '@/components/HydrationSafeImage';
+import { getFirebaseStorageUrl } from '@/lib/firebase';
 // import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -33,9 +34,19 @@ const Marquee = lazy(() => import("react-fast-marquee"));
 // Hero Section Component - Hydration Safe
 const HeroSection = () => {
   const [isClient, setIsClient] = useState(false);
+  const [desktopHeroUrl, setDesktopHeroUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     setIsClient(true);
+    // Resolve Firebase URL on client to avoid SSR token/CORS issues
+    (async () => {
+      try {
+        const url = await getFirebaseStorageUrl('herosection_images/EM Banner.webp');
+        if (url) setDesktopHeroUrl(url);
+      } catch {
+        // silently ignore, fallback will be used
+      }
+    })();
   }, []);
 
   return (
@@ -43,7 +54,8 @@ const HeroSection = () => {
       {/* SINGLE IMAGE */}
       <div className="hero-image-container" suppressHydrationWarning>
         <HydrationSafeImage
-          src="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2FEM%20Banner.webp?alt=media&token=deb37527-471d-462a-81ff-d9182109a8c2"
+          // Base fallback is a local static image to ensure production never shows a broken state
+          src="/hero-fallback.jpg"
           alt="Emilio Beaufort - Premium Hair Extensions and Luxury Grooming"
           fill
           priority
@@ -52,10 +64,12 @@ const HeroSection = () => {
           className="hero-image"
           placeholder="blur"
           blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-          // Responsive image sources - Mobile image for small screens and ultra-wide screens, desktop image for medium screens
+          unoptimized
+          referrerPolicy="no-referrer"
+          // Responsive image sources - Mobile & tablet Plus an on-demand Firebase URL for desktop fetched client-side
           mobileSrc="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-12.webp?alt=media&token=716b25e1-adcf-4f09-80e9-2e94211187bd"
           tabletSrc="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-12.webp?alt=media&token=716b25e1-adcf-4f09-80e9-2e94211187bd"
-          desktopSrc="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2FEM%20Banner.webp?alt=media&token=deb37527-471d-462a-81ff-d9182109a8c2"
+          desktopSrc={desktopHeroUrl}
           largeScreenSrc="https://firebasestorage.googleapis.com/v0/b/emilio-beaufort.firebasestorage.app/o/herosection-image%2Fimage-12.webp?alt=media&token=716b25e1-adcf-4f09-80e9-2e94211187bd"
         />
         {/* Mobile readability overlay - enhanced for better text contrast */}
