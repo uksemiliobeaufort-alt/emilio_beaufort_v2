@@ -55,6 +55,7 @@ const partners = [
 function PartnerCard({ name, description }: { name: string; description: string }) {
   const [imageError, setImageError] = React.useState(false);
   const [useWebP, setUseWebP] = React.useState(true);
+  const [imageLoaded, setImageLoaded] = React.useState(false);
   
   // Try WebP first, fallback to original format
   const imageUrl = getPartnerImageUrl(name, undefined, useWebP ? 'webp' : 'original');
@@ -63,7 +64,13 @@ function PartnerCard({ name, description }: { name: string; description: string 
   console.log(`Partner: ${name}, Image URL (${useWebP ? 'WebP' : 'Original'}): ${imageUrl}`);
   
   const handleImageError = (e: any) => {
-    console.error(`Failed to load ${useWebP ? 'WebP' : 'original'} image for ${name}:`, imageUrl, e);
+    console.error(`Failed to load ${useWebP ? 'WebP' : 'original'} image for ${name}:`, {
+      imageUrl,
+      error: e,
+      target: e.target,
+      currentSrc: e.target?.currentSrc,
+      src: e.target?.src
+    });
     
     // If WebP failed, try original format
     if (useWebP) {
@@ -71,8 +78,14 @@ function PartnerCard({ name, description }: { name: string; description: string 
       setUseWebP(false);
     } else {
       // Both formats failed
+      console.error(`Both WebP and original format failed for ${name}`);
       setImageError(true);
     }
+  };
+
+  const handleImageLoad = () => {
+    console.log(`Successfully loaded ${useWebP ? 'WebP' : 'original'} image for ${name}:`, imageUrl);
+    setImageLoaded(true);
   };
   
   return (
@@ -87,9 +100,9 @@ function PartnerCard({ name, description }: { name: string; description: string 
             quality={useWebP ? 85 : 100} // Lower quality for WebP since it's already compressed
             className="object-contain"
             onError={handleImageError}
-            onLoad={() => {
-              console.log(`Successfully loaded ${useWebP ? 'WebP' : 'original'} image for ${name}:`, imageUrl);
-            }}
+            onLoad={handleImageLoad}
+            unoptimized={false}
+            priority={false}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -109,6 +122,19 @@ function PartnerCard({ name, description }: { name: string; description: string 
 }
 
 export default function PartnersMarquee() {
+  // Debug: Log all partner URLs on component mount
+  React.useEffect(() => {
+    console.log('=== PARTNERS MARQUEE DEBUG ===');
+    partners.forEach(partner => {
+      const webpUrl = getPartnerImageUrl(partner.name, undefined, 'webp');
+      const originalUrl = getPartnerImageUrl(partner.name, undefined, 'original');
+      console.log(`Partner: ${partner.name}`);
+      console.log(`  WebP URL: ${webpUrl}`);
+      console.log(`  Original URL: ${originalUrl}`);
+    });
+    console.log('=== END DEBUG ===');
+  }, []);
+
   return (
     <div className="relative flex w-full flex-col items-center justify-center overflow-hidden py-8 bg-white">
       <Marquee pauseOnHover={true} speed={40} gradient={false}>
