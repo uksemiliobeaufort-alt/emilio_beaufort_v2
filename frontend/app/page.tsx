@@ -318,7 +318,7 @@ export default function Home() {
     {
       name: "Manish Jha",
       role: "CoFounder & CEO",
-      description: "CEO | Director & Head of Strategy & Innovation | Emilio Beaufort – Luxury Personal Care Brand | 13 Years in Business Building",
+      description: "CEO | Director & Head of Strategy & Innovation | 13 Years in Business Building",
       gradient: "from-amber-500 via-orange-500 to-red-500",
       linkedin: "https://www.linkedin.com/in/manish-jha-786a87257",
       twitter: "https://x.com/manishXplore?t=WINq2Q-fqSjS-1WBF0K76g&s=09",
@@ -335,9 +335,18 @@ export default function Home() {
       //imageName: "EM Avatar"
     },
     {
+      name: "Uttam Kumar Singh",
+      role: "Junior Founder",
+      description: "Multi Faceted Entrepreneur | Product Manager",
+      gradient: "from-green-500 via-emerald-500 to-teal-500",
+      linkedin: "https://www.linkedin.com/in/uttam-kumar-singh-uks/",
+      twitter: "/",
+      instagram: "/"
+    },
+    {
       name: "Aly Sayyad",
       role: "CoFounder & CSO",
-      description: "L&D| Training| Consulting| Banking| Startups",
+      description: "L&D | Training| Consulting | Banking | Startups",
       gradient: "from-purple-500 via-pink-500 to-rose-500",
       linkedin: "https://www.linkedin.com/in/aly-sayyad-40501a20/",
       twitter: "/",
@@ -345,53 +354,47 @@ export default function Home() {
     },
     {
       name: "Sreedeep Saha",
-      role: "Junior Founder",
-      description: "Junior Founder | EMILIO BEAUFORT Steering Emilio Beaufort Pvt. Ltd. towards excellence",
+      role: "Junior Founding Member",
+      description: "Steering Emilio Beaufort towards Success",
       gradient: "from-blue-500 via-indigo-500 to-purple-500",
       linkedin: "https://www.linkedin.com/in/sreedeep-saha-fm-eb",
       twitter: "https://x.com/SahaSreede48415?t=yDKm6CvOxpC_s9iCU73MDw&s=09",
       instagram: "https://www.instagram.com/sreedeep_eb/"
     },
-    {
-      name: "Uttam Kumar Singh",
-      role: "Junior Founder",
-      description: "Junior Founding Member | Multi Faceted Entrepreneur | Product Manager",
-      gradient: "from-green-500 via-emerald-500 to-teal-500",
-      linkedin: "https://www.linkedin.com/in/uttam-kumar-singh-uks/",
-      twitter: "/",
-      instagram: "/"
-    },
+
     
     // New founder card for Rahul Pandey
-    {
-      name: "Rahul Pandey",
-      role: "Tech Lead and Project Coordinator",
-      description: "AI Automation Consultant | Technical Coordinator @ Emilio Beaufort  ",
-      gradient: "from-cyan-500 via-blue-500 to-indigo-500",
-      linkedin: "https://www.linkedin.com/in/rahulpandey187/",
-      twitter: "https://x.com/rahulpandey187",
-      instagram: "/",
-      imageName: "Rahul Sir"
-    },
-      {
-       name: "Pratibha Sharma",
-      role: "HR Lead",
-      description: "HR Lead @ Emilio Beaufort | Certifications in Talent Acquisition, HR Analytics ",
-     gradient: "from-gray-600 via-slate-600 to-zinc-600",
-     linkedin: "https://www.linkedin.com/in/pratibha-sharma-7771a6215//",
-    twitter: "/",
-     instagram: "https://www.instagram.com/aashii2509?igsh=MTg0NDNja3NqMnpmcw==/",
+    //{
+      //name: "Rahul Pandey",
+      //role: "Tech Lead and Project Coordinator",
+      //description: "AI Automation Consultant | Technical Coordinator @ Emilio Beaufort  ",
+      //gradient: "from-cyan-500 via-blue-500 to-indigo-500",
+      //linkedin: "https://www.linkedin.com/in/rahulpandey187/",
+     // twitter: "https://x.com/rahulpandey187",
+     // instagram: "/",
+      //imageName: "Rahul Sir"
+    //},
+      //{
+       //name: "Pratibha Sharma",
+      //role: "HR Lead",
+      //description: "HR Lead @ Emilio Beaufort | Certifications in Talent Acquisition, HR Analytics ",
+    // gradient: "from-gray-600 via-slate-600 to-zinc-600",
+    // linkedin: "https://www.linkedin.com/in/pratibha-sharma-7771a6215//",
+    //twitter: "/",
+    // instagram: "https://www.instagram.com/aashii2509?igsh=MTg0NDNja3NqMnpmcw==/",
      //imageName: "Pratibha Mam"
-    },
+    //},
   ];
   //const firstRow = founders.slice(0, 3);
   //const secondRow = founders.slice(3, 6);
   //const thirdRow = founders.slice(6, 7); // Rahul Pandey
 
   const firstRow = founders.slice(0, 3); // First 3 founders
-const secondRow = founders.slice(3, 6); // Next 3 founders (Sreedeep, Uttam, Rahul)
-const thirdRow = founders.slice(6, 7); // Last founder (Pratibha)
-const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
+  const secondRow = founders.slice(3, 5);
+//const secondRow = founders.slice(3, 6); // Next 3 founders (Sreedeep, Uttam, Rahul)
+//const thirdRow = founders.slice(6, 7); // Last founder (Pratibha)
+const allFounders = [...firstRow, ...secondRow] as Founder[];
+//const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
   return (
     <>
       {/* Render Hero immediately for best LCP */}
