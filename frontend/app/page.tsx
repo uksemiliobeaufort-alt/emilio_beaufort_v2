@@ -362,28 +362,6 @@ export default function Home() {
       instagram: "https://www.instagram.com/sreedeep_eb/"
     },
 
-    
-    // New founder card for Rahul Pandey
-    //{
-      //name: "Rahul Pandey",
-      //role: "Tech Lead and Project Coordinator",
-      //description: "AI Automation Consultant | Technical Coordinator @ Emilio Beaufort  ",
-      //gradient: "from-cyan-500 via-blue-500 to-indigo-500",
-      //linkedin: "https://www.linkedin.com/in/rahulpandey187/",
-     // twitter: "https://x.com/rahulpandey187",
-     // instagram: "/",
-      //imageName: "Rahul Sir"
-    //},
-      //{
-       //name: "Pratibha Sharma",
-      //role: "HR Lead",
-      //description: "HR Lead @ Emilio Beaufort | Certifications in Talent Acquisition, HR Analytics ",
-    // gradient: "from-gray-600 via-slate-600 to-zinc-600",
-    // linkedin: "https://www.linkedin.com/in/pratibha-sharma-7771a6215//",
-    //twitter: "/",
-    // instagram: "https://www.instagram.com/aashii2509?igsh=MTg0NDNja3NqMnpmcw==/",
-     //imageName: "Pratibha Mam"
-    //},
   ];
   //const firstRow = founders.slice(0, 3);
   //const secondRow = founders.slice(3, 6);
@@ -391,10 +369,8 @@ export default function Home() {
 
   const firstRow = founders.slice(0, 3); // First 3 founders
   const secondRow = founders.slice(3, 5);
-//const secondRow = founders.slice(3, 6); // Next 3 founders (Sreedeep, Uttam, Rahul)
-//const thirdRow = founders.slice(6, 7); // Last founder (Pratibha)
 const allFounders = [...firstRow, ...secondRow] as Founder[];
-//const allFounders = [...firstRow, ...secondRow, ...thirdRow] as Founder[];
+
   return (
     <>
       {/* Render Hero immediately for best LCP */}
